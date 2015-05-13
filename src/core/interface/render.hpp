@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/renderer.h>
 //#include <tiny/algo/typecluster.h>
 
-namespace ch
+namespace strata
 {
 	namespace core
 	{

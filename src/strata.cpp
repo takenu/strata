@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int main(int, char **)
 {
-	ch::core::Game * game = 0;
+	strata::core::Game * game = 0;
 	try
 	{
-		game = new ch::core::Game();
+		game = new strata::core::Game();
 	}
 	catch (std::exception &e)
 	{

@@ -16,26 +16,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <tiny/os/sdlapplication.h>
+#include <tiny/algo/typecluster.h>
+#include <tiny/draw/staticmesh.h>
+
+#include "../core/interface/render.hpp"
+
+#include "layer.hpp"
 
 namespace strata
 {
-	namespace core
+	namespace mesh
 	{
-		namespace intf
+		class Terrain
 		{
-			class ApplInterface
-			{
-				private:
-				public:
-					ApplInterface(void) {}
-					~ApplInterface(void) {}
+			private:
+				core::intf::RenderInterface * renderer;
 
-					virtual bool isRunning(void) const = 0;
-					virtual int getScreenWidth(void) const = 0;
-					virtual int getScreenHeight(void) const = 0;
-					virtual tiny::os::MouseState getMouseState(const bool &) const = 0;
-			};
-		}
+				long unsigned int layercounter;
+				tiny::algo::TypeCluster<long unsigned int, Layer> layers;
+			public:
+				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), layercounter(0), layers((long unsigned int)(-1), "LayerTC")
+				{
+					new Layer(++layercounter, layers, renderer);
+				}
+
+				~Terrain(void)
+				{
+				}
+		};
 	}
 }

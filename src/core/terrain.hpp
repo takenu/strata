@@ -16,26 +16,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <tiny/os/sdlapplication.h>
+#include <tiny/math/vec.h>
+
+#include <tiny/mesh/staticmesh.h>
+
+#include "interface/render.hpp"
+#include "interface/terrain.hpp"
+
+#include "../mesh/terrain.hpp"
 
 namespace strata
 {
 	namespace core
 	{
-		namespace intf
+		/** Manage all terrain. */
+		class TerrainManager : public intf::TerrainInterface
 		{
-			class ApplInterface
-			{
-				private:
-				public:
-					ApplInterface(void) {}
-					~ApplInterface(void) {}
+			private:
+				intf::RenderInterface * renderer;
 
-					virtual bool isRunning(void) const = 0;
-					virtual int getScreenWidth(void) const = 0;
-					virtual int getScreenHeight(void) const = 0;
-					virtual tiny::os::MouseState getMouseState(const bool &) const = 0;
-			};
-		}
+				mesh::Terrain terrain;
+			public:
+				TerrainManager(intf::RenderInterface * _renderer) :
+					intf::TerrainInterface(),
+					renderer(_renderer),
+					terrain(renderer)
+				{
+				}
+
+				void update(double)
+				{
+				}
+		};
 	}
 }

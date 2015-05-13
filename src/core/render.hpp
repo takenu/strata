@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "interface/appl.hpp"
 #include "interface/render.hpp"
 
-namespace ch
+namespace strata
 {
 	namespace core
 	{
@@ -99,7 +99,7 @@ namespace ch
 				RenderManager(intf::ApplInterface * _interface) :
 					intf::RenderInterface(),
 					applInterface(_interface),
-					cameraPosition(tiny::vec3(0.001f, 256.0f, 0.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true),
+					cameraPosition(tiny::vec3(0.001f, 0.001f, 3.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true),
 					worldRenderer(new tiny::draw::WorldRenderer(applInterface->getScreenWidth(), applInterface->getScreenHeight()))
 				{
 				}

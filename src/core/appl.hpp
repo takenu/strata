@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "interface/appl.hpp"
 
-namespace ch
+namespace strata
 {
 	namespace core
 	{

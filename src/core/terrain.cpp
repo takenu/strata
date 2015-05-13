@@ -14,28 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
 
-#include <tiny/os/sdlapplication.h>
+#include <config.h>
 
-namespace strata
-{
-	namespace core
-	{
-		namespace intf
-		{
-			class ApplInterface
-			{
-				private:
-				public:
-					ApplInterface(void) {}
-					~ApplInterface(void) {}
+#include "terrain.hpp"
 
-					virtual bool isRunning(void) const = 0;
-					virtual int getScreenWidth(void) const = 0;
-					virtual int getScreenHeight(void) const = 0;
-					virtual tiny::os::MouseState getMouseState(const bool &) const = 0;
-			};
-		}
-	}
-}

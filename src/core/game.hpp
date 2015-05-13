@@ -30,8 +30,9 @@ extern "C" {
 #include "ui.hpp"
 #include "render.hpp"
 #include "sky.hpp"
+#include "terrain.hpp"
 
-namespace ch
+namespace strata
 {
 	namespace core
 	{
@@ -43,6 +44,7 @@ namespace ch
 				ApplManager applManager; /**< Manage application specifics (key presses, low level rendering, sound, etcetera). */
 				RenderManager renderManager; /**< Manage graphics rendering. */
 				UIManager uiManager; /**< Manage user input and user interface. */
+				TerrainManager terrainManager; /**< Manage terrain. */
 				SkyManager skyManager; /**< Manage sky and weather. */
 
 				sel::State luaState; /**< A Lua state. */
@@ -51,6 +53,7 @@ namespace ch
 					applManager(),
 					renderManager(static_cast<intf::ApplInterface*>(&applManager)),
 					uiManager(static_cast<intf::ApplInterface*>(&applManager),static_cast<intf::RenderInterface*>(&renderManager)),
+					terrainManager(static_cast<intf::RenderInterface*>(&renderManager)),
 					skyManager(static_cast<intf::RenderInterface*>(&renderManager)),
 					luaState(true)
 				{

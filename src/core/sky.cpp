@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sky.hpp"
 
-using namespace ch::core;
+using namespace strata::core;
 
 void SkyManager::loadSkyBox(float cubeMeshSize, int boxTexSize, std::string gradTex)
 {
