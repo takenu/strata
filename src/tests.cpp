@@ -14,35 +14,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
 
-#include <tiny/algo/typecluster.h>
-#include <tiny/draw/staticmesh.h>
+#include <iostream>
+#include <exception>
 
-#include "../core/interface/render.hpp"
+#include "mesh/vecmath.hpp"
 
-#include "layer.hpp"
+#include "core/game.hpp"
 
-namespace strata
+using namespace strata;
+
+int main(int, char **)
 {
-	namespace mesh
-	{
-		class Terrain
-		{
-			private:
-				core::intf::RenderInterface * renderer;
-
-				long unsigned int layercounter;
-				tiny::algo::TypeCluster<long unsigned int, Layer> layers;
-			public:
-				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), layercounter(0), layers((long unsigned int)(-1), "LayerTC")
-				{
-					new Layer(++layercounter, layers, renderer, 10.0f, 5);
-				}
-
-				~Terrain(void)
-				{
-				}
-		};
-	}
+	std::cout << " Running tests... "<<std::endl;
+	mesh::testMathRelations();
+	std::cout << " Tests finished. "<<std::endl;
 }

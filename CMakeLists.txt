@@ -78,3 +78,6 @@ file(GLOB STRATA_SOURCES RELATIVE ${STRATA_SOURCE_DIR}
 add_executable(strata src/strata.cpp ${STRATA_SOURCES})
 target_link_libraries(strata ${USED_LIBS})
 
+add_executable(tests src/tests.cpp ${STRATA_SOURCES})
+target_link_libraries(tests ${USED_LIBS})
+

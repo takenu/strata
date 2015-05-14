@@ -16,32 +16,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <set>
+
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
+#include <tiny/algo/typecluster.h>
 
 #include "../core/interface/render.hpp"
 
+#include "element.hpp"
 #include "texture.hpp"
 
 namespace strata
 {
 	namespace mesh
 	{
+
 		class Layer : public tiny::algo::TypeClusterObject<long unsigned int, Layer>
 		{
 			private:
+				MeshBundle mesh;
+
 				core::intf::RenderInterface * renderer;
-				tiny::draw::StaticMesh * mesh;
+				tiny::draw::StaticMesh * renderMesh;
 				tiny::draw::RGBTexture2D * texture;
+				
+				tiny::draw::StaticMesh * createFlatLayer(float size, unsigned int ndivs, float height = 0.0f)
+				{
+					mesh.createFlatLayer(size, ndivs, height);
+					return new tiny::draw::StaticMesh(tiny::mesh::StaticMesh::createCubeMesh(0.5f));
+				}
 			public:
-				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Layer> &tc, core::intf::RenderInterface * _renderer) :
+				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Layer> &tc, core::intf::RenderInterface * _renderer,
+						float size, unsigned int ndivs) :
 					tiny::algo::TypeClusterObject<long unsigned int, Layer>(id, this, tc),
+					mesh(),
 					renderer(_renderer),
-					mesh(new tiny::draw::StaticMesh(tiny::mesh::StaticMesh::createCubeMesh(0.5f))),
+					renderMesh(0),
 					texture(createTestTexture())
 				{
-					mesh->setDiffuseTexture(*texture);
-					renderer->addWorldRenderable(mesh);
+					renderMesh = createFlatLayer(size, ndivs);
+					renderMesh->setDiffuseTexture(*texture);
+					renderer->addWorldRenderable(renderMesh);
 				}
 		};
 	}
