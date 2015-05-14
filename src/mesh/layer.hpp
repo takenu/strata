@@ -44,7 +44,9 @@ namespace strata
 				tiny::draw::StaticMesh * createFlatLayer(float size, unsigned int ndivs, float height = 0.0f)
 				{
 					mesh.createFlatLayer(size, ndivs, height);
-					return new tiny::draw::StaticMesh(tiny::mesh::StaticMesh::createCubeMesh(0.5f));
+					
+					return new tiny::draw::StaticMesh( mesh.convertToMesh(size) );
+//					return new tiny::draw::StaticMesh(tiny::mesh::StaticMesh::createCubeMesh(0.5f));
 				}
 			public:
 				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Layer> &tc, core::intf::RenderInterface * _renderer,

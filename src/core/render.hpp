@@ -99,7 +99,7 @@ namespace strata
 				RenderManager(intf::ApplInterface * _interface) :
 					intf::RenderInterface(),
 					applInterface(_interface),
-					cameraPosition(tiny::vec3(0.001f, 0.001f, 3.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true),
+					cameraPosition(tiny::vec3(0.001f, 2.001f, 3.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true),
 					worldRenderer(new tiny::draw::WorldRenderer(applInterface->getScreenWidth(), applInterface->getScreenHeight()))
 				{
 				}

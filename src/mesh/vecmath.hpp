@@ -32,6 +32,8 @@ namespace strata
 
 		inline float dot(const tiny::vec3 &a, const tiny::vec3 &b) { return tiny::dot(a,b); }
 
+		/** Rotate a vector around another vector.
+		  * Origin: http://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula */
 		inline tiny::vec3 rot(const tiny::vec3 &v, tiny::vec3 axis, float angle)
 		{
 			if( std::fabs(length2(axis)-1.0f)>0.001f) normalize(axis);

@@ -81,6 +81,8 @@ namespace strata
 				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit);
 
+				tiny::mesh::StaticMesh convertToMesh(float size);
+
 				/** Add a vertex and return the xVert reference to that vertex. */
 				xVert addVertex(const Vertex &v) { ve.push_back( vertices.size() ); vertices.push_back(v); vertices.back().index = ve.size()-1; return ve.size()-1; }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }

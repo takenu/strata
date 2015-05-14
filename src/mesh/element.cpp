@@ -88,3 +88,21 @@ void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
 	while(plist.size() > 0) { createFlatLayerPolygon(plist, plist.front().a, plist.front().b, size/2); plist.pop_front(); }
 	printLists();
 }
+
+tiny::mesh::StaticMesh MeshBundle::convertToMesh(float size)
+{
+	tiny::mesh::StaticMesh mesh;
+	for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
+				tiny::vec2(vertices[i].pos.z/size + 0.5, vertices[i].pos.x/size + 0.5), // texture coordinate
+				tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
+				tiny::vec3(0.0f,1.0f,0.0f), // normal
+				vertices[i].pos ) ); // position
+	for(unsigned int i = 1; i < polygons.size(); i++)
+	{
+		mesh.indices.push_back( ve[polygons[i].c] - 1 ); // -1 because vertices[0] is the error value and the mesh doesn't have that so it's shifted by 1
+		mesh.indices.push_back( ve[polygons[i].b] - 1 ); // Note that we add polygons in reverse order because OpenGL likes them counterclockwise
+		mesh.indices.push_back( ve[polygons[i].a] - 1 );
+	}
+
+	return mesh;
+}
