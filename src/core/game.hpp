@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/os/sdlapplication.h>
 
-#include "../selene.h" // for Selene, C++11 Lua interface library. Include before Lua (it defines compatibility with Lua 5.2)
+#include <selene.h> // for Selene, C++11 Lua interface library. Include before Lua (it defines compatibility with Lua 5.2)
 
 extern "C" {
 #include <lua.h>
