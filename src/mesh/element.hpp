@@ -75,11 +75,13 @@ namespace strata
 				std::vector<xVert> ve;
 				std::vector<xPoly> po;
 
+				long unsigned int polyAttempts;
+
 				/** At construction, add error values for polygons and vertices. */
-				MeshBundle(void) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); }
+				MeshBundle(void) : polyAttempts(0) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); }
 
 				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f);
-				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit);
+				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
 
 				tiny::mesh::StaticMesh convertToMesh(float size);
 
@@ -105,7 +107,7 @@ namespace strata
 				  * It remains to be seen whether it is fast enough. However, it's only to be used in constructing new layers, not in modifying
 				  * existing ones.
 				  */
-				inline xVert findNeighbor(const tiny::vec3 &p, const Vertex & v, float eps = 0.00001f)
+				inline xVert findNeighbor(const tiny::vec3 &p, const Vertex & v, float eps = 0.0001f)
 				{
 					xVert x = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
@@ -116,10 +118,29 @@ namespace strata
 							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].a ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].a; break;}
 							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].b ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].b; break;}
 							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].c ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].c; break;}
+							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].a ]].pos - p ) < 0.01f )
+							{
+								std::cout << " unexpected neighbor pos at "<<vertices[ve[ polygons[po[v.poly[i]]].a ]].pos<<" far from "<<p<<std::endl;
+								x = polygons[po[v.poly[i]]].a; break;
+							}
 						}
 					}
+					if(x != 0) vertices[ve[x]].pos = (vertices[ve[x]].pos + p)*0.5; // Use mixing: if position slightly deviates from expected, adjust to middle
 					return x;
 				}
+
+				/** Find a neighbouring vertex based on an edge.
+				  *
+				  * This function returns the vertex on the other side of the first edge radiating away from 'v' in a clockwise fashion, measured starting from j.
+				  */
+/*				inline Vertex & findNeighborVertex(const tiny::vec3 &p, const Vertex & v, bool clockwise)
+				{
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(v.poly[i]==0) break;
+						else
+						{
+				}*/
 
 				/** Compare two polygons. Return 'true' if they contain the same vertices in the same (clockwise) order. */
 				inline bool comparePolygons(xVert a, xVert b, Polygon & k)
@@ -130,20 +151,21 @@ namespace strata
 					else return false;
 				}
 
-				void addPolygon(Vertex &a, Vertex &b, Vertex &c)
+				bool addPolygon(Vertex &a, Vertex &b, Vertex &c)
 				{
 					// check whether polygon exists (by using a's list)
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return; // Polygon found
+						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return false; // Polygon found
 					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
-					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return; }
+					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
 					po.push_back( polygons.size() );
 					polygons.push_back( Polygon(a.index, b.index, c.index) );
 					polygons.back().index = po.size()-1;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { a.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { b.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
-					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<std::endl;
+//					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<std::endl;
+					return true;
 				}
 
 				void printLists(void)
@@ -152,8 +174,25 @@ namespace strata
 					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
 					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<", "; std::cout << std::endl;
 					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
-					std::cout << " polygons: "; for(unsigned int i = 0; i < polygons.size(); i++) std::cout << i << ":"<<polygons[i]<<", "; std::cout << std::endl;
-					std::cout << " polygon index: "; for(unsigned int i = 0; i < po.size(); i++) std::cout << i << ":"<<po[i]<<", "; std::cout << std::endl;
+				}
+
+				void printDifferentials(const tiny::vec3 & v, float div)
+				{
+					float dummy;
+					std::cout << "(" << std::modf(v.x*div*sqrt(3.0f),&dummy)<<","<<std::modf(v.y*div, &dummy)<<","<<std::modf(v.z*div, &dummy)<<"), ";
+				}
+
+				void printPolygons(float step, unsigned int iterstep = 1)
+				{
+					float div = 0.5f/step;
+					std::cout << " polygons: ";
+					for(unsigned int i = 0; i < polygons.size(); i+=iterstep)
+					{
+						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
+						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
+						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
+						std::cout << std::endl;
+					}
 				}
 		};
 	}

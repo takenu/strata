@@ -49,44 +49,63 @@ using namespace strata::mesh;
 
 /** An instruction to create a polygon a-b-c (clockwise). Other polygons to be created are added to the list.
   */
-void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVert _b, float limit)
+void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVert _b, float limit, float step)
 {
+	++polyAttempts;
 	Vertex & a = vertices[ve[_a]];
 	Vertex & b = vertices[ve[_b]];
 	tiny::vec3 ab(b.pos-a.pos);
-	tiny::vec3 bc = roty(ab,-3.1415926535f*0.6666666667f); // a rotation of 120 degrees or 2pi/3
+/*	tiny::vec3 bc = roty(ab,-3.1415926535*0.6666666667); // a rotation of 120 degrees or 2pi/3
 	if( std::max(std::fabs((b.pos+bc).x),std::fabs((b.pos+bc).z)) > limit ) return; // Don't make polygons whose vertices are outside of the limit
 	xVert _c = findNeighbor(b.pos+bc, b); // find neighbor of 'b' at c pos
 	if(_c == 0) _c = findNeighbor(b.pos+bc, a); // try 'a' too
-	if(_c == 0) _c = addVertex(b.pos+bc); // add new vertex if neither a nor b have a neighbor at c's pos
-	Vertex & c = vertices[ve[_c]];
-	addPolygon(a,b,c); // add the polygon. It may already exist but then this call is just ignored.
+	if(_c == 0) _c = addVertex(b.pos+bc); // add new vertex if neither a nor b have a neighbor at c's pos*/
+	ab = normalize(ab)*step;
+	tiny::vec3 cpos = a.pos + ab*0.5 + tiny::vec3(-ab.z, 0.0f, ab.x)*sqrt(3.0)*0.5;
+	std::cout << " dist diff to step: "<<step-length(cpos-b.pos)<<","<<step-length(cpos-a.pos)<<std::endl;
+	if( std::max(std::fabs(cpos.x),std::fabs(cpos.z)) > limit ) return; // Don't make polygons whose vertices are outside of the limit
+	xVert _c = findNeighbor(cpos, b); // find neighbor of 'b' at c pos
+	if(_c == 0) _c = findNeighbor(cpos, a); // try 'a' too
+	if(_c == 0) _c = addVertex(cpos); // add new vertex if neither a nor b have a neighbor at c's pos*/
 
-//	std::cout << " going to list new pairs for polygon "<<a.index<<","<<b.index<<","<<c.index<<std::endl;
-	// check whether polygon added has ab as a horizontal line (note that in this case b.z < a.z in this case because of clockwise-ness) or is a \ side (note the xor):
-	if( a.pos.z > b.pos.z + 0.9*length(ab) || ( (b.pos.x > a.pos.x) != (b.pos.z > a.pos.z) ))
-	{ plist.push_back( VertPair(a.index, c.index) ); plist.push_back( VertPair(c.index, b.index) ); }
-	else
+	Vertex & c = vertices[ve[_c]];
+	if(addPolygon(a,b,c)) // add the polygon. It may already exist but then this call is just ignored.
 	{
-		if(a.pos.z > b.pos.z) plist.push_back( VertPair(a.index, c.index) ); // the to-the-left-of (/) case: add to the top
-		else plist.push_back( VertPair(c.index, b.index) ); // the to-the-right-of (/) case: add to the right
+//		std::cout << " going to list new pairs for polygon "<<a.index<<","<<b.index<<","<<c.index<<std::endl;
+		// check whether polygon added has ab as a horizontal line (note that in this case b.z < a.z in this case because of clockwise-ness) or is a \ side (note the xor):
+		if( a.pos.z > b.pos.z + 0.9*length(ab) || ( (b.pos.x > a.pos.x) != (b.pos.z > a.pos.z) ))
+		{ plist.push_back( VertPair(a.index, c.index) ); plist.push_back( VertPair(c.index, b.index) ); }
+		else
+		{
+			if(a.pos.z > b.pos.z) plist.push_back( VertPair(a.index, c.index) ); // the to-the-left-of (/) case: add to the top
+			else plist.push_back( VertPair(c.index, b.index) ); // the to-the-right-of (/) case: add to the right
+		}
+//		std::cout << " Printing plist: "; for(unsigned int i = 0; i < plist.size(); i++) std::cout << "("<<plist[i].a<<","<<plist[i].b<<"), "; std::cout << std::endl;
+		if( (polygons.size()%100)==0) std::cout << " Added "<<polygons.size()<<" polygons so far. "<<std::endl;
 	}
-//	std::cout << " Printing plist: "; for(unsigned int i = 0; i < plist.size(); i++) std::cout << "("<<plist[i].a<<","<<plist[i].b<<"), "; std::cout << std::endl;
 }
 
 void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
 {
 	float step = size/ndivs;
-	Vertex v1(-size/2, height, -size/2);
-	Vertex v2(-size/2, height, -size/2 + step);
+	float xstart = floor(size/(2*step*sqrt(0.75)))*(step*sqrt(0.75));
+	Vertex v1(-xstart, height, -size/2);
+	Vertex v2(-xstart, height, -size/2 + step);
 	xVert b = addVertex(v1);
 	xVert a = addVertex(v2);
 	printLists();
 
 	std::deque<VertPair> plist;
 	plist.push_back( VertPair(a,b) );
-	while(plist.size() > 0) { createFlatLayerPolygon(plist, plist.front().a, plist.front().b, size/2); plist.pop_front(); }
-	printLists();
+	while(plist.size() > 0)
+	{
+		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*size/2, step);
+		plist.pop_front();
+		if(polygons.size() > 4 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
+	}
+//	printLists();
+	printPolygons(step, 100);
+	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
 tiny::mesh::StaticMesh MeshBundle::convertToMesh(float size)
