@@ -1,4 +1,5 @@
 /*
+This file is part of Chathran Strata: https://github.com/takenu/strata
 Copyright 2015, Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
@@ -20,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 
 #include <tiny/math/vec.h>
+
+#include "vecmath.hpp"
 
 #define STRATA_VERTEX_MAX_LINKS 12
 
@@ -65,7 +68,9 @@ namespace strata
 			VertPair(xVert _a, xVert _b) : a(_a), b(_b) {}
 		};
 
-		/** A mesh, consisting of vertices and polygons that link the vertices together. */
+		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
+		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
+		  */
 		class MeshBundle
 		{
 			public:
@@ -100,6 +105,59 @@ namespace strata
 					ve[j] = 0; // remove from index list
 				}
 
+				/** Compare two polygons. Return 'true' if they contain the same vertices in the same (clockwise) order. */
+				inline bool comparePolygons(xVert a, xVert b, Polygon & k)
+				{
+					if(a == k.a) return (b == k.b); // if a and b are the same vertices for both polygons, c must be as well
+					else if(a == k.b) return (b == k.c);
+					else if(a == k.c) return (b == k.a);
+					else return false;
+				}
+
+				bool addPolygon(Vertex &a, Vertex &b, Vertex &c)
+				{
+					// check whether polygon exists (by using a's list)
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return false; // Polygon found
+					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
+					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
+					po.push_back( polygons.size() );
+					polygons.push_back( Polygon(a.index, b.index, c.index) );
+					polygons.back().index = po.size()-1;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { a.poly[i] = po.size()-1; break; }
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { b.poly[i] = po.size()-1; break; }
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
+//					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<", indices "<<polygons.back()<<std::endl;
+					return true;
+				}
+
+				void printLists(void)
+				{
+					std::cout << " Printing MeshBundle lists: "<<std::endl;
+					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<", "; std::cout << std::endl;
+					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
+				}
+
+				void printDifferentials(const tiny::vec3 & v, float div)
+				{
+					float dummy;
+					std::cout << "(" << std::modf(v.x*div*sqrt(3.0f),&dummy)<<","<<std::modf(v.y*div, &dummy)<<","<<std::modf(v.z*div, &dummy)<<"), ";
+				}
+
+				void printPolygons(float step, unsigned int iterstep = 1)
+				{
+					float div = 0.5f/step;
+					std::cout << " polygons: ";
+					for(unsigned int i = 0; i < polygons.size(); i+=iterstep)
+					{
+						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
+						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
+						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
+						std::cout << std::endl;
+					}
+				}
+			private:
 				/** Find a neighbouring vertex based on a position. If the vertex exists and a link exists between it and v, then a
 				  * polygon should exist which has both v and the desired vertex. It compares vertices with a squared-diff tolerance 'eps'.
 				  *
@@ -129,70 +187,49 @@ namespace strata
 					return x;
 				}
 
+				/** Get a (non-normalized) normal vector for a polygon. */
+				inline tiny::vec3 polyNormal(const Polygon &p) { return cross( vertices[ve[p.c]].pos-vertices[ve[p.a]].pos, vertices[ve[p.b]].pos-vertices[ve[p.a]].pos); }
+
 				/** Find a neighbouring vertex based on an edge.
 				  *
-				  * This function returns the vertex on the other side of the first edge radiating away from 'v' in a clockwise fashion, measured starting from j.
+				  * This function returns the vertex on the other side of the first edge radiating away from 'v' in a (counter)clockwise fashion, measured starting from j.
+				  * It does this by trying to find the highest dot (inner) product among all vectors with a positive (or negative, for counterclockwise) cross product.
+				  * If no neighbor is found with an angle less than 90 degrees (measured from the v-j vector) then 0 is returned (the non-existing vertex).
+				  *
+				  * Note that length is ignored, the algorithm doesn't care much how far it has to look to find a vertex in the right direction. However, it's guaranteed that
+				  * it's already connected by a polygon also connecting to j, so the resulting polygon won't be much bigger than one already existing.
 				  */
-/*				inline Vertex & findNeighborVertex(const tiny::vec3 &p, const Vertex & v, bool clockwise)
+				inline xVert findNeighborVertex(const Vertex &j, const Vertex & v, bool clockwise)
 				{
+					float bestInnerProd = 0.0f;
+					xVert vert = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
 						if(v.poly[i]==0) break;
 						else
 						{
-				}*/
-
-				/** Compare two polygons. Return 'true' if they contain the same vertices in the same (clockwise) order. */
-				inline bool comparePolygons(xVert a, xVert b, Polygon & k)
-				{
-					if(a == k.a) return (b == k.b); // if a and b are the same vertices for both polygons, c must be as well
-					else if(a == k.b) return (b == k.c);
-					else if(a == k.c) return (b == k.a);
-					else return false;
-				}
-
-				bool addPolygon(Vertex &a, Vertex &b, Vertex &c)
-				{
-					// check whether polygon exists (by using a's list)
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return false; // Polygon found
-					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
-					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
-					po.push_back( polygons.size() );
-					polygons.push_back( Polygon(a.index, b.index, c.index) );
-					polygons.back().index = po.size()-1;
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { a.poly[i] = po.size()-1; break; }
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { b.poly[i] = po.size()-1; break; }
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
-//					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<std::endl;
-					return true;
-				}
-
-				void printLists(void)
-				{
-					std::cout << " Printing MeshBundle lists: "<<std::endl;
-					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<", "; std::cout << std::endl;
-					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
-				}
-
-				void printDifferentials(const tiny::vec3 & v, float div)
-				{
-					float dummy;
-					std::cout << "(" << std::modf(v.x*div*sqrt(3.0f),&dummy)<<","<<std::modf(v.y*div, &dummy)<<","<<std::modf(v.z*div, &dummy)<<"), ";
-				}
-
-				void printPolygons(float step, unsigned int iterstep = 1)
-				{
-					float div = 0.5f/step;
-					std::cout << " polygons: ";
-					for(unsigned int i = 0; i < polygons.size(); i+=iterstep)
-					{
-						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
-						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
-						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
-						std::cout << std::endl;
+							Vertex & w = vertices[ve[ findPolyNeighbor(polygons[po[v.poly[i]]],v.index,clockwise) ]];
+							float innerProd = dot(j.pos - v.pos, normalize(w.pos - v.pos));
+							if(innerProd > bestInnerProd && w.index != j.index) // skip j itself, it can show up if another polygon already exists on the other side
+							{
+								if( (dot(cross( w.pos - v.pos, j.pos - v.pos ),polyNormal(polygons[po[v.poly[i]]]) ) < 0.0f) != clockwise ) // note the inequality on two bools to generate XOR-like behavior
+								{
+//									std::cout << " j="<<j.index<<", v="<<v.index<<", w="<<w.index<<", innerprod="<<innerProd<<" cross="<<cross(w.pos-v.pos, j.pos-v.pos)<<"norm="<<polyNormal(polygons[po[v.poly[i]]])<<std::endl;
+									bestInnerProd = innerProd;
+									vert = w.index;
+								}
+							}
+						}
 					}
+					return vert;
+				}
+
+				/** Find a neighbor vertex in a polygon. This function gives nonsensical output if you call it for a vertex not part of this polygon. */
+				inline const xVert & findPolyNeighbor(const Polygon &p, const xVert &v, bool clockwise)
+				{
+					return (p.a == v ? (clockwise ? p.b : p.c) :
+							(p.b == v ? (clockwise ? p.c : p.a) :
+							 			 (clockwise ? p.a : p.b) ) );
 				}
 		};
 	}

@@ -1,4 +1,5 @@
 /*
+This file is part of Chathran Strata: https://github.com/takenu/strata
 Copyright 2015, Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
@@ -62,11 +63,14 @@ void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, 
 	if(_c == 0) _c = addVertex(b.pos+bc); // add new vertex if neither a nor b have a neighbor at c's pos*/
 	ab = normalize(ab)*step;
 	tiny::vec3 cpos = a.pos + ab*0.5 + tiny::vec3(-ab.z, 0.0f, ab.x)*sqrt(3.0)*0.5;
-	std::cout << " dist diff to step: "<<step-length(cpos-b.pos)<<","<<step-length(cpos-a.pos)<<std::endl;
+//	std::cout << " dist diff to step: "<<step-length(cpos-b.pos)<<","<<step-length(cpos-a.pos)<<std::endl;
 	if( std::max(std::fabs(cpos.x),std::fabs(cpos.z)) > limit ) return; // Don't make polygons whose vertices are outside of the limit
-	xVert _c = findNeighbor(cpos, b); // find neighbor of 'b' at c pos
+/*	xVert _c = findNeighbor(cpos, b); // find neighbor of 'b' at c pos
 	if(_c == 0) _c = findNeighbor(cpos, a); // try 'a' too
-	if(_c == 0) _c = addVertex(cpos); // add new vertex if neither a nor b have a neighbor at c's pos*/
+	if(_c == 0) _c = addVertex(cpos); // add new vertex if neither a nor b have a neighbor at c's pos */
+	xVert _c = findNeighborVertex(b, a, true); // find neighbor of 'a'
+	if(_c == 0) _c = findNeighborVertex(a, b, false); // find neighbor of 'b' (now we must look counterclockwise)
+	if(_c == 0) _c = addVertex(cpos); // If no suitable neighbors exist, make a vertex right in the middle and at the usual grid distance (such that the polygon will be equilateral)
 
 	Vertex & c = vertices[ve[_c]];
 	if(addPolygon(a,b,c)) // add the polygon. It may already exist but then this call is just ignored.
@@ -101,7 +105,7 @@ void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
 	{
 		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*size/2, step);
 		plist.pop_front();
-		if(polygons.size() > 4 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
+		if(polygons.size() > 10 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
 	}
 //	printLists();
 	printPolygons(step, 100);

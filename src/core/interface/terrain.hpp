@@ -1,4 +1,5 @@
 /*
+This file is part of Chathran Strata: https://github.com/takenu/strata
 Copyright 2015, Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
