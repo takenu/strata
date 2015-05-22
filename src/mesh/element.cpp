@@ -72,8 +72,10 @@ void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, 
 	if(_c == 0) _c = findNeighborVertex(a, b, false); // find neighbor of 'b' (now we must look counterclockwise)
 	if(_c == 0) _c = addVertex(cpos); // If no suitable neighbors exist, make a vertex right in the middle and at the usual grid distance (such that the polygon will be equilateral)
 
+	Vertex & a2 = vertices[ve[_a]]; // refresh reference (might be broken after adding vertex because of vector resize, somehow "a = vertices[ve[_a]]" fails)
+	Vertex & b2 = vertices[ve[_b]]; // refresh also
 	Vertex & c = vertices[ve[_c]];
-	if(addPolygon(a,b,c)) // add the polygon. It may already exist but then this call is just ignored.
+	if(addPolygon(a2,b2,c)) // add the polygon. It may already exist but then this call is just ignored.
 	{
 //		std::cout << " going to list new pairs for polygon "<<a.index<<","<<b.index<<","<<c.index<<std::endl;
 		// check whether polygon added has ab as a horizontal line (note that in this case b.z < a.z in this case because of clockwise-ness) or is a \ side (note the xor):
@@ -106,9 +108,10 @@ void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
 		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*size/2, step);
 		plist.pop_front();
 		if(polygons.size() > 10 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
+//		if(polygons.size()>9) break;
 	}
 //	printLists();
-	printPolygons(step, 100);
+//	printPolygons(step, 100);
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 

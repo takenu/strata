@@ -43,6 +43,8 @@ namespace strata
 
 			Vertex(const tiny::vec3 &p) : pos(p), index(0) { for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = 0; }
 			Vertex(float x, float y, float z) : pos(x,y,z), index(0) { for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = 0; }
+
+			Vertex & operator= (const Vertex &v) { pos = v.pos; index = v.index; for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = v.poly[i]; return *this; }
 		};
 
 		/** A polygon, for being part of a mesh. */
@@ -57,6 +59,7 @@ namespace strata
 			Polygon(xVert _a, xVert _b, xVert _c) : a(_a), b(_b), c(_c) {}
 		};
 
+		inline std::ostream & operator<< (std::ostream &s, const Vertex &v) { s << v.index; return s; }
 		inline std::ostream & operator<< (std::ostream &s, const Polygon &p) { s << "("<<p.a<<","<<p.b<<","<<p.c<<")"; return s; }
 
 		/** A helper struct for keeping a list of vertex pairs. */
@@ -83,7 +86,7 @@ namespace strata
 				long unsigned int polyAttempts;
 
 				/** At construction, add error values for polygons and vertices. */
-				MeshBundle(void) : polyAttempts(0) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); }
+				MeshBundle(void) : polyAttempts(0) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); po.push_back(0); }
 
 				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
@@ -91,7 +94,13 @@ namespace strata
 				tiny::mesh::StaticMesh convertToMesh(float size);
 
 				/** Add a vertex and return the xVert reference to that vertex. */
-				xVert addVertex(const Vertex &v) { ve.push_back( vertices.size() ); vertices.push_back(v); vertices.back().index = ve.size()-1; return ve.size()-1; }
+				xVert addVertex(const Vertex &v)
+				{
+					ve.push_back( vertices.size() );
+					vertices.push_back(v);
+					vertices.back().index = ve.size()-1;
+					return ve.size()-1;
+				}
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 
@@ -124,9 +133,13 @@ namespace strata
 					po.push_back( polygons.size() );
 					polygons.push_back( Polygon(a.index, b.index, c.index) );
 					polygons.back().index = po.size()-1;
+//					std::cout << " new polygon at vertices "<<&a<<", "<<&b<<", "<<&c<<std::endl; printLists();
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { a.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { b.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
+//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<a.index<<std::endl; a.poly[i] = po.size()-1; break; }
+//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<b.index<<std::endl; b.poly[i] = po.size()-1; break; }
+//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<c.index<<std::endl; c.poly[i] = po.size()-1; break; }
 //					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<", indices "<<polygons.back()<<std::endl;
 					return true;
 				}
@@ -135,8 +148,15 @@ namespace strata
 				{
 					std::cout << " Printing MeshBundle lists: "<<std::endl;
 					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<", "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
 					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
+					std::cout << " vertex polys: "<<std::endl;
+					for(unsigned int i = 0; i < vertices.size(); i++)
+					{
+						std::cout << " vertex "<<i<<": index = "<<vertices[i].index<<", polys = ";
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++) std::cout << vertices[i].poly[j] << ", ";
+						std::cout << std::endl;
+					}
 				}
 
 				void printDifferentials(const tiny::vec3 & v, float div)
@@ -153,7 +173,7 @@ namespace strata
 					{
 						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
 						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
-						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
+//						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
 						std::cout << std::endl;
 					}
 				}
@@ -203,6 +223,7 @@ namespace strata
 				{
 					float bestInnerProd = 0.0f;
 					xVert vert = 0;
+//					std::cout << " findNeighborVertex() : finding neighbor for "<<j<<" and "<<v<<" in "<<(clockwise?"":"counter")<<"clockwise direction..."<<std::endl;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
 						if(v.poly[i]==0) break;
@@ -210,6 +231,8 @@ namespace strata
 						{
 							Vertex & w = vertices[ve[ findPolyNeighbor(polygons[po[v.poly[i]]],v.index,clockwise) ]];
 							float innerProd = dot(j.pos - v.pos, normalize(w.pos - v.pos));
+//							std::cout << " poly "<<i<<": vertex="<<w.index<<" third="<<findPolyNeighbor(polygons[po[v.poly[i]]],v.index,!clockwise)<<" dotpr="<<innerProd
+//								<<" dotcr="<<dot(cross( w.pos - v.pos, j.pos - v.pos ),polyNormal(polygons[po[v.poly[i]]]) )<<std::endl;
 							if(innerProd > bestInnerProd && w.index != j.index) // skip j itself, it can show up if another polygon already exists on the other side
 							{
 								if( (dot(cross( w.pos - v.pos, j.pos - v.pos ),polyNormal(polygons[po[v.poly[i]]]) ) < 0.0f) != clockwise ) // note the inequality on two bools to generate XOR-like behavior

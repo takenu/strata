@@ -38,7 +38,7 @@ namespace strata
 			public:
 				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), layercounter(0), layers((long unsigned int)(-1), "LayerTC")
 				{
-					new Layer(++layercounter, layers, renderer, 100.0f, 30);
+					new Layer(++layercounter, layers, renderer, 100.0f, 100);
 				}
 
 				~Terrain(void)
