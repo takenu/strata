@@ -133,14 +133,9 @@ namespace strata
 					po.push_back( polygons.size() );
 					polygons.push_back( Polygon(a.index, b.index, c.index) );
 					polygons.back().index = po.size()-1;
-//					std::cout << " new polygon at vertices "<<&a<<", "<<&b<<", "<<&c<<std::endl; printLists();
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { a.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { b.poly[i] = po.size()-1; break; }
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
-//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(a.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<a.index<<std::endl; a.poly[i] = po.size()-1; break; }
-//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(b.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<b.index<<std::endl; b.poly[i] = po.size()-1; break; }
-//					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { std::cout << " put poly["<<i<<"] to "<<po.size()-1<<" for vertex "<<c.index<<std::endl; c.poly[i] = po.size()-1; break; }
-//					std::cout << " Created polygon: vertices="<<a.pos<<"->"<<b.pos<<"->"<<c.pos<<", indices "<<polygons.back()<<std::endl;
 					return true;
 				}
 
@@ -173,7 +168,6 @@ namespace strata
 					{
 						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
 						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
-//						printDifferentials(vertices[ve[polygons[i].b]].pos,div); printDifferentials(vertices[ve[polygons[i].c]].pos,div);
 						std::cout << std::endl;
 					}
 				}
@@ -223,7 +217,6 @@ namespace strata
 				{
 					float bestInnerProd = 0.0f;
 					xVert vert = 0;
-//					std::cout << " findNeighborVertex() : finding neighbor for "<<j<<" and "<<v<<" in "<<(clockwise?"":"counter")<<"clockwise direction..."<<std::endl;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
 						if(v.poly[i]==0) break;
@@ -231,13 +224,10 @@ namespace strata
 						{
 							Vertex & w = vertices[ve[ findPolyNeighbor(polygons[po[v.poly[i]]],v.index,clockwise) ]];
 							float innerProd = dot(j.pos - v.pos, normalize(w.pos - v.pos));
-//							std::cout << " poly "<<i<<": vertex="<<w.index<<" third="<<findPolyNeighbor(polygons[po[v.poly[i]]],v.index,!clockwise)<<" dotpr="<<innerProd
-//								<<" dotcr="<<dot(cross( w.pos - v.pos, j.pos - v.pos ),polyNormal(polygons[po[v.poly[i]]]) )<<std::endl;
 							if(innerProd > bestInnerProd && w.index != j.index) // skip j itself, it can show up if another polygon already exists on the other side
 							{
 								if( (dot(cross( w.pos - v.pos, j.pos - v.pos ),polyNormal(polygons[po[v.poly[i]]]) ) < 0.0f) != clockwise ) // note the inequality on two bools to generate XOR-like behavior
 								{
-//									std::cout << " j="<<j.index<<", v="<<v.index<<", w="<<w.index<<", innerprod="<<innerProd<<" cross="<<cross(w.pos-v.pos, j.pos-v.pos)<<"norm="<<polyNormal(polygons[po[v.poly[i]]])<<std::endl;
 									bestInnerProd = innerProd;
 									vert = w.index;
 								}
