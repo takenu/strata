@@ -32,7 +32,25 @@ namespace strata
 {
 	namespace mesh
 	{
+		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
+		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order
+		  * to reduce layer size when desirable.
+		  * Stitches are more general and less coherent than layers since they define polygons that incorporate vertices
+		  * belonging to adjacent objects (layers and other stitches). */
+		class Stitch : public tiny::algo::TypeClusterObject<long unsigned int, Stitch>
+		{
+			private:
+			public:
+				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Stitch> &tc, core::intf::RenderInterface * _renderer) :
+					tiny::algo::TypeClusterObject<long unsigned int, Stitch>(id, this, tc)
+				{
+				}
+		};
 
+		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
+		  * It is visible thanks to it owning a renderMesh object. It uses a MeshBundle to define its mesh
+		  * where necessary. However, the Layer can also inherit all points from the layer under it, in the
+		  * process becoming a subordinate layer to it. In this case it defines only its edge and thickness. */
 		class Layer : public tiny::algo::TypeClusterObject<long unsigned int, Layer>
 		{
 			private:
