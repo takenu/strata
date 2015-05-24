@@ -33,12 +33,13 @@ namespace strata
 			private:
 				core::intf::RenderInterface * renderer;
 
-				long unsigned int layercounter;
-				tiny::algo::TypeCluster<long unsigned int, Layer> layers;
+				long unsigned int meshcounter;
+				tiny::algo::TypeCluster<long unsigned int, MeshFragment> meshes;
 			public:
-				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), layercounter(0), layers((long unsigned int)(-1), "LayerTC")
+				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), meshcounter(0), meshes((long unsigned int)(-1), "MeshFragmentTC")
 				{
-					new Layer(++layercounter, layers, renderer, 100.0f, 100);
+					Layer * baselayer = new Layer(++meshcounter, meshes, renderer);
+					baselayer->createFlatLayer(100.0f, 100, 0.0f);
 				}
 
 				~Terrain(void)

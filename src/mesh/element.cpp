@@ -80,12 +80,13 @@ void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, 
 	}
 }
 
-void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
+void MeshBundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 {
-	float step = size/ndivs;
-	float xstart = floor(size/(2*step*sqrt(0.75)))*(step*sqrt(0.75));
-	Vertex v1(-xstart, height, -size/2);
-	Vertex v2(-xstart, height, -size/2 + step);
+	scale = _size;
+	float step = scale/ndivs;
+	float xstart = floor(scale/(2*step*sqrt(0.75)))*(step*sqrt(0.75));
+	Vertex v1(-xstart, height, -scale/2);
+	Vertex v2(-xstart, height, -scale/2 + step);
 	xVert b = addVertex(v1);
 	xVert a = addVertex(v2);
 	printLists();
@@ -94,18 +95,18 @@ void MeshBundle::createFlatLayer(float size, unsigned int ndivs, float height)
 	plist.push_back( VertPair(a,b) );
 	while(plist.size() > 0)
 	{
-		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*size/2, step);
+		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*scale/2, step);
 		plist.pop_front();
 		if(polygons.size() > 10 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
 	}
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
-tiny::mesh::StaticMesh MeshBundle::convertToMesh(float size)
+tiny::mesh::StaticMesh MeshBundle::convertToMesh(void)
 {
 	tiny::mesh::StaticMesh mesh;
 	for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
-				tiny::vec2(vertices[i].pos.z/size + 0.5, vertices[i].pos.x/size + 0.5), // texture coordinate
+				tiny::vec2(vertices[i].pos.z/scale + 0.5, vertices[i].pos.x/scale + 0.5), // texture coordinate
 				tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
 				tiny::vec3(0.0f,1.0f,0.0f), // normal
 				vertices[i].pos ) ); // position

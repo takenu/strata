@@ -32,17 +32,41 @@ namespace strata
 {
 	namespace mesh
 	{
+		class MeshFragment : public tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>
+		{
+			private:
+			protected:
+				core::intf::RenderInterface * renderer;
+				tiny::draw::StaticMesh * renderMesh;
+				tiny::draw::RGBTexture2D * texture;
+
+				void initMesh(MeshBundle * mesh)
+				{
+					renderMesh = new tiny::draw::StaticMesh( mesh->convertToMesh() );
+					renderMesh->setDiffuseTexture(*texture);
+					renderer->addWorldRenderable(renderMesh);
+				}
+			public:
+				MeshFragment(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
+					tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>(id, this, tc),
+					renderer(_renderer),
+					renderMesh(0),
+					texture(createTestTexture())
+				{
+				}
+		};
+
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
 		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order
 		  * to reduce layer size when desirable.
 		  * Stitches are more general and less coherent than layers since they define polygons that incorporate vertices
 		  * belonging to adjacent objects (layers and other stitches). */
-		class Stitch : public tiny::algo::TypeClusterObject<long unsigned int, Stitch>
+		class Stitch : public MeshFragment
 		{
 			private:
 			public:
-				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Stitch> &tc, core::intf::RenderInterface * _renderer) :
-					tiny::algo::TypeClusterObject<long unsigned int, Stitch>(id, this, tc)
+				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
+					MeshFragment(id, tc, _renderer)
 				{
 				}
 		};
@@ -51,34 +75,24 @@ namespace strata
 		  * It is visible thanks to it owning a renderMesh object. It uses a MeshBundle to define its mesh
 		  * where necessary. However, the Layer can also inherit all points from the layer under it, in the
 		  * process becoming a subordinate layer to it. In this case it defines only its edge and thickness. */
-		class Layer : public tiny::algo::TypeClusterObject<long unsigned int, Layer>
+		class Layer : public MeshFragment
 		{
 			private:
 				MeshBundle mesh;
 
-				core::intf::RenderInterface * renderer;
-				tiny::draw::StaticMesh * renderMesh;
-				tiny::draw::RGBTexture2D * texture;
-				
-				tiny::draw::StaticMesh * createFlatLayer(float size, unsigned int ndivs, float height = 0.0f)
+			public:
+				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
+					MeshFragment(id, tc, _renderer),
+					mesh()
+				{
+				}
+
+				/** Initialize the MeshFragment as a flat, square layer. */
+				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f)
 				{
 					mesh.createFlatLayer(size, ndivs, height);
-					
-					return new tiny::draw::StaticMesh( mesh.convertToMesh(size) );
-//					return new tiny::draw::StaticMesh(tiny::mesh::StaticMesh::createCubeMesh(0.5f));
-				}
-			public:
-				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Layer> &tc, core::intf::RenderInterface * _renderer,
-						float size, unsigned int ndivs) :
-					tiny::algo::TypeClusterObject<long unsigned int, Layer>(id, this, tc),
-					mesh(),
-					renderer(_renderer),
-					renderMesh(0),
-					texture(createTestTexture())
-				{
-					renderMesh = createFlatLayer(size, ndivs);
-					renderMesh->setDiffuseTexture(*texture);
-					renderer->addWorldRenderable(renderMesh);
+
+					initMesh(&mesh);
 				}
 		};
 	}

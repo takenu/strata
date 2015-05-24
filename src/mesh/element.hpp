@@ -84,14 +84,15 @@ namespace strata
 				std::vector<xPoly> po;
 
 				long unsigned int polyAttempts;
+				float scale; /**< Scale factor - coordinates should range from -scale/2 to scale/2 (used for texture coords) */
 
 				/** At construction, add error values for polygons and vertices. */
-				MeshBundle(void) : polyAttempts(0) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); po.push_back(0); }
+				MeshBundle(void) : polyAttempts(0), scale(1.0f) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); po.push_back(0); }
 
-				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f);
+				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
 
-				tiny::mesh::StaticMesh convertToMesh(float size);
+				tiny::mesh::StaticMesh convertToMesh(void);
 
 				/** Add a vertex and return the xVert reference to that vertex. */
 				xVert addVertex(const Vertex &v)
