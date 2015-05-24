@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../core/interface/render.hpp"
 
 #include "element.hpp"
+#include "stitch.hpp"
 #include "texture.hpp"
 
 namespace strata
@@ -35,6 +36,9 @@ namespace strata
 		class MeshFragment : public tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>
 		{
 			private:
+				/** A list of fragments adjacent to the current one. If a vertex is deleted, all adjacent mesh fragments are notified such that
+				  * they can update their mapping. */
+				std::vector<MeshFragment*> adjacentFragments;
 			protected:
 				core::intf::RenderInterface * renderer;
 				tiny::draw::StaticMesh * renderMesh;
@@ -46,6 +50,11 @@ namespace strata
 					renderMesh->setDiffuseTexture(*texture);
 					renderer->addWorldRenderable(renderMesh);
 				}
+
+				/** Purge a vertex, cleaning it from all references. After this operation, the derived class should consider the vertex with
+				  * index "oldVert" belonging to the mesh fragment with id "mfid" as no longer existing. The vertex with index "newVert" is the
+				  * suggested replacement of the old vertex. */
+				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
 			public:
 				MeshFragment(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>(id, this, tc),
@@ -54,6 +63,8 @@ namespace strata
 					texture(createTestTexture())
 				{
 				}
+
+				virtual ~MeshFragment(void) {}
 		};
 
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
@@ -64,6 +75,11 @@ namespace strata
 		class Stitch : public MeshFragment
 		{
 			private:
+				MeshStitch stitch;
+
+				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
+				{
+				}
 			public:
 				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
 					MeshFragment(id, tc, _renderer)
@@ -80,6 +96,7 @@ namespace strata
 			private:
 				MeshBundle mesh;
 
+				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 			public:
 				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
 					MeshFragment(id, tc, _renderer),
