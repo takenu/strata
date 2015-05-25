@@ -29,20 +29,37 @@ namespace strata
 {
 	namespace mesh
 	{
+		class ForeignVertex
+		{
+			public:
+				xVert vertex; /**< The index of the vertex in its own MeshBundle. */
+				long unsigned int mfid; /**< The id of the MeshBundle that owns this  vertex. */
+
+				ForeignVertex(xVert _vertex, long unsigned int _mfid) : vertex(_vertex), mfid(_mfid) {}
+		};
+
 		/** A borrowed vertex from some MeshBundle. */
-		class StitchVertex
+		class StitchVertex : public ForeignVertex
 		{
 			private:
-				xVert vertex; /**< The index of the vertex in its own MeshBundle. */
 				xVert index; /**< The index of the vertex in the MeshStitch. */
-				long unsigned int mfid; /**< The id of the MeshBundle that contains this vertex. */
 			public:
-				StitchVertex(xVert _vertex, long unsigned int _mfid) : vertex(_vertex), mfid(_mfid) {}
+				StitchVertex(xVert _vertex, long unsigned int _mfid) : ForeignVertex(_vertex, _mfid), index(0) {}
 		};
 
 		/** A polygon on StitchedVertices. */
 		class StitchPolygon
 		{
+			private:
+				xVert a; /**< The index of vertex a. Indices use numbering local to the MeshStitch object. */
+				xVert b;
+				xVert c;
+
+				xPoly index; /**< The index of this polygon in the MeshStitch object. */
+			public:
+				StitchPolygon(xVert _a, xVert _b, xVert _c) : a(_a), b(_b), c(_c)
+				{
+				}
 		};
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
@@ -56,6 +73,21 @@ namespace strata
 				std::vector<xVert> ve;
 				std::vector<xPoly> po;
 			public:
+				MeshStitch(void) { vertices.push_back( StitchVertex(0,0) ); polygons.push_back( StitchPolygon(0,0,0) ); po.push_back(0); }
+
+				/** Create a MeshStitch in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
+				void connectMeshes(MeshBundle &a, MeshBundle &b, std::vector<xVert> aVerts);
+		};
+
+		/** A class for stitching together stitch-meshes, using a single polygon. */
+		class MeshStitchJunction
+		{
+			private:
+				ForeignVertex a;
+				ForeignVertex b;
+				ForeignVertex c;
+			public:
+				MeshStitchJunction(const ForeignVertex & _a, const ForeignVertex & _b, const ForeignVertex & _c) : a(_a), b(_b), c(_c) {}
 		};
 	}
 }
