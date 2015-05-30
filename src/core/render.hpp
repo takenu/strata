@@ -89,6 +89,8 @@ namespace strata
 					worldRenderer->addScreenRenderable(renderable, readDepthTex, writeDepthTex, blendMode);
 				}
 
+				virtual void freeRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeRenderable(renderable); }
+
 				// The list-first, add-to-world-renderer-later doesn't seem very necessary - we could skip the RenderableObjectSpecs altogether and
 				// redirect addWorldRenderable() to worldRenderer->addWorldRenderable(). Commented out for now, likely to be deleted later.
 /*				void getRenderables(void)

@@ -60,20 +60,22 @@ namespace strata
 					tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>(id, this, tc),
 					renderer(_renderer),
 					renderMesh(0),
-					texture(createTestTexture())
+					texture(createTestTexture(512,255,0,0))
 				{
 				}
+
+				void resetTexture(MeshBundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b) { delete texture; texture = createTestTexture(_size, _r, _g, _b); renderer->freeRenderable(renderMesh); initMesh(mesh); }
 
 				virtual ~MeshFragment(void) {}
 		};
 
 		/** A Junction is a class for a mesh consisting of a single polygon, which is the point where three layers meet. */
-		class Junction: public MeshFragment
+/*		class Junction: public MeshFragment
 		{
 			private:
 				MeshStitchJunction junction;
 
-				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
+				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert)
 				{
 				}
 			public:
@@ -82,7 +84,7 @@ namespace strata
 					MeshFragment(id, tc, _renderer), junction(_a,_b,_c)
 				{
 				}
-		};
+		};*/
 
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
 		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order

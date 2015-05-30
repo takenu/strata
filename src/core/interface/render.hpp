@@ -80,6 +80,8 @@ namespace strata
 
 					virtual void addScreenRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 							const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
+
+					virtual void freeRenderable(tiny::draw::Renderable * renderable) = 0;
 			};
 		} // end namespace intf
 	} // end namespace core

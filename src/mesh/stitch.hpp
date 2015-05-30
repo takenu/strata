@@ -64,14 +64,9 @@ namespace strata
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
 		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
-		class MeshStitch
+		class MeshStitch : public Mesh<StitchVertex, StitchPolygon>
 		{
 			private:
-				std::vector<StitchVertex> vertices;
-				std::vector<StitchPolygon> polygons;
-
-				std::vector<xVert> ve;
-				std::vector<xPoly> po;
 			public:
 				MeshStitch(void) { vertices.push_back( StitchVertex(0,0) ); polygons.push_back( StitchPolygon(0,0,0) ); po.push_back(0); }
 
@@ -80,7 +75,7 @@ namespace strata
 		};
 
 		/** A class for stitching together stitch-meshes, using a single polygon. */
-		class MeshStitchJunction
+/*		class MeshStitchJunction
 		{
 			private:
 				ForeignVertex a;
@@ -88,6 +83,6 @@ namespace strata
 				ForeignVertex c;
 			public:
 				MeshStitchJunction(const ForeignVertex & _a, const ForeignVertex & _b, const ForeignVertex & _c) : a(_a), b(_b), c(_c) {}
-		};
+		};*/
 	}
 }

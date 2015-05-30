@@ -71,23 +71,33 @@ namespace strata
 			VertPair(xVert _a, xVert _b) : a(_a), b(_b) {}
 		};
 
-		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
-		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
-		  */
-		class MeshBundle
+		template <typename VertexType, typename PolygonType>
+		class Mesh
 		{
 			public:
-				std::vector<Vertex> vertices;
-				std::vector<Polygon> polygons;
+				std::vector<VertexType> vertices;
+				std::vector<PolygonType> polygons;
 
 				std::vector<xVert> ve;
 				std::vector<xPoly> po;
+			protected:
+				Mesh(void) {}
+				virtual ~Mesh(void) { polygons.clear(); vertices.clear(); ve.clear(); po.clear(); }
+		};
 
+		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
+		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
+		  */
+		class MeshBundle : public Mesh<Vertex, Polygon>
+		{
+			public:
 				long unsigned int polyAttempts;
 				float scale; /**< Scale factor - coordinates should range from -scale/2 to scale/2 (used for texture coords) */
 
 				/** At construction, add error values for polygons and vertices. */
 				MeshBundle(void) : polyAttempts(0), scale(1.0f) { vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) ); polygons.push_back( Polygon(0,0,0) ); po.push_back(0); }
+
+				virtual ~MeshBundle(void) {}
 
 				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
