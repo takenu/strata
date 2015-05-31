@@ -29,26 +29,20 @@ namespace strata
 {
 	namespace mesh
 	{
-		class ForeignVertex : public Vertex
+		/** A borrowed vertex from some MeshBundle. */
+		class StitchVertex : public Vertex
 		{
+			private:
 			public:
 				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
-
-				ForeignVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
+				StitchVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
 				{
 					index = _vertex;
 				}
 		};
 
-		/** A borrowed vertex from some MeshBundle. */
-		class StitchVertex : public ForeignVertex
-		{
-			private:
-			public:
-				StitchVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : ForeignVertex(_pos, _vertex, _mfid) {}
-		};
-
-		/** A polygon on StitchedVertices. */
+		/** A polygon on StitchedVertices. Note that the StitchPolygon inherits the Polygon xVert's a, b and c, but
+		  * they index the Stitch object's arrays, such that they actually 'refer' to StitchVertex objects. */
 		class StitchPolygon : public Polygon
 		{
 			private:
