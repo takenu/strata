@@ -102,5 +102,6 @@ void MeshBundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 			break;
 		}
 	}
+//	printLists();
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }

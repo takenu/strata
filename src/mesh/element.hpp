@@ -74,6 +74,14 @@ namespace strata
 
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex.
+		  *
+		  * Note that Mesh objects CANNOT HAVE HOLES in them, they can be strongly warped whatsoever but they must be isomorphic to
+		  * the 2-dimensional unit disk. This requirement is made in order to ease finding the edge: the Mesh is widely assumed
+		  * to have one continuous set of edge vertices. In addition, bottleneck vertices are not allowed (i.e. vertices that have
+		  * four or more outgoing edges that are not adjacent to a polygon). For edge vertices, there should be only two vertices
+		  * along which one can follow the edge of the mesh.
+		  *
+		  * This no-hole no-bottleneck requirement imposes strict limits on vertex deletion.
 		  */
 		template <typename VertexType>
 		class Mesh
@@ -113,11 +121,38 @@ namespace strata
 										   vertices[ve[polygons[po[_p]].b]].pos - vertices[ve[polygons[po[_p]].a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
 				}
 
-				inline bool isEdgeVertex(xVert v)
+				inline bool isEdgeVertex(xVert _v)
 				{
-					if(vertices[ve[v]].poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge
-//					unsigned int verts[2*STRATA_VERTEX_MAX_LINKS];
-					return false;
+					Vertex & v = vertices[ve[_v]];
+					if(v.poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge
+					unsigned int verts[2*STRATA_VERTEX_MAX_LINKS];
+					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) verts[i] = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(v.poly[i]==0) break;
+						else
+						{
+							verts[2*i  ] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, true); // find both neighbours of the present vertex
+							verts[2*i+1] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, false);
+						}
+					}
+//					std::cout << std::endl << " Vertices: "; for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) std::cout << verts[i] << ", "; std::cout << std::endl;
+					bool hasUniqueVertex = false;
+					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(verts[i] == 0) continue; // This is a vertex for which we already found a partner
+						hasUniqueVertex = true;
+						for(unsigned int j = i+1; j < 2*STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(verts[j] == verts[i])
+							{
+								verts[j] = 0;
+								hasUniqueVertex = false;
+							}
+						}
+						if(hasUniqueVertex) break; // Not found, then this is an edge vertex
+					}
+					return hasUniqueVertex;
 				}
 
 				/** Find a vertex on the edge. */
@@ -146,7 +181,7 @@ namespace strata
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 
-				/** Delete a vertex. */
+				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
 				{
 					assert(j < ve.size());
@@ -185,7 +220,7 @@ namespace strata
 				{
 					std::cout << " Printing MeshBundle lists: "<<std::endl;
 					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<(isEdgeVertex(i)?"(E)":"")<<", "; std::cout << std::endl;
 					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
 					std::cout << " vertex polys: "<<std::endl;
 					for(unsigned int i = 0; i < vertices.size(); i++)
