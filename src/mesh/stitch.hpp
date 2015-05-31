@@ -33,6 +33,7 @@ namespace strata
 		class StitchVertex : public Vertex
 		{
 			private:
+				xVert remoteIndex;
 			public:
 				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
 				StitchVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
@@ -41,24 +42,19 @@ namespace strata
 				}
 		};
 
-		/** A polygon on StitchedVertices. Note that the StitchPolygon inherits the Polygon xVert's a, b and c, but
-		  * they index the Stitch object's arrays, such that they actually 'refer' to StitchVertex objects. */
-		class StitchPolygon : public Polygon
-		{
-			private:
-			public:
-				StitchPolygon(xVert _a, xVert _b, xVert _c) : Polygon(_a,_b,_c)
-				{
-				}
-		};
-
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
 		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
-		class MeshStitch : public Mesh<StitchVertex, StitchPolygon>
+		class MeshStitch : public Mesh<StitchVertex>
 		{
 			private:
 			public:
-				MeshStitch(void) { vertices.push_back( StitchVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) ); polygons.push_back( StitchPolygon(0,0,0) ); po.push_back(0); }
+				MeshStitch(void) :
+					Mesh<StitchVertex>()
+				{
+					vertices.push_back( StitchVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) );
+					polygons.push_back( Polygon(0,0,0) );
+				   	po.push_back(0);
+				}
 
 				/** Create a MeshStitch in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(MeshBundle &a, MeshBundle &b, std::vector<xVert> aVerts);

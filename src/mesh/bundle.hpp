@@ -33,13 +33,14 @@ namespace strata
 		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
 		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
 		  */
-		class MeshBundle : public Mesh<Vertex, Polygon>
+		class MeshBundle : public Mesh<Vertex>
 		{
 			public:
 				long unsigned int polyAttempts;
 
 				/** At construction, add error values for polygons and vertices. */
 				MeshBundle(void) :
+					Mesh<Vertex>(),
 					polyAttempts(0)
 				{
 					vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) );

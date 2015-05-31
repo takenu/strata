@@ -73,15 +73,14 @@ namespace strata
 		};
 
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
-		  * - The VertexType is a class that represents a point in space.
-		  * - The PolygonType is a class that represents a surface in space, determined by an ordered set of vertices (normally three).
+		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex.
 		  */
-		template <typename VertexType, typename PolygonType>
+		template <typename VertexType>
 		class Mesh
 		{
 			public:
 				std::vector<VertexType> vertices;
-				std::vector<PolygonType> polygons;
+				std::vector<Polygon> polygons;
 
 				std::vector<xVert> ve;
 				std::vector<xPoly> po;
