@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../core/interface/render.hpp"
 
-#include "element.hpp"
+#include "bundle.hpp"
 #include "stitch.hpp"
 #include "texture.hpp"
 
@@ -33,6 +33,11 @@ namespace strata
 {
 	namespace mesh
 	{
+		/** A MeshFragment is the base class for all objects that are to be represented by a mesh (i.e.
+		  * an object consisting of a set of polygons). In other words, the terrain is defined through the
+		  * set of all MeshFragments.
+		  * In order to bundle these fragments together, they are combined in a TypeCluster, which enables
+		  * memory management through deletion of MeshFragment pointers. */
 		class MeshFragment : public tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>
 		{
 			private:
@@ -69,23 +74,6 @@ namespace strata
 				virtual ~MeshFragment(void) {}
 		};
 
-		/** A Junction is a class for a mesh consisting of a single polygon, which is the point where three layers meet. */
-/*		class Junction: public MeshFragment
-		{
-			private:
-				MeshStitchJunction junction;
-
-				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert)
-				{
-				}
-			public:
-				Junction(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer,
-						ForeignVertex _a, ForeignVertex _b, ForeignVertex _c) :
-					MeshFragment(id, tc, _renderer), junction(_a,_b,_c)
-				{
-				}
-		};*/
-
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
 		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order
 		  * to reduce layer size when desirable.
@@ -109,11 +97,17 @@ namespace strata
 		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
 		  * It is visible thanks to it owning a renderMesh object. It uses a MeshBundle to define its mesh
 		  * where necessary. However, the Layer can also inherit all points from the layer under it, in the
-		  * process becoming a subordinate layer to it. In this case it defines only its edge and thickness. */
+		  * process becoming a subordinate layer to it. In this case it defines only its edge and thickness.
+		  *
+		  * The mesh always describes the upper part of the Layer, such that the surface is formed through
+		  * clockwise-ordered polygons. Note that this is somewhat contrary to typical computer graphics which
+		  * has upward normals if polygons are traversed counterclockwise.
+		  */
 		class Layer : public MeshFragment
 		{
 			private:
 				MeshBundle mesh;
+				double thickness;
 
 				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 			public:

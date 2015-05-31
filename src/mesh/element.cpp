@@ -16,10 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tiny/mesh/staticmesh.h>
-
 #include "vecmath.hpp"
 #include "element.hpp"
+#include "bundle.hpp"
 
 using namespace strata::mesh;
 
@@ -97,25 +96,11 @@ void MeshBundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	{
 		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*scale/2, step);
 		plist.pop_front();
-		if(polygons.size() > 10 * ndivs * ndivs) { std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl; break; }
+		if(polygons.size() > 10 * ndivs * ndivs)
+		{
+			std::cerr << " Warning : createFlatLayer() : Too many polygons are getting created, stopping prematurely. "<<std::endl;
+			break;
+		}
 	}
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
-}
-
-tiny::mesh::StaticMesh MeshBundle::convertToMesh(void)
-{
-	tiny::mesh::StaticMesh mesh;
-	for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
-				tiny::vec2(vertices[i].pos.z/scale + 0.5, vertices[i].pos.x/scale + 0.5), // texture coordinate
-				tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
-				tiny::vec3(0.0f,1.0f,0.0f), // normal
-				vertices[i].pos ) ); // position
-	for(unsigned int i = 1; i < polygons.size(); i++)
-	{
-		mesh.indices.push_back( ve[polygons[i].c] - 1 ); // -1 because vertices[0] is the error value and the mesh doesn't have that so it's shifted by 1
-		mesh.indices.push_back( ve[polygons[i].b] - 1 ); // Note that we add polygons in reverse order because OpenGL likes them counterclockwise
-		mesh.indices.push_back( ve[polygons[i].a] - 1 );
-	}
-
-	return mesh;
 }
