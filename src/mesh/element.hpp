@@ -95,9 +95,7 @@ namespace strata
 					for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
 								tiny::vec2(vertices[i].pos.z/scale + 0.5, vertices[i].pos.x/scale + 0.5), // texture coordinate
 								tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
-				//				(poly[0] > 0 ? normalize(cross(vertices[ve[polygons[po[vertices[i].poly[0]]].c]].pos - vertices[ve[polygons[po[vertices[i].poly[0]]].a]].pos,
-				//											   vertices[ve[polygons[po[vertices[i].poly[0]]].b]].pos - vertices[ve[polygons[po[vertices[i].poly[0]]].a]].pos)) : tiny::vec3(0.0f,1.0f,0.0f)), // normal (use first poly's normal if available, otherwise use vertical)
-								tiny::vec3(0.0f,1.0f,0.0f),
+								(vertices[i].poly[0] > 0 ? computeNormal(vertices[i].poly[0]) : tiny::vec3(0.0f,1.0f,0.0f)),
 								vertices[i].pos ) ); // position
 					for(unsigned int i = 1; i < polygons.size(); i++)
 					{
@@ -107,6 +105,13 @@ namespace strata
 					}
 
 					return mesh;
+				}
+
+				/** Calculate the normal of a polygon. */
+				tiny::vec3 computeNormal(xPoly _p)
+				{
+					return normalize(cross(vertices[ve[polygons[po[_p]].c]].pos - vertices[ve[polygons[po[_p]].a]].pos,
+										   vertices[ve[polygons[po[_p]].b]].pos - vertices[ve[polygons[po[_p]].a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
 				}
 			protected:
 				Mesh(void) {}
