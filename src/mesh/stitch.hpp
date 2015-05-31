@@ -52,8 +52,6 @@ namespace strata
 					Mesh<StitchVertex>()
 				{
 					vertices.push_back( StitchVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) );
-					polygons.push_back( Polygon(0,0,0) );
-				   	po.push_back(0);
 				}
 
 				/** Create a MeshStitch in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */

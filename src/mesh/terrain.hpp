@@ -39,7 +39,7 @@ namespace strata
 				Terrain(core::intf::RenderInterface * _renderer) : renderer(_renderer), meshcounter(0), meshes((long unsigned int)(-1), "MeshFragmentTC")
 				{
 					Layer * baselayer = new Layer(++meshcounter, meshes, renderer);
-					baselayer->createFlatLayer(100.0f, 100, 0.0f);
+					baselayer->createFlatLayer(1000.0f, 100, 0.0f);
 				}
 
 				~Terrain(void)
