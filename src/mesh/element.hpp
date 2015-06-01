@@ -155,12 +155,34 @@ namespace strata
 					return hasUniqueVertex;
 				}
 
-				/** Find a vertex on the edge. */
-				xVert findEdgeVertex(void)
+				xVert findRandomEdgeVertex(void)
 				{
-					xVert edgeVertex = 0;
-//					for(unsigned int i = 0; i < vertices.size(); i++)
+					unsigned int step = ve.size()/7 + 1;
+					unsigned int startVertex = 1;
+					unsigned int edgeVertex = (unsigned int)(-1);
+					while(edgeVertex == (unsigned int)(-1))
+					{
+						startVertex = ((startVertex + step) % ve.size()); // take modulo to get next vertex
+						if(startVertex != 0) edgeVertex = findEdgeVertex(startVertex);
+					}
 					return edgeVertex;
+				}
+
+				/** Find some vertex on the edge, starting at vertex v. This function may fail if it gets stuck in a highly deformed mesh, in this case it returns 0.
+				  * This situation is best dealt with by trying to find an edge vertex but starting at another vertex randomly. */
+				xVert findEdgeVertex(xVert _v)
+				{
+					if(_v == 0) { std::cout << " Mesh::findEdgeVertex() : Cannot find edge vertex starting from xVert error value 0! "<<std::endl; return (unsigned int)(-1); }
+					if(isEdgeVertex(_v)) return _v;
+					Vertex & v = vertices[ve[_v]];
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(v.poly[i] == 0) break;
+						xVert w = findPolyNeighbor(polygons[po[v.poly[i]]], v.index, true); // Only need to consider one direction - the other vertex will be found in the neighbouring polygon for a non-edge vertex
+						if(vertices[ve[w]].pos.x > v.pos.x) return findEdgeVertex(w);
+					}
+					std::cout << " Mesh::findEdgeVertex() : No edge vertex found! "<<std::endl;
+					return (unsigned int)(-1);
 				}
 
 				/** Analyse the shape of the mesh, and set the vertices _a and _b to the pair of most distant vertices in the set. This only considers edge vertices (such
@@ -219,15 +241,15 @@ namespace strata
 				void printLists(void)
 				{
 					std::cout << " Printing MeshBundle lists: "<<std::endl;
-					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<", "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<(isEdgeVertex(i)?"(E)":"")<<", "; std::cout << std::endl;
+					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<" (E="<<findEdgeVertex(vertices[i].index)<<"), "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
 					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
 					std::cout << " vertex polys: "<<std::endl;
 					for(unsigned int i = 0; i < vertices.size(); i++)
 					{
 						std::cout << " vertex "<<i<<": index = "<<vertices[i].index<<", polys = ";
 						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++) std::cout << vertices[i].poly[j] << ", ";
-						std::cout << std::endl;
+						std::cout <<(isEdgeVertex(vertices[i].index)?"(E)":"")<< std::endl;
 					}
 				}
 
@@ -266,7 +288,7 @@ namespace strata
 				  * It remains to be seen whether it is fast enough. However, it's only to be used in constructing new layers, not in modifying
 				  * existing ones.
 				  */
-				inline xVert findNeighbor(const tiny::vec3 &p, const Vertex & v, float eps = 0.0001f)
+/*				inline xVert findNeighbor(const tiny::vec3 &p, const Vertex & v, float eps = 0.0001f)
 				{
 					xVert x = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
@@ -286,7 +308,7 @@ namespace strata
 					}
 					if(x != 0) vertices[ve[x]].pos = (vertices[ve[x]].pos + p)*0.5; // Use mixing: if position slightly deviates from expected, adjust to middle
 					return x;
-				}
+				}*/
 
 				/** Get a (non-normalized) normal vector for a polygon. */
 				inline tiny::vec3 polyNormal(const Polygon &p) { return cross( vertices[ve[p.c]].pos-vertices[ve[p.a]].pos, vertices[ve[p.b]].pos-vertices[ve[p.a]].pos); }
