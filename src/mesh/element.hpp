@@ -279,37 +279,6 @@ namespace strata
 
 				virtual ~Mesh(void) { polygons.clear(); vertices.clear(); ve.clear(); po.clear(); }
 
-				/** A function to split large meshes. */
-//				virtual void splitMesh(void) = 0;
-				/** Find a neighbouring vertex based on a position. If the vertex exists and a link exists between it and v, then a
-				  * polygon should exist which has both v and the desired vertex. It compares vertices with a squared-diff tolerance 'eps'.
-				  *
-				  * This function risks having to do an average of up to 18 (6polys*3verts) deep lookups (which go through 4 large std::vector's).
-				  * It remains to be seen whether it is fast enough. However, it's only to be used in constructing new layers, not in modifying
-				  * existing ones.
-				  */
-/*				inline xVert findNeighbor(const tiny::vec3 &p, const Vertex & v, float eps = 0.0001f)
-				{
-					xVert x = 0;
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-					{
-						if(v.poly[i]==0) break;
-						else
-						{
-							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].a ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].a; break;}
-							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].b ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].b; break;}
-							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].c ]].pos - p ) < eps ) {x = polygons[po[v.poly[i]]].c; break;}
-							if( tiny::length2( vertices[ve[ polygons[po[v.poly[i]]].a ]].pos - p ) < 0.01f )
-							{
-								std::cout << " unexpected neighbor pos at "<<vertices[ve[ polygons[po[v.poly[i]]].a ]].pos<<" far from "<<p<<std::endl;
-								x = polygons[po[v.poly[i]]].a; break;
-							}
-						}
-					}
-					if(x != 0) vertices[ve[x]].pos = (vertices[ve[x]].pos + p)*0.5; // Use mixing: if position slightly deviates from expected, adjust to middle
-					return x;
-				}*/
-
 				/** Get a (non-normalized) normal vector for a polygon. */
 				inline tiny::vec3 polyNormal(const Polygon &p) { return cross( vertices[ve[p.c]].pos-vertices[ve[p.a]].pos, vertices[ve[p.b]].pos-vertices[ve[p.a]].pos); }
 
