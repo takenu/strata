@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <deque>
+#include <map>
 
 #include <tiny/math/vec.h>
 #include <tiny/mesh/staticmesh.h>
@@ -63,7 +64,7 @@ namespace strata
 		inline std::ostream & operator<< (std::ostream &s, const Vertex &v) { s << v.index; return s; }
 		inline std::ostream & operator<< (std::ostream &s, const Polygon &p) { s << "("<<p.a<<","<<p.b<<","<<p.c<<")"; return s; }
 
-		/** A helper struct for keeping a list of vertex pairs. */
+		/** A class for containing a pair of vertices. */
 		struct VertPair
 		{
 			xVert a;
@@ -114,11 +115,14 @@ namespace strata
 
 				float scale; /**< Scale factor - coordinates should range from -scale/2 to scale/2 (used for texture coords) */
 
-				/** Analyse the shape of the mesh, and set the vertices _a and _b to the pair of most distant vertices in the set. This only considers edge vertices (such
-				  * that the calculation is easiest, also because for most sane meshes edge vertices are most distant, and because it is easier to work with edge
-				  * vertices when e.g. splitting meshes). */
-				void analyseShape(VertexType &_a, VertexType &_b)
+				/** Analyse the shape of the mesh, and return the pair of most distant vertices in the set. This only considers edge vertices (such
+				  * that the calculation is easiest, also because for most sane meshes edge vertices are most distant, and because it is easier to
+				  * work with edge vertices when e.g. splitting meshes). */
+				void analyseShape(VertPair &vp)
 				{
+					std::vector<xVert> edgeVertices;
+					std::map<xVert, xVert> maxDistances;
+					xVert edgeStart = findRandomEdgeVertex();
 				}
 
 				/** Add a vertex and return the xVert reference to that vertex. */
@@ -275,6 +279,23 @@ namespace strata
 						if(hasUniqueVertex) break; // Not found, then this is an edge vertex
 					}
 					return hasUniqueVertex;
+				}
+
+				/** Find another edge vertex, starting from the current vertex. If the parameter 'clockwise' is true the mesh edge will be traversed in a
+				  * clockwise fashion (looking from the direction of the normals, or typically, from above the terrain). */
+				xVert findAdjacentEdgeVertex(xVert v, bool clockwise)
+				{
+					xVert result = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex! "<<std::endl; break; }
+						else if( isEdgeVertex( findPolyNeighbor(vertices[ve[v]].poly[i], v, clockwise) ) )
+						{
+							result = findPolyNeighbor(vertices[ve[v]].poly[i], v, clockwise);
+							break;
+						}
+					}
+					return result;
 				}
 
 				xVert findRandomEdgeVertex(void)
