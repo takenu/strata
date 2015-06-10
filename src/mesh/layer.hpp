@@ -69,9 +69,21 @@ namespace strata
 				{
 				}
 
-				void resetTexture(MeshBundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b) { delete texture; texture = createTestTexture(_size, _r, _g, _b); renderer->freeRenderable(renderMesh); initMesh(mesh); }
+				void resetTexture(MeshBundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
+				{
+					delete texture;
+					texture = createTestTexture(_size, _r, _g, _b);
+					renderer->freeRenderable(renderMesh);
+					initMesh(mesh);
+				}
 
 				virtual ~MeshFragment(void) {}
+
+				/** Split the MeshFragment into two parts. This operation should always reduce the size() of the MeshFragment. */
+				virtual void split(void) = 0;
+
+				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
+				virtual float meshSize(void) = 0;
 		};
 
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
@@ -92,6 +104,10 @@ namespace strata
 					MeshFragment(id, tc, _renderer)
 				{
 				}
+
+				virtual void split (void) {}
+
+				virtual float meshSize(void) { return 0.0f; }
 		};
 
 		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
@@ -123,6 +139,13 @@ namespace strata
 					mesh.createFlatLayer(size, ndivs, height);
 
 					initMesh(&mesh);
+				}
+
+				virtual void split (void) {}
+
+				virtual float meshSize(void)
+				{
+					return mesh.size();
 				}
 		};
 	}

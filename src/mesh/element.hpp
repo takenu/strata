@@ -106,6 +106,12 @@ namespace strata
 
 					return mesh;
 				}
+
+				float size(void)
+				{
+					VertPair farthestPair(0,0);
+					return analyseShape(farthestPair);
+				}
 			protected:
 				std::vector<VertexType> vertices;
 				std::vector<Polygon> polygons;
@@ -118,11 +124,31 @@ namespace strata
 				/** Analyse the shape of the mesh, and return the pair of most distant vertices in the set. This only considers edge vertices (such
 				  * that the calculation is easiest, also because for most sane meshes edge vertices are most distant, and because it is easier to
 				  * work with edge vertices when e.g. splitting meshes). */
-				void analyseShape(VertPair &vp)
+				float analyseShape(VertPair &farthestPair)
 				{
 					std::vector<xVert> edgeVertices;
-					std::map<xVert, xVert> maxDistances;
+					float maxDistance = 0.0f;
+//					std::map<xVert, xVert> maxDistances;
 					xVert edgeStart = findRandomEdgeVertex();
+					xVert edgeVertex = 0;
+					while(edgeVertex != edgeStart)
+					{
+						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
+						edgeVertices.push_back(edgeVertex); // this will add all edge vertices, finishing with edgeStart, after which the loop exits
+					}
+					for(unsigned int i = 0; i < edgeVertices.size(); i++)
+					{
+						for(unsigned int j = i+1; j < edgeVertices.size(); j++)
+						{
+							float dist = tiny::length( vertices[ve[edgeVertices[i]]].pos - vertices[ve[edgeVertices[j]]].pos );
+							if(dist > maxDistance)
+							{
+								maxDistance = dist;
+								farthestPair = VertPair(edgeVertices[i],edgeVertices[j]);
+							}
+						}
+					}
+					return maxDistance;
 				}
 
 				/** Add a vertex and return the xVert reference to that vertex. */
@@ -289,9 +315,9 @@ namespace strata
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
 						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex! "<<std::endl; break; }
-						else if( isEdgeVertex( findPolyNeighbor(vertices[ve[v]].poly[i], v, clockwise) ) )
+						else if( isEdgeVertex( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise) ) )
 						{
-							result = findPolyNeighbor(vertices[ve[v]].poly[i], v, clockwise);
+							result = findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise);
 							break;
 						}
 					}
