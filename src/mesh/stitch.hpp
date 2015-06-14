@@ -56,6 +56,14 @@ namespace strata
 
 				/** Create a MeshStitch in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(MeshBundle &a, MeshBundle &b, std::vector<xVert> aVerts);
+
+				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
+				  * stitch vertices are already edge vertices. */
+				virtual float size(void)
+				{
+					VertPair farthestPair(0,0);
+					return analyseShapeDirect(farthestPair);
+				}
 		};
 	}
 }

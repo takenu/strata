@@ -107,7 +107,10 @@ namespace strata
 
 				virtual void split (void) {}
 
-				virtual float meshSize(void) { return 0.0f; }
+				virtual float meshSize(void)
+				{
+					return stitch.size();
+				}
 		};
 
 		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
