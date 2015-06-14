@@ -107,9 +107,15 @@ namespace strata
 					return mesh;
 				}
 
-				virtual float size(void)
+				float size(void)
 				{
 					VertPair farthestPair(0,0);
+					return findFarthestPair(farthestPair);
+				}
+
+				/** Function is virtual: derived classes may improve upon this function by rewriting it (e.g. through not calling the expensive analyseShape() function).  */
+				virtual float findFarthestPair(VertPair &farthestPair)
+				{
 					return analyseShape(farthestPair);
 				}
 			protected:
@@ -134,17 +140,17 @@ namespace strata
 						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
 						edgeVertices.push_back(edgeVertex); // this will add all edge vertices, finishing with edgeStart, after which the loop exits
 					}
-					return findFarthestPair(edgeVertices, farthestPair);
+					return findFarthestPairFromList(edgeVertices, farthestPair);
 				}
 
 				/** Directly compare all vertex pairs to find the pair of vertices with the maximal separation. Typically slower than analyseShape() but
 				  * faster for very thin, very long meshes (e.g. stitches). */
 				float analyseShapeDirect(VertPair &farthestPair)
 				{
-					return findFarthestPair(ve, farthestPair);
+					return findFarthestPairFromList(ve, farthestPair);
 				}
 
-				float findFarthestPair(std::vector<xVert> &edgeVertices, VertPair &farthestPair)
+				float findFarthestPairFromList(std::vector<xVert> &edgeVertices, VertPair &farthestPair)
 				{
 					float maxDistance = 0.0f;
 					for(unsigned int i = 0; i < edgeVertices.size(); i++)

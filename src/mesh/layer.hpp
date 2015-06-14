@@ -144,7 +144,11 @@ namespace strata
 					initMesh(&mesh);
 				}
 
-				virtual void split (void) {}
+				virtual void split (void)
+				{
+					VertPair farthestPair(0,0);
+
+				}
 
 				virtual float meshSize(void)
 				{

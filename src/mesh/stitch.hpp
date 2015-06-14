@@ -59,11 +59,11 @@ namespace strata
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */
-				virtual float size(void)
+				virtual float findFarthestPair(VertPair &farthestPair)
 				{
-					VertPair farthestPair(0,0);
 					return analyseShapeDirect(farthestPair);
 				}
+
 		};
 	}
 }
