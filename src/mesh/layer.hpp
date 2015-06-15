@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <set>
+#include <functional>
 
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
@@ -33,6 +34,9 @@ namespace strata
 {
 	namespace mesh
 	{
+		class Layer;
+		class Stitch;
+
 		/** A MeshFragment is the base class for all objects that are to be represented by a mesh (i.e.
 		  * an object consisting of a set of polygons). In other words, the terrain is defined through the
 		  * set of all MeshFragments.
@@ -80,7 +84,7 @@ namespace strata
 				virtual ~MeshFragment(void) {}
 
 				/** Split the MeshFragment into two parts. This operation should always reduce the size() of the MeshFragment. */
-				virtual void split(void) = 0;
+				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch) = 0;
 
 				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
 				virtual float meshSize(void) = 0;
@@ -105,7 +109,9 @@ namespace strata
 				{
 				}
 
-				virtual void split (void) {}
+				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch)
+				{
+				}
 
 				virtual float meshSize(void)
 				{
@@ -144,11 +150,8 @@ namespace strata
 					initMesh(&mesh);
 				}
 
-				virtual void split (void)
-				{
-					VertPair farthestPair(0,0);
-
-				}
+				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
+				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch);
 
 				virtual float meshSize(void)
 				{

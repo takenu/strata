@@ -15,29 +15,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
 
+#include <set>
 #include <functional>
 
-#include "terrain.hpp"
+#include "layer.hpp"
 
 using namespace strata::mesh;
-using namespace std::placeholders; // for using std::bind
 
-Layer * Terrain::makeNewLayer(void)
+void Layer::split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch)
 {
-	return new Layer(++meshcounter, meshes, renderer);
-}
-
-Stitch * Terrain::makeNewStitch(void)
-{
-	return new Stitch(++meshcounter, meshes, renderer);
-}
-
-void Terrain::splitLargeFragments(float _maxSize)
-{
-	for(std::map<long unsigned int, MeshFragment*>::iterator it = meshes.begin(); it != meshes.end(); it++)
-	{
-		if(it->second->meshSize() > _maxSize)
-			it->second->split(std::bind(&Terrain::makeNewLayer, this), std::bind(&Terrain::makeNewStitch, this));
-	}
+	VertPair farthestPair(0,0);
+	mesh.findFarthestPair(farthestPair);
+	Layer * f = makeNewLayer();
+	Layer * g = makeNewLayer();
+	Stitch * s = makeNewStitch();
 }

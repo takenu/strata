@@ -28,13 +28,17 @@ namespace strata
 {
 	namespace mesh
 	{
+		typedef tiny::algo::TypeCluster<long unsigned int, MeshFragment> MeshTC;
 		class Terrain
 		{
 			private:
 				core::intf::RenderInterface * renderer;
 
 				long unsigned int meshcounter;
-				tiny::algo::TypeCluster<long unsigned int, MeshFragment> meshes;
+				MeshTC meshes;
+
+				Layer * makeNewLayer(void);
+				Stitch * makeNewStitch(void);
 
 				void splitLargeFragments(float _maxSize = 700.0f);
 			public:
@@ -43,7 +47,7 @@ namespace strata
 					meshcounter(0),
 					meshes((long unsigned int)(-1), "MeshFragmentTC")
 				{
-					Layer * baselayer = new Layer(++meshcounter, meshes, renderer);
+					Layer * baselayer = makeNewLayer();
 					baselayer->createFlatLayer(1000.0f, 100, 0.0f);
 				}
 
