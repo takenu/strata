@@ -157,6 +157,9 @@ namespace strata
 				{
 					return mesh.size();
 				}
+
+				xVert addVertex(tiny::vec3 pos) { return mesh.addVertex(pos); }
+				tiny::vec3 getVertexPosition(xVert v) { return mesh.getVertexPosition(v); }
 		};
 	}
 }

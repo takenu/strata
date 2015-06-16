@@ -18,12 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <set>
+#include <map>
 #include <functional>
 
 #include "layer.hpp"
 
 using namespace strata::mesh;
 
+/** Split a layer into two parts. The splitting is done such that each vertex is assigned to the member
+  * of farthestPair that it can reach in the smallest number of steps. */
 void Layer::split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch)
 {
 	VertPair farthestPair(0,0);
@@ -31,4 +34,10 @@ void Layer::split(std::function<Layer * (void)> makeNewLayer, std::function<Stit
 	Layer * f = makeNewLayer();
 	Layer * g = makeNewLayer();
 	Stitch * s = makeNewStitch();
+
+	std::map<xVert, xVert> fvert, gvert;
+	xVert v;
+
+	v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
+	v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
 }

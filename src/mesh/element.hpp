@@ -118,6 +118,21 @@ namespace strata
 				{
 					return analyseShape(farthestPair);
 				}
+
+				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
+				  * result in invalid meshes, this function  should only be used if one ensures that all vertices end up being properly
+				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
+				xVert addVertex(const Vertex &v)
+				{
+					ve.push_back( vertices.size() );
+					vertices.push_back(v);
+					vertices.back().index = ve.size()-1;
+					return ve.size()-1;
+				}
+				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
+				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
+
+				tiny::vec3 getVertexPosition(xVert v) { return vertices[ve[v]].pos; }
 			protected:
 				std::vector<VertexType> vertices;
 				std::vector<Polygon> polygons;
@@ -167,17 +182,6 @@ namespace strata
 					}
 					return maxDistance;
 				}
-
-				/** Add a vertex and return the xVert reference to that vertex. */
-				xVert addVertex(const Vertex &v)
-				{
-					ve.push_back( vertices.size() );
-					vertices.push_back(v);
-					vertices.back().index = ve.size()-1;
-					return ve.size()-1;
-				}
-				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
-				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 
 				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
