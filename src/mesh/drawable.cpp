@@ -16,27 +16,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <set>
-#include <map>
-#include <functional>
+#include "element.hpp"
 
-#include "layer.hpp"
+#include "drawable.hpp"
 
 using namespace strata::mesh;
 
-/** Split a layer into two parts. The splitting is done such that each vertex is assigned to the member
-  * of farthestPair that it can reach in the smallest number of steps. */
-void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
+void DrawableMesh::initMesh(MeshInterface * mesh)
 {
-	VertPair farthestPair(0,0);
-	findFarthestPair(farthestPair);
-	Bundle * f = makeNewBundle();
-	Bundle * g = makeNewBundle();
-	Strip * s = makeNewStrip();
+	renderMesh = new tiny::draw::StaticMesh( mesh->convertToMesh() );
+	renderMesh->setDiffuseTexture(*texture);
+	renderer->addWorldRenderable(renderMesh);
+}
 
-	std::map<xVert, xVert> fvert, gvert;
-	xVert v;
-
-	v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
-	v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
+void DrawableMesh::resetTexture(MeshInterface * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
+{
+	delete texture;
+	texture = createTestTexture(_size, _r, _g, _b);
+	renderer->freeRenderable(renderMesh);
+	initMesh(mesh);
 }

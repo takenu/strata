@@ -22,9 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
-#include <tiny/algo/typecluster.h>
-
-#include "../core/interface/render.hpp"
 
 #include "bundle.hpp"
 #include "stitch.hpp"
@@ -37,85 +34,19 @@ namespace strata
 		class Layer;
 		class Stitch;
 
-		/** A MeshFragment is the base class for all objects that are to be represented by a mesh (i.e.
-		  * an object consisting of a set of polygons). In other words, the terrain is defined through the
-		  * set of all MeshFragments.
-		  * In order to bundle these fragments together, they are combined in a TypeCluster, which enables
-		  * memory management through deletion of MeshFragment pointers. */
-		class MeshFragment : public tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>
-		{
-			private:
-				/** A list of fragments adjacent to the current one. If a vertex is deleted, all adjacent mesh fragments are notified such that
-				  * they can update their mapping. */
-				std::vector<MeshFragment*> adjacentFragments;
-			protected:
-				core::intf::RenderInterface * renderer;
-				tiny::draw::StaticMesh * renderMesh;
-				tiny::draw::RGBTexture2D * texture;
-
-				void initMesh(Bundle * mesh)
-				{
-					renderMesh = new tiny::draw::StaticMesh( mesh->convertToMesh() );
-					renderMesh->setDiffuseTexture(*texture);
-					renderer->addWorldRenderable(renderMesh);
-				}
-
-				/** Purge a vertex, cleaning it from all references. After this operation, the derived class should consider the vertex with
-				  * index "oldVert" belonging to the mesh fragment with id "mfid" as no longer existing. The vertex with index "newVert" is the
-				  * suggested replacement of the old vertex. */
-				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
-			public:
-				MeshFragment(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
-					tiny::algo::TypeClusterObject<long unsigned int, MeshFragment>(id, this, tc),
-					renderer(_renderer),
-					renderMesh(0),
-					texture(createTestTexture(512,255,0,0))
-				{
-				}
-
-				void resetTexture(Bundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
-				{
-					delete texture;
-					texture = createTestTexture(_size, _r, _g, _b);
-					renderer->freeRenderable(renderMesh);
-					initMesh(mesh);
-				}
-
-				virtual ~MeshFragment(void) {}
-
-				/** Split the MeshFragment into two parts. This operation should always reduce the size() of the MeshFragment. */
-				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch) = 0;
-
-				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
-				virtual float meshSize(void) = 0;
-		};
-
 		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
 		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order
 		  * to reduce layer size when desirable.
 		  * Stitches are more general and less coherent than layers since they define polygons that incorporate vertices
 		  * belonging to adjacent objects (layers and other stitches). */
-		class Stitch : public MeshFragment
+		class Stitch
 		{
 			private:
 				Strip strip;
-
-				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
-				{
-				}
 			public:
-				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
-					MeshFragment(id, tc, _renderer)
+				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, core::intf::RenderInterface * _renderer) :
+					strip(id, tc, _renderer)
 				{
-				}
-
-				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch)
-				{
-				}
-
-				virtual float meshSize(void)
-				{
-					return strip.size();
 				}
 		};
 
@@ -128,38 +59,28 @@ namespace strata
 		  * clockwise-ordered polygons. Note that this is somewhat contrary to typical computer graphics which
 		  * has upward normals if polygons are traversed counterclockwise.
 		  */
-		class Layer : public MeshFragment
+		class Layer
 		{
 			private:
-				Bundle mesh;
+				std::vector<long unsigned int> bundles; /** The bundles forming this Layer. */
 				double thickness;
-
-				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 			public:
-				Layer(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, MeshFragment> &tc, core::intf::RenderInterface * _renderer) :
-					MeshFragment(id, tc, _renderer),
-					mesh()
+				Layer(void)
 				{
 				}
 
 				/** Initialize the MeshFragment as a flat, square layer. */
-				void createFlatLayer(float size, unsigned int ndivs, float height = 0.0f)
+				void createFlatLayer(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip, float size, unsigned int ndivs, float height = 0.0f)
 				{
-					mesh.createFlatLayer(size, ndivs, height);
+					Bundle * bundle = makeNewBundle();
+					bundles.push_back( bundle->getKey() );
+					bundle->createFlatLayer(size, ndivs, height);
 
-					initMesh(&mesh);
+					bundle->initMesh(bundle);
 				}
 
-				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
-				virtual void split(std::function<Layer * (void)> makeNewLayer, std::function<Stitch * (void)> makeNewStitch);
-
-				virtual float meshSize(void)
-				{
-					return mesh.size();
-				}
-
-				xVert addVertex(tiny::vec3 pos) { return mesh.addVertex(pos); }
-				tiny::vec3 getVertexPosition(xVert v) { return mesh.getVertexPosition(v); }
+//				xVert addVertex(tiny::vec3 pos) { return mesh.addVertex(pos); }
+//				tiny::vec3 getVertexPosition(xVert v) { return mesh.getVertexPosition(v); }
 		};
 	}
 }

@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <deque>
 #include <map>
+#include <functional>
 
 #include <tiny/math/vec.h>
 #include <tiny/mesh/staticmesh.h>
 
 #include "vecmath.hpp"
+#include "drawable.hpp"
 
 #define STRATA_VERTEX_MAX_LINKS 12
 
@@ -73,6 +75,30 @@ namespace strata
 			VertPair(xVert _a, xVert _b) : a(_a), b(_b) {}
 		};
 
+		class Bundle;
+		class Strip;
+
+		/** An interface for the Mesh class. */
+		class MeshInterface : public DrawableMesh
+		{
+			private:
+			protected:
+				/** Purge a vertex, cleaning it from all references. After this operation, the derived class should consider the vertex with
+				  * index "oldVert" belonging to the mesh fragment with id "mfid" as no longer existing. The vertex with index "newVert" is the
+				  * suggested replacement of the old vertex. */
+				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
+
+				MeshInterface(core::intf::RenderInterface * _renderer) : DrawableMesh(_renderer) {}
+			public:
+				/** Split the Mesh into two parts. This operation should always reduce the size() of the Mesh. */
+				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
+
+				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
+				virtual float meshSize(void) = 0;
+
+				virtual tiny::mesh::StaticMesh convertToMesh(void) = 0;
+		};
+
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex.
 		  *
@@ -85,11 +111,11 @@ namespace strata
 		  * This no-hole no-bottleneck requirement imposes strict limits on vertex deletion.
 		  */
 		template <typename VertexType>
-		class Mesh
+		class Mesh : public MeshInterface
 		{
 			public:
 				/** Convert the Mesh to a StaticMesh object. */
-				tiny::mesh::StaticMesh convertToMesh(void)
+				virtual tiny::mesh::StaticMesh convertToMesh(void)
 				{
 					tiny::mesh::StaticMesh mesh;
 					for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
@@ -133,6 +159,10 @@ namespace strata
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 
 				tiny::vec3 getVertexPosition(xVert v) { return vertices[ve[v]].pos; }
+
+				// Re-define pure virtual functions from MeshInterface.
+				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
+				virtual float meshSize(void) = 0;
 			protected:
 				std::vector<VertexType> vertices;
 				std::vector<Polygon> polygons;
@@ -141,6 +171,8 @@ namespace strata
 				std::vector<xPoly> po;
 
 				float scale; /**< Scale factor - coordinates should range from -scale/2 to scale/2 (used for texture coords) */
+
+				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
 
 				/** Analyse the shape of the mesh, and return the pair of most distant vertices in the set. This only considers edge vertices (such
 				  * that the calculation is easiest, also because for most sane meshes edge vertices are most distant, and because it is easier to
@@ -245,7 +277,7 @@ namespace strata
 					}
 				}
 
-				Mesh(void)
+				Mesh(core::intf::RenderInterface * _renderer) : MeshInterface(_renderer)
 				{
 					polygons.push_back( Polygon(0,0,0) );
 					po.push_back(0); // po[0] shouldn't be used as a polygon because 0 is the "N/A" value for the Vertex's poly[] array
@@ -285,8 +317,11 @@ namespace strata
 					}
 					return vert;
 				}
-
 			private:
+				/** A list of meshes adjacent to the current one. If a vertex is deleted, all adjacent meshes are notified such that
+				  * they can update their mapping. */
+				std::vector<MeshInterface*> adjacentMeshes;
+
 				/** Calculate the normal of a polygon. */
 				tiny::vec3 computeNormal(xPoly _p)
 				{

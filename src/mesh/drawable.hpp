@@ -17,52 +17,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <tiny/algo/typecluster.h>
+#include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
 
 #include "../core/interface/render.hpp"
 
-#include "stitch.hpp"
-#include "bundle.hpp"
-#include "layer.hpp"
+#include "texture.hpp"
 
 namespace strata
 {
 	namespace mesh
 	{
-		typedef tiny::algo::TypeCluster<long unsigned int, Bundle> BundleTC;
-		typedef tiny::algo::TypeCluster<long unsigned int, Strip> StripTC;
+		class MeshInterface;
 
-		class Terrain
+		/** A DrawableMesh is the base class for all objects that are to be represented by a mesh (i.e.
+		  * an object consisting of a set of polygons). In other words, the terrain is defined through the
+		  * set of all DrawableMeshes. */
+		class DrawableMesh
 		{
 			private:
-				std::vector<Layer *> layers;
+			protected:
 				core::intf::RenderInterface * renderer;
-
-				long unsigned int bundleCounter;
-				long unsigned int stripCounter;
-				BundleTC bundles;
-				StripTC strips;
-
-				Bundle * makeNewBundle(void);
-				Strip * makeNewStrip(void);
-
-				void splitLargeMeshes(float _maxSize = 700.0f);
+				tiny::draw::StaticMesh * renderMesh;
+				tiny::draw::RGBTexture2D * texture;
 			public:
-				Terrain(core::intf::RenderInterface * _renderer) :
+				DrawableMesh(core::intf::RenderInterface * _renderer) :
 					renderer(_renderer),
-					bundleCounter(0),
-					stripCounter(0),
-					bundles((long unsigned int)(-1), "BundleTC"),
-					strips((long unsigned int)(-1), "StripTC")
+					renderMesh(0),
+					texture(createTestTexture(512,255,0,0))
 				{
-					layers.push_back(new Layer());
-					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
 				}
 
-				~Terrain(void)
-				{
-				}
+				void initMesh(MeshInterface * mesh);
+
+				void resetTexture(MeshInterface * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
+
+				virtual ~DrawableMesh(void) {}
 		};
-	}
-}
+	} // end namespace mesh
+} // end namespace strata

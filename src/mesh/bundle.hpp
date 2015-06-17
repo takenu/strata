@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
+#include <tiny/algo/typecluster.h>
 
 #include "vecmath.hpp"
 #include "element.hpp"
@@ -30,17 +31,23 @@ namespace strata
 {
 	namespace mesh
 	{
+		class Strip;
+
 		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
 		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
 		  */
-		class Bundle : public Mesh<Vertex>
+		class Bundle : public tiny::algo::TypeClusterObject<long unsigned int, Bundle>, public Mesh<Vertex>
 		{
 			private:
 				long unsigned int polyAttempts;
+
+				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 			public:
-				/** At construction, add error values for polygons and vertices. */
-				Bundle(void) :
-					Mesh<Vertex>(),
+				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
+
+				Bundle(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Bundle> &tc, core::intf::RenderInterface * _renderer) :
+					tiny::algo::TypeClusterObject<long unsigned int, Bundle>(meshId, this, tc),
+					Mesh<Vertex>(_renderer),
 					polyAttempts(0)
 				{
 					vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) );
@@ -50,6 +57,14 @@ namespace strata
 
 				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
+
+				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
+				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
+
+				virtual float meshSize(void)
+				{
+					return size();
+				}
 		};
 	}
 }

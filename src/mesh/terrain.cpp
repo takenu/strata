@@ -23,21 +23,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace strata::mesh;
 using namespace std::placeholders; // for using std::bind
 
-Layer * Terrain::makeNewLayer(void)
+Bundle * Terrain::makeNewBundle(void)
 {
-	return new Layer(++meshcounter, meshes, renderer);
+	return new Bundle(++bundleCounter, bundles, renderer);
 }
 
-Stitch * Terrain::makeNewStitch(void)
+Strip * Terrain::makeNewStrip(void)
 {
-	return new Stitch(++meshcounter, meshes, renderer);
+	return new Strip(++stripCounter, strips, renderer);
 }
 
-void Terrain::splitLargeFragments(float _maxSize)
+void Terrain::splitLargeMeshes(float _maxSize)
 {
-	for(std::map<long unsigned int, MeshFragment*>::iterator it = meshes.begin(); it != meshes.end(); it++)
+	for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
 	{
 		if(it->second->meshSize() > _maxSize)
-			it->second->split(std::bind(&Terrain::makeNewLayer, this), std::bind(&Terrain::makeNewStitch, this));
+			it->second->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this));
+	}
+	for(std::map<long unsigned int, Strip*>::iterator it = strips.begin(); it != strips.end(); it++)
+	{
+		if(it->second->meshSize() > _maxSize)
+			it->second->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this));
 	}
 }
