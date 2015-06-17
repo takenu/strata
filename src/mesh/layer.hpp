@@ -53,7 +53,7 @@ namespace strata
 				tiny::draw::StaticMesh * renderMesh;
 				tiny::draw::RGBTexture2D * texture;
 
-				void initMesh(MeshBundle * mesh)
+				void initMesh(Bundle * mesh)
 				{
 					renderMesh = new tiny::draw::StaticMesh( mesh->convertToMesh() );
 					renderMesh->setDiffuseTexture(*texture);
@@ -73,7 +73,7 @@ namespace strata
 				{
 				}
 
-				void resetTexture(MeshBundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
+				void resetTexture(Bundle * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
 				{
 					delete texture;
 					texture = createTestTexture(_size, _r, _g, _b);
@@ -98,7 +98,7 @@ namespace strata
 		class Stitch : public MeshFragment
 		{
 			private:
-				MeshStitch stitch;
+				Strip strip;
 
 				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
 				{
@@ -115,12 +115,12 @@ namespace strata
 
 				virtual float meshSize(void)
 				{
-					return stitch.size();
+					return strip.size();
 				}
 		};
 
 		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
-		  * It is visible thanks to it owning a renderMesh object. It uses a MeshBundle to define its mesh
+		  * It is visible thanks to it owning a renderMesh object. It uses a Bundle to define its mesh
 		  * where necessary. However, the Layer can also inherit all points from the layer under it, in the
 		  * process becoming a subordinate layer to it. In this case it defines only its edge and thickness.
 		  *
@@ -131,7 +131,7 @@ namespace strata
 		class Layer : public MeshFragment
 		{
 			private:
-				MeshBundle mesh;
+				Bundle mesh;
 				double thickness;
 
 				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}

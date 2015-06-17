@@ -49,7 +49,7 @@ using namespace strata::mesh;
 
 /** An instruction to create a polygon a-b-c (clockwise). Other polygons to be created are added to the list.
   */
-void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVert _b, float limit, float step)
+void Bundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVert _b, float limit, float step)
 {
 	++polyAttempts;
 	Vertex & a = vertices[ve[_a]];
@@ -79,7 +79,7 @@ void MeshBundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, 
 	}
 }
 
-void MeshBundle::createFlatLayer(float _size, unsigned int ndivs, float height)
+void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 {
 	scale = _size;
 	float step = scale/ndivs;

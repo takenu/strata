@@ -33,20 +33,20 @@ namespace strata
 		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
 		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
 		  */
-		class MeshBundle : public Mesh<Vertex>
+		class Bundle : public Mesh<Vertex>
 		{
 			private:
 				long unsigned int polyAttempts;
 			public:
 				/** At construction, add error values for polygons and vertices. */
-				MeshBundle(void) :
+				Bundle(void) :
 					Mesh<Vertex>(),
 					polyAttempts(0)
 				{
 					vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) );
 				}
 
-				virtual ~MeshBundle(void) {}
+				virtual ~Bundle(void) {}
 
 				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);

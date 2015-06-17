@@ -29,14 +29,14 @@ namespace strata
 {
 	namespace mesh
 	{
-		/** A borrowed vertex from some MeshBundle. */
-		class StitchVertex : public Vertex
+		/** A borrowed vertex from some Bundle. */
+		class StripVertex : public Vertex
 		{
 			private:
 				xVert remoteIndex;
 			public:
 				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
-				StitchVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
+				StripVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
 				{
 					index = _vertex;
 				}
@@ -44,18 +44,18 @@ namespace strata
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
 		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
-		class MeshStitch : public Mesh<StitchVertex>
+		class Strip : public Mesh<StripVertex>
 		{
 			private:
 			public:
-				MeshStitch(void) :
-					Mesh<StitchVertex>()
+				Strip(void) :
+					Mesh<StripVertex>()
 				{
-					vertices.push_back( StitchVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) );
+					vertices.push_back( StripVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) );
 				}
 
-				/** Create a MeshStitch in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
-				void connectMeshes(MeshBundle &a, MeshBundle &b, std::vector<xVert> aVerts);
+				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
+				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */
