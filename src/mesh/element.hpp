@@ -83,12 +83,50 @@ namespace strata
 		{
 			private:
 			protected:
+				/** A list of meshes adjacent to the current one. If a vertex is deleted, all adjacent meshes are notified such that
+				  * they can update their mapping. */
+				std::vector<MeshInterface*> adjacentMeshes;
+
 				/** Purge a vertex, cleaning it from all references. After this operation, the derived class should consider the vertex with
 				  * index "oldVert" belonging to the mesh fragment with id "mfid" as no longer existing. The vertex with index "newVert" is the
 				  * suggested replacement of the old vertex. */
 				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
 
+				/** Purge an adjacent mesh, removing it from the adjacentMeshes list. After this action is performed, the adjacent mesh
+				  * removed from the list will no longer be informed of changes and communication (e.g. regarding vertices being deleted
+				  * or added) becomes impossible. In general, this function should be used only immediately before deleting a mesh. */
+				void purgeAdjacentMesh(MeshInterface * _mesh)
+				{
+					for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
+						if(adjacentMeshes[i] == _mesh)
+						{
+							adjacentMeshes[i] = adjacentMeshes.back();
+							adjacentMeshes.pop_back();
+						}
+				}
+
+				/** Check whether a given mesh is already listed as adjacent to this mesh. */
+				bool hasAdjacentMesh(MeshInterface * _mesh)
+				{
+					for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
+						if(adjacentMeshes[i] == _mesh) return true;
+					return false;
+				}
+
+				/** Add an adjacent mesh, if it doesn't exist yet. */
+				void addAdjacentMesh(MeshInterface * _mesh)
+				{
+					if(!hasAdjacentMesh(_mesh))
+						adjacentMeshes.push_back(_mesh);
+				}
+
 				MeshInterface(core::intf::RenderInterface * _renderer) : DrawableMesh(_renderer) {}
+
+				virtual ~MeshInterface(void)
+				{
+					for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
+						adjacentMeshes[i]->purgeAdjacentMesh(this);
+				}
 			public:
 				/** Split the Mesh into two parts. This operation should always reduce the size() of the Mesh. */
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
@@ -318,10 +356,6 @@ namespace strata
 					return vert;
 				}
 			private:
-				/** A list of meshes adjacent to the current one. If a vertex is deleted, all adjacent meshes are notified such that
-				  * they can update their mapping. */
-				std::vector<MeshInterface*> adjacentMeshes;
-
 				/** Calculate the normal of a polygon. */
 				tiny::vec3 computeNormal(xPoly _p)
 				{
