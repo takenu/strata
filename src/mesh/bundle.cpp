@@ -105,3 +105,20 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 //	printLists();
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
+
+/** Split a layer into two parts. The splitting is done such that each vertex is assigned to the member
+  * of farthestPair that it can reach in the smallest number of steps. */
+void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
+{
+	VertPair farthestPair(0,0);
+	findFarthestPair(farthestPair);
+	Bundle * f = makeNewBundle();
+	Bundle * g = makeNewBundle();
+	Strip * s = makeNewStrip();
+
+	std::map<xVert, xVert> fvert, gvert;
+	xVert v;
+
+	v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
+	v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
+}
