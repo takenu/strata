@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmesh.h>
 
 #include "bundle.hpp"
-#include "stitch.hpp"
+#include "strip.hpp"
 #include "texture.hpp"
 
 namespace strata

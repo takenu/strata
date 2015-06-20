@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../core/interface/render.hpp"
 
-#include "stitch.hpp"
-#include "bundle.hpp"
 #include "layer.hpp"
 
 namespace strata
