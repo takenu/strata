@@ -50,7 +50,6 @@ namespace strata
 					Mesh<Vertex>(_renderer),
 					polyAttempts(0)
 				{
-					vertices.push_back( Vertex(0.0f, 0.0f, 0.0f) );
 				}
 
 				virtual ~Bundle(void) {}

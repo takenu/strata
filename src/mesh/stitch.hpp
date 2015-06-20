@@ -58,7 +58,6 @@ namespace strata
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
 					Mesh<StripVertex>(_renderer)
 				{
-					vertices.push_back( StripVertex(tiny::vec3(0.0f,0.0f,0.0f),0,0) );
 				}
 
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */

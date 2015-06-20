@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vecmath.hpp"
 #include "drawable.hpp"
 
-#define STRATA_VERTEX_MAX_LINKS 12
+#define STRATA_VERTEX_MAX_LINKS 11
 
 namespace strata
 {
@@ -43,10 +43,16 @@ namespace strata
 		{
 			tiny::vec3 pos;
 			xVert index; /**< The index of this vertex in the 've' array of the MeshBundle. */
+			xVert nextEdgeVertex; /**< The next edge vertex, if this vertex itself is on the edge. Otherwise 0. */
 			xPoly poly[STRATA_VERTEX_MAX_LINKS]; /**< Enforce max number of links (to avoid having to (de)allocate memory when creating a Vertex). */
 
-			Vertex(const tiny::vec3 &p) : pos(p), index(0) { for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = 0; }
-			Vertex(float x, float y, float z) : pos(x,y,z), index(0) { for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = 0; }
+			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0)
+			{
+				for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					poly[i] = 0;
+			}
+
+			Vertex(float x, float y, float z) : Vertex(tiny::vec3(x,y,z)) {}
 
 			Vertex & operator= (const Vertex &v) { pos = v.pos; index = v.index; for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = v.poly[i]; return *this; }
 		};
@@ -138,7 +144,8 @@ namespace strata
 		};
 
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
-		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex.
+		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex. It 
+		  * needs a constructor that takes the form VertexType(float, float, float).
 		  *
 		  * Note that Mesh objects CANNOT HAVE HOLES in them, they can be strongly warped whatsoever but they must be isomorphic to
 		  * the 2-dimensional unit disk. This requirement is made in order to ease finding the edge: the Mesh is widely assumed
@@ -319,6 +326,8 @@ namespace strata
 				{
 					polygons.push_back( Polygon(0,0,0) );
 					po.push_back(0); // po[0] shouldn't be used as a polygon because 0 is the "N/A" value for the Vertex's poly[] array
+					vertices.push_back( VertexType(0.0f, 0.0f, 0.0f) );
+					ve.push_back(0); // ve[0] shouldn't be used either because 0 is the "N/A" value for the Vertex's nextEdgeVertex variable.
 				}
 
 				virtual ~Mesh(void) { polygons.clear(); vertices.clear(); ve.clear(); po.clear(); }
