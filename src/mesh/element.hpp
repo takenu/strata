@@ -191,7 +191,7 @@ namespace strata
 				}
 
 				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
-				  * result in invalid meshes, this function  should only be used if one ensures that all vertices end up being properly
+				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
 				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
 				xVert addVertex(const Vertex &v)
 				{
@@ -224,12 +224,14 @@ namespace strata
 				  * work with edge vertices when e.g. splitting meshes). */
 				float analyseShape(VertPair &farthestPair)
 				{
+					identifyEdgeVertices();
 					std::vector<xVert> edgeVertices;
 					xVert edgeStart = findRandomEdgeVertex();
 					xVert edgeVertex = 0;
 					while(edgeVertex != edgeStart)
 					{
-						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
+//						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
+						edgeVertex = vertices[ve[edgeVertex]].nextEdgeVertex;
 						edgeVertices.push_back(edgeVertex); // this will add all edge vertices, finishing with edgeStart, after which the loop exits
 					}
 					return findFarthestPairFromList(edgeVertices, farthestPair);
@@ -322,7 +324,9 @@ namespace strata
 					}
 				}
 
-				Mesh(core::intf::RenderInterface * _renderer) : MeshInterface(_renderer)
+				Mesh(core::intf::RenderInterface * _renderer) :
+					MeshInterface(_renderer),
+					hasDesignatedEdgeVertices(false)
 				{
 					polygons.push_back( Polygon(0,0,0) );
 					po.push_back(0); // po[0] shouldn't be used as a polygon because 0 is the "N/A" value for the Vertex's poly[] array
@@ -365,6 +369,41 @@ namespace strata
 					return vert;
 				}
 			private:
+				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
+				  * reliable and can be used to follow the edge. If false, the former is not guaranteed to be correct and, in general, should not be
+				  * relied upon. */
+				bool hasDesignatedEdgeVertices;
+
+				void identifyEdgeVertices(void)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++) vertices[i].nextEdgeVertex = 0;
+					xVert startVertex = findRandomEdgeVertex();
+					xVert edgeVertex = startVertex;
+					xVert nextVertex = 0;
+					while(nextVertex != startVertex)
+					{
+						nextVertex = findAdjacentEdgeVertex(edgeVertex, true);
+						vertices[ve[edgeVertex]].nextEdgeVertex = nextVertex;
+						edgeVertex = nextVertex;
+					}
+					if(checkEdgeVertices())
+						hasDesignatedEdgeVertices = true;
+				}
+
+				/** Check the validity of edge vertex values in Vertex::nextEdgeVertex. A value of 'true' is returned if and only if all such
+				  * values are valid. */
+				bool checkEdgeVertices(void)
+				{
+					bool edgeVerticesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].nextEdgeVertex == 0 && isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has zero nextEdgeVertex but is an edge vertex! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+					}
+					return edgeVerticesAreValid;
+				}
+
 				/** Calculate the normal of a polygon. */
 				tiny::vec3 computeNormal(xPoly _p)
 				{
@@ -423,6 +462,7 @@ namespace strata
 					return result;
 				}
 
+				/** A function guaranteed to return an edge vertex. */
 				xVert findRandomEdgeVertex(void)
 				{
 					unsigned int step = ve.size()/7 + 1;
@@ -433,6 +473,7 @@ namespace strata
 						startVertex = ((startVertex + step) % ve.size()); // take modulo to get next vertex
 						if(startVertex != 0) edgeVertex = findEdgeVertex(startVertex);
 					}
+					if(!isEdgeVertex(edgeVertex)) { std::cout << " Mesh::findRandomEdgeVertex() : No edge vertex found! "<<std::endl; return 0; }
 					return edgeVertex;
 				}
 
