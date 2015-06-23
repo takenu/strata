@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 
 #include <tiny/math/vec.h>
-#include <tiny/draw/staticmesh.h>
 #include <tiny/algo/typecluster.h>
 
 #include "vecmath.hpp"
-#include "element.hpp"
+#include "mesh.hpp"
 
 namespace strata
 {
