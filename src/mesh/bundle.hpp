@@ -58,11 +58,6 @@ namespace strata
 
 				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
-
-				virtual float meshSize(void)
-				{
-					return size();
-				}
 		};
 	}
 }

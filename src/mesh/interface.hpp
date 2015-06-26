@@ -86,7 +86,8 @@ namespace strata
 				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
 				virtual float meshSize(void) = 0;
 
-				virtual tiny::mesh::StaticMesh convertToMesh(void) = 0;
+				/** Re-declare DrawableMesh's function for converting a mesh to a drawable object. */
+				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 		};
 	} // end namespace mesh
 } // end namespace strata

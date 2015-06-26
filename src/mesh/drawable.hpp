@@ -52,6 +52,8 @@ namespace strata
 
 				void resetTexture(MeshInterface * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
 
+				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
+
 				virtual ~DrawableMesh(void) {}
 		};
 	} // end namespace mesh

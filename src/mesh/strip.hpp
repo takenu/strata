@@ -72,12 +72,6 @@ namespace strata
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 				{
 				}
-
-				virtual float meshSize(void)
-				{
-					return size();
-				}
-
 		};
 	}
 }
