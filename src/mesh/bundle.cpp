@@ -106,6 +106,31 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
+void Bundle::splitAddIfNewVertex(xVert w, Bundle * b, std::vector<xVert> & newVertices,
+		std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices)
+{
+	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0 ) addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) );
+}
+
+/** Find new vertices to be added to a Bundle under construction, during the process of splitting an existing Bundle. */
+void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices,
+		std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices, Bundle * b)
+{
+	for(unsigned int i = 0; i < oldVertices.size(); i++)
+	{
+		Vertex & v = vertices[ve[oldVertices[i]]];
+		xVert w = 0;
+		for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+		{
+			if(v.poly[j] == 0) break;
+			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], true);
+			splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
+			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], false);
+			splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
+		}
+	}
+}
+
 /** Split a layer into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
@@ -116,9 +141,22 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	Bundle * g = makeNewBundle();
 	Strip * s = makeNewStrip();
 
-	std::map<xVert, xVert> fvert, gvert;
+	std::map<xVert, xVert> fvert, gvert; // Mapping with key = old xVert and value = new xVert
 	xVert v;
 
 	v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
 	v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
+
+	std::vector<xVert> fOldVertices, fNewVertices, gOldVertices, gNewVertices;
+	fOldVertices.push_back(farthestPair.a);
+	gOldVertices.push_back(farthestPair.b);
+	while(fOldVertices.size() > 0 || gOldVertices.size() > 0)
+	{
+		f->splitAddNewVertices(fOldVertices, fNewVertices, fvert, gvert, f);
+		g->splitAddNewVertices(gOldVertices, gNewVertices, gvert, fvert, g);
+		fOldVertices.swap(fNewVertices);
+		gOldVertices.swap(gNewVertices);
+		fNewVertices.clear();
+		gNewVertices.clear();
+	}
 }

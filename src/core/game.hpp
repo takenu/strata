@@ -40,7 +40,7 @@ namespace strata
 		class Game
 		{
 			private:
-				tiny::os::Application *application; /**< The engine's application class, for user input, OpenGL, OpenAL, SDL, etcetera. */
+//				tiny::os::Application *application; /**< The engine's application class, for user input, OpenGL, OpenAL, SDL, etcetera. */
 
 				ApplManager applManager; /**< Manage application specifics (key presses, low level rendering, sound, etcetera). */
 				RenderManager renderManager; /**< Manage graphics rendering. */

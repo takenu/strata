@@ -33,8 +33,9 @@ namespace strata
 				intf::ApplInterface * applInterface;
 				tiny::vec3 cameraPosition;
 				tiny::vec4 cameraOrientation;
-
 				bool lodFollowsCamera;
+				unsigned int renderableKeyCounter;
+				std::map<tiny::draw::Renderable *, unsigned int> renderableKeyMap;
 
 				tiny::draw::WorldRenderer * worldRenderer;
 
@@ -78,18 +79,19 @@ namespace strata
 				virtual void addWorldRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
-//					worldRenderables.push_back( RenderableObjectSpecs(renderable, readDepthTex, writeDepthTex, blendMode) );
-					worldRenderer->addWorldRenderable(renderable, readDepthTex, writeDepthTex, blendMode);
+					renderableKeyMap.insert( std::make_pair(renderable, ++renderableKeyCounter) );
+					worldRenderer->addWorldRenderable(renderableKeyCounter, renderable, readDepthTex, writeDepthTex, blendMode);
 				}
 
 				virtual void addScreenRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
-//					screenRenderables.push_back( RenderableObjectSpecs(renderable, readDepthTex, writeDepthTex, blendMode) );
-					worldRenderer->addScreenRenderable(renderable, readDepthTex, writeDepthTex, blendMode);
+					renderableKeyMap.insert( std::make_pair(renderable, ++renderableKeyCounter) );
+					worldRenderer->addScreenRenderable(renderableKeyCounter, renderable, readDepthTex, writeDepthTex, blendMode);
 				}
 
-				virtual void freeRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeRenderable(renderable); }
+				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeWorldRenderable(renderableKeyMap.find(renderable)->second); }
+				virtual void freeScreenRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeScreenRenderable(renderableKeyMap.find(renderable)->second); }
 
 				// The list-first, add-to-world-renderer-later doesn't seem very necessary - we could skip the RenderableObjectSpecs altogether and
 				// redirect addWorldRenderable() to worldRenderer->addWorldRenderable(). Commented out for now, likely to be deleted later.
@@ -102,7 +104,7 @@ namespace strata
 				RenderManager(intf::ApplInterface * _interface) :
 					intf::RenderInterface(),
 					applInterface(_interface),
-					cameraPosition(tiny::vec3(0.001f, 100.0f, 3.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true),
+					cameraPosition(tiny::vec3(0.001f, 100.0f, 3.001f)), cameraOrientation(tiny::vec4(0.0f, 0.0f, 0.0f, 1.0f)), lodFollowsCamera(true), renderableKeyCounter(0),
 					worldRenderer(new tiny::draw::WorldRenderer(applInterface->getScreenWidth(), applInterface->getScreenHeight()))
 				{
 				}

@@ -210,6 +210,14 @@ namespace strata
 					}
 					return vert;
 				}
+
+				/** Find a neighbor vertex in a polygon. This function gives nonsensical output if you call it for a vertex not part of this polygon. */
+				inline const xVert & findPolyNeighbor(const Polygon &p, const xVert &v, bool clockwise) const
+				{
+					return (p.a == v ? (clockwise ? p.b : p.c) :
+							(p.b == v ? (clockwise ? p.c : p.a) :
+							 			 (clockwise ? p.a : p.b) ) );
+				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
 				  * reliable and can be used to follow the edge. If false, the former is not guaranteed to be correct and, in general, should not be
@@ -340,14 +348,6 @@ namespace strata
 				inline tiny::vec3 polyNormal(const Polygon &p) const
 				{
 					return cross( vertices[ve[p.c]].pos-vertices[ve[p.a]].pos, vertices[ve[p.b]].pos-vertices[ve[p.a]].pos);
-				}
-
-				/** Find a neighbor vertex in a polygon. This function gives nonsensical output if you call it for a vertex not part of this polygon. */
-				inline const xVert & findPolyNeighbor(const Polygon &p, const xVert &v, bool clockwise) const
-				{
-					return (p.a == v ? (clockwise ? p.b : p.c) :
-							(p.b == v ? (clockwise ? p.c : p.a) :
-							 			 (clockwise ? p.a : p.b) ) );
 				}
 		};
 	} // end namespace mesh

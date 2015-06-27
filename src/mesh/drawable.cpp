@@ -33,6 +33,6 @@ void DrawableMesh::resetTexture(MeshInterface * mesh, unsigned int _size, unsign
 {
 	delete texture;
 	texture = createTestTexture(_size, _r, _g, _b);
-	renderer->freeRenderable(renderMesh);
+	renderer->freeWorldRenderable(renderMesh);
 	initMesh(mesh);
 }
