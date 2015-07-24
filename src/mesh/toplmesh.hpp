@@ -95,10 +95,11 @@ namespace strata
 				{
 					std::vector<xVert> edgeVertices;
 					xVert edgeStart = findRandomEdgeVertex();
-					xVert edgeVertex = 0;
+					xVert edgeVertex = vertices[ve[edgeStart]].nextEdgeVertex;
 					while(edgeVertex != edgeStart)
 					{
 //						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
+						std::cout << " edgevertex = "<<edgeVertex<<std::endl;
 						edgeVertex = vertices[ve[edgeVertex]].nextEdgeVertex;
 						edgeVertices.push_back(edgeVertex); // this will add all edge vertices, finishing with edgeStart, after which the loop exits
 					}
@@ -142,9 +143,9 @@ namespace strata
 				void printLists(void) const
 				{
 					std::cout << " Printing MeshBundle lists: "<<std::endl;
-					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<" (E="<<findEdgeVertex(vertices[i].index)<<"), "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
-					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
+					std::cout << " vertices: "; for(unsigned int i = 1; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<" (E="<<findEdgeVertex(vertices[i].index)<<"), "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 1; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
+					std::cout << " vertex check: "; for(unsigned int i = 1; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
 					std::cout << " vertex polys: "<<std::endl;
 					for(unsigned int i = 0; i < vertices.size(); i++)
 					{
@@ -218,6 +219,16 @@ namespace strata
 							(p.b == v ? (clockwise ? p.c : p.a) :
 							 			 (clockwise ? p.a : p.b) ) );
 				}
+
+				bool checkVertexIndices(void) const
+				{
+					bool vertexIndicesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].index < 1) vertexIndicesAreValid = false;
+					}
+					return vertexIndicesAreValid;
+				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
 				  * reliable and can be used to follow the edge. If false, the former is not guaranteed to be correct and, in general, should not be
@@ -234,6 +245,7 @@ namespace strata
 					{
 						nextVertex = findAdjacentEdgeVertex(edgeVertex, true);
 						vertices[ve[edgeVertex]].nextEdgeVertex = nextVertex;
+						std::cout << " nextVertex "<<nextVertex<<" is adjacent to "<<edgeVertex<<", start= "<<startVertex<<"..."<<std::endl;
 						edgeVertex = nextVertex;
 					}
 					if(checkEdgeVertices())
@@ -272,6 +284,8 @@ namespace strata
 						if(v.poly[i]==0) break;
 						else
 						{
+							assert(v.poly[i] < po.size());
+							assert(po[v.poly[i]] < polygons.size());
 							verts[2*i  ] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, true); // find both neighbours of the present vertex
 							verts[2*i+1] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, false);
 						}
@@ -295,10 +309,12 @@ namespace strata
 					return hasUniqueVertex;
 				}
 
-				/** Find another edge vertex, starting from the current vertex. If the parameter 'clockwise' is true the mesh edge will be traversed in a
-				  * clockwise fashion (looking from the direction of the normals, or typically, from above the terrain). */
+				/** Find another edge vertex, starting from the current vertex. If the parameter 'clockwise' is true the mesh edge will be traversed
+				  * in a clockwise fashion (looking from the direction of the normals, or typically, from above the terrain). */
 				xVert findAdjacentEdgeVertex(xVert v, bool clockwise) const
 				{
+					if(v<=0) printLists();
+					assert(v>0);
 					xVert result = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
@@ -306,37 +322,54 @@ namespace strata
 						else if( isEdgeVertex( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise) ) )
 						{
 							result = findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise);
-							break;
+							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+							{
+								if(i == j) continue;
+								if(vertices[ve[v]].poly[j] == 0) break;
+								if( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[j]]], v, !clockwise) == result ) result = 0; // if vertex is in another polygon as well, it may be on the edge but not *along* the edge.
+							}
+							if(result != 0) break;
 						}
 					}
 					return result;
 				}
 
 				/** A function guaranteed to return an edge vertex. */
-				xVert findRandomEdgeVertex(void) const
+				xVert findRandomEdgeVertex(bool _printSteps = false) const
 				{
 					unsigned int step = ve.size()/7 + 1;
 					unsigned int startVertex = 1;
 					unsigned int edgeVertex = (unsigned int)(-1);
-					while(edgeVertex == (unsigned int)(-1))
+					unsigned int maxAttemptsRemaining = 100;
+					while(edgeVertex == (unsigned int)(-1) && (--maxAttemptsRemaining) != (unsigned int)-1)
 					{
 						startVertex = ((startVertex + step) % ve.size()); // take modulo to get next vertex
-						if(startVertex != 0) edgeVertex = findEdgeVertex(startVertex);
+						if(startVertex != 0)
+						{
+							if(_printSteps)
+							{
+								std::cout << " TopologicalMesh::findRandomEdgeVertex() : start="<<startVertex;
+								std::cout << " result="<<findEdgeVertex(startVertex, true)<<std::endl;
+							}
+							edgeVertex = findEdgeVertex(startVertex);
+						}
 					}
-					if(!isEdgeVertex(edgeVertex)) { std::cout << " Mesh::findRandomEdgeVertex() : No edge vertex found! "<<std::endl; return 0; }
+					if(edgeVertex == (unsigned int)-1 || !isEdgeVertex(edgeVertex)) { std::cout << " Mesh::findRandomEdgeVertex() : No edge vertex found! "<<std::endl; return 0; }
 					return edgeVertex;
 				}
 
 				/** Find some vertex on the edge, starting at vertex v. This function may fail if it gets stuck in a highly deformed mesh, in this case it returns 0.
 				  * This situation is best dealt with by trying to find an edge vertex but starting at another vertex randomly. */
-				xVert findEdgeVertex(xVert _v) const
+				xVert findEdgeVertex(xVert _v, bool _printSteps = false) const
 				{
 					if(_v == 0) { std::cout << " Mesh::findEdgeVertex() : Cannot find edge vertex starting from xVert error value 0! "<<std::endl; return (unsigned int)(-1); }
+					if(_printSteps) std::cout << " Trying edge vertex near xVert "<<_v<<"..."<<std::endl;
 					if(isEdgeVertex(_v)) return _v;
 					const Vertex & v = vertices[ve[_v]];
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
 						if(v.poly[i] == 0) break;
+						if(_printSteps) std::cout << " Trying edge vertex near xVert "<<_v<<" for poly "<<v.poly[i]<<"..."<<std::endl;
 						xVert w = findPolyNeighbor(polygons[po[v.poly[i]]], v.index, true); // Only need to consider one direction - the other vertex will be found in the neighbouring polygon for a non-edge vertex
 						if(vertices[ve[w]].pos.x > v.pos.x) return findEdgeVertex(w);
 					}

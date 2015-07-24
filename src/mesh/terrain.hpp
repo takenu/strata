@@ -45,7 +45,21 @@ namespace strata
 				Bundle * makeNewBundle(void);
 				Strip * makeNewStrip(void);
 
-				void splitLargeMeshes(float _maxSize = 700.0f);
+				template <typename MeshType>
+				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize = 700.0f)
+				{
+					std::vector<MeshType*> largeMeshes;
+					for(typename std::map<long unsigned int, MeshType*>::iterator it = tc.begin(); it != tc.end(); it++)
+					{
+						if(it->second->meshSize() > _maxSize)
+							largeMeshes.push_back(it->second);
+					}
+					for(unsigned int i = 0; i < largeMeshes.size(); i++)
+					{
+						std::cout << " splitting mesh... "<<std::endl;
+						largeMeshes[i]->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this));
+					}
+				}
 			public:
 				Terrain(core::intf::RenderInterface * _renderer) :
 					renderer(_renderer),
@@ -55,7 +69,13 @@ namespace strata
 					strips((long unsigned int)(-1), "StripTC")
 				{
 					layers.push_back(new Layer());
-					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
+					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 4, 0.0f);
+					splitLargeMeshes<Bundle>(bundles);
+					splitLargeMeshes<Strip>(strips);
+				}
+
+				void update(void)
+				{
 				}
 
 				~Terrain(void)

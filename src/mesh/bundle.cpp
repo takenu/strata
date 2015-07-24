@@ -102,6 +102,7 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 			break;
 		}
 	}
+	assert(checkVertexIndices());
 //	printLists();
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
@@ -109,6 +110,7 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 void Bundle::splitAddIfNewVertex(xVert w, Bundle * b, std::vector<xVert> & newVertices,
 		std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices)
 {
+	std::cout << " attempt to add "<<w<<"..."<<std::endl;
 	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0 ) addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) );
 }
 
@@ -123,8 +125,12 @@ void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::ve
 		for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
 		{
 			if(v.poly[j] == 0) break;
+			assert(v.poly[j] < po.size());
+			assert(po[v.poly[j]] < polygons.size());
 			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], true);
 			splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
+			assert(v.poly[j] < po.size());
+			assert(po[v.poly[j]] < polygons.size());
 			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], false);
 			splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
 		}
@@ -135,6 +141,7 @@ void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::ve
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 {
+	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
 	VertPair farthestPair(0,0);
 	findFarthestPair(farthestPair);
 	Bundle * f = makeNewBundle();
@@ -152,8 +159,8 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	gOldVertices.push_back(farthestPair.b);
 	while(fOldVertices.size() > 0 || gOldVertices.size() > 0)
 	{
-		f->splitAddNewVertices(fOldVertices, fNewVertices, fvert, gvert, f);
-		g->splitAddNewVertices(gOldVertices, gNewVertices, gvert, fvert, g);
+		splitAddNewVertices(fOldVertices, fNewVertices, fvert, gvert, f);
+		splitAddNewVertices(gOldVertices, gNewVertices, gvert, fvert, g);
 		fOldVertices.swap(fNewVertices);
 		gOldVertices.swap(gNewVertices);
 		fNewVertices.clear();
