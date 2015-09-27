@@ -110,16 +110,38 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
-void Bundle::splitAddIfNewVertex(xVert w, Bundle * b, std::vector<xVert> & newVertices,
-		std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices)
+/** Add a new vertex provided that it has not yet been assigned a new Bundle.
+  *
+  * Parameters:
+  * - w             : the Vertex whose neighbours are to be considered as new members of Bundle 'b'
+  * - b             : the Bundle to which this function should add new vertices
+  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
+  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
+  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
+  */
+void Bundle::splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices,
+		std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices)
 {
-	std::cout << " attempt to add "<<w<<"..."<<std::endl;
-	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0 ) addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) );
+//	std::cout << " Bundle::splitAddIfNewVertex() : attempt to add "<<w<<"..."<<std::endl;
+	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0 )
+	{
+		std::cout << " Bundle::splitAddIfNewVertex() : Added vertex "<<w<<" to Bundle "<<b->getKey()<<std::endl;
+		newVertices.push_back(w);
+		addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of b's vertices
+	}
 }
 
-/** Find new vertices to be added to a Bundle under construction, during the process of splitting an existing Bundle. */
+/** Find new vertices to be added to a Bundle under construction, during the process of splitting an existing Bundle.
+  *
+  * Parameters:
+  * - oldVertices   : list of vertices of the original Bundle that were most recently added to Bundle 'b'
+  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
+  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
+  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
+  * - b             : the Bundle to which this function should add new vertices
+  */
 void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices,
-		std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices, Bundle * b)
+		std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices, Bundle * b)
 {
 	for(unsigned int i = 0; i < oldVertices.size(); i++)
 	{
@@ -140,7 +162,7 @@ void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::ve
 	}
 }
 
-/** Split a layer into two parts. The splitting is done such that each vertex is assigned to the member
+/** Split a Bundle into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 {

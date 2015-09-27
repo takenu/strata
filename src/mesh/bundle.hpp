@@ -42,8 +42,10 @@ namespace strata
 
 				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 
-				void splitAddIfNewVertex(xVert w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices);
-				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices, std::map<xVert, xVert> & otherVertices, Bundle * b);
+				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
+						const std::map<xVert, xVert> & otherVertices);
+				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
+						const std::map<xVert, xVert> & otherVertices, Bundle * b);
 			public:
 				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
 
