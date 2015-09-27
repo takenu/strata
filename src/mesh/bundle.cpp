@@ -54,8 +54,8 @@ void Bundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVer
 	++polyAttempts;
 	Vertex & a = vertices[ve[_a]];
 	Vertex & b = vertices[ve[_b]];
-	tiny::vec3 ab(b.pos-a.pos);
-	ab = normalize(ab)*step;
+	tiny::vec3 ab(b.pos-a.pos); // The line between vertices a and b
+	ab = normalize(ab)*step; // rescaled to the step size
 	tiny::vec3 cpos = a.pos + ab*0.5 + tiny::vec3(-ab.z, 0.0f, ab.x)*sqrt(3.0)*0.5;
 	if( std::max(std::fabs(cpos.x),std::fabs(cpos.z)) > limit ) return; // Don't make polygons whose vertices are outside of the limit
 	xVert _c = findNeighborVertex(b, a, true); // find neighbor of 'a'
@@ -67,15 +67,18 @@ void Bundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVer
 	Vertex & c = vertices[ve[_c]];
 	if(addPolygon(a2,b2,c)) // add the polygon. It may already exist but then this call is just ignored.
 	{
+//		if(polygons.size() > 64690) std::cout << " createFlatLayerPolgyon() : a.pos = "<<a.pos<<", b.pos="<<b.pos<<", ab="<<ab<<std::endl; 
 		// check whether polygon added has ab as a horizontal line (note that in this case b.z < a.z in this case because of clockwise-ness) or is a \ side (note the xor):
-		if( a.pos.z > b.pos.z + 0.9*length(ab) || ( (b.pos.x > a.pos.x) != (b.pos.z > a.pos.z) ))
-		{ plist.push_back( VertPair(a.index, c.index) ); plist.push_back( VertPair(c.index, b.index) ); }
+		if( a2.pos.z > b2.pos.z + 0.9*length(ab) || ( (b2.pos.x > a2.pos.x) != (b2.pos.z > a2.pos.z) ))
+		{ plist.push_back( VertPair(a2.index, c.index) ); plist.push_back( VertPair(c.index, b2.index) ); }
 		else
 		{
-			if(a.pos.z > b.pos.z) plist.push_back( VertPair(a.index, c.index) ); // the to-the-left-of (/) case: add to the top
-			else plist.push_back( VertPair(c.index, b.index) ); // the to-the-right-of (/) case: add to the right
+			if(a2.pos.z > b2.pos.z) plist.push_back( VertPair(a2.index, c.index) ); // the to-the-left-of (/) case: add to the top
+			else plist.push_back( VertPair(c.index, b2.index) ); // the to-the-right-of (/) case: add to the right
 		}
-		if( (polygons.size()%100)==0) std::cout << " Added "<<polygons.size()<<" polygons so far. "<<std::endl;
+//		if( polygons.size()>64690)
+		if( (polygons.size()%1000)==0)
+			std::cout << " Added "<<polygons.size()<<" polygons so far. "<<std::endl;
 	}
 }
 
@@ -88,7 +91,7 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	Vertex v2(-xstart, height, -scale/2 + step);
 	xVert b = addVertex(v1);
 	xVert a = addVertex(v2);
-	printLists();
+//	printLists();
 
 	std::deque<VertPair> plist;
 	plist.push_back( VertPair(a,b) );
@@ -141,7 +144,7 @@ void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::ve
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 {
-	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
+//	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
 	VertPair farthestPair(0,0);
 	findFarthestPair(farthestPair);
 	Bundle * f = makeNewBundle();

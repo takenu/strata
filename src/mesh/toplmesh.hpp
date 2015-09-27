@@ -99,7 +99,7 @@ namespace strata
 					while(edgeVertex != edgeStart)
 					{
 //						edgeVertex = findAdjacentEdgeVertex(edgeVertex, true); // move by one edge vertex, clockwise
-						std::cout << " edgevertex = "<<edgeVertex<<std::endl;
+//						std::cout << " TopologicalMesh::analyseShape() : edgevertex = "<<edgeVertex<<std::endl;
 						edgeVertex = vertices[ve[edgeVertex]].nextEdgeVertex;
 						edgeVertices.push_back(edgeVertex); // this will add all edge vertices, finishing with edgeStart, after which the loop exits
 					}
@@ -245,7 +245,7 @@ namespace strata
 					{
 						nextVertex = findAdjacentEdgeVertex(edgeVertex, true);
 						vertices[ve[edgeVertex]].nextEdgeVertex = nextVertex;
-						std::cout << " nextVertex "<<nextVertex<<" is adjacent to "<<edgeVertex<<", start= "<<startVertex<<"..."<<std::endl;
+//						std::cout << " TopologicalMesh::identifyEdgeVertices() : nextVertex "<<nextVertex<<" is adjacent to "<<edgeVertex<<", start= "<<startVertex<<"..."<<std::endl;
 						edgeVertex = nextVertex;
 					}
 					if(checkEdgeVertices())
