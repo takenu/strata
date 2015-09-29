@@ -39,13 +39,19 @@ namespace strata
 
 			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0)
 			{
-				for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-					poly[i] = 0;
+				clearPolys();
 			}
 
 			Vertex(float x, float y, float z) : Vertex(tiny::vec3(x,y,z)) {}
 
 			Vertex & operator= (const Vertex &v) { pos = v.pos; index = v.index; for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = v.poly[i]; return *this; }
+
+			/** Remove all polygon memberships from the Vertex (required e.g. when creating a duplicate of a Vertex) */
+			void clearPolys(void)
+			{
+				for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					poly[i] = 0;
+			}
 		};
 
 		/** A polygon, for being part of a mesh. */

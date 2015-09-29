@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <exception>
+
 #include "vecmath.hpp"
 #include "element.hpp"
 #include "bundle.hpp"
@@ -125,7 +127,7 @@ void Bundle::splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert>
 //	std::cout << " Bundle::splitAddIfNewVertex() : attempt to add "<<w<<"..."<<std::endl;
 	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0 )
 	{
-		std::cout << " Bundle::splitAddIfNewVertex() : Added vertex "<<w<<" to Bundle "<<b->getKey()<<std::endl;
+//		std::cout << " Bundle::splitAddIfNewVertex() : Added vertex "<<w<<" to Bundle "<<b->getKey()<<std::endl;
 		newVertices.push_back(w);
 		addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of b's vertices
 	}
@@ -190,5 +192,54 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 		gOldVertices.swap(gNewVertices);
 		fNewVertices.clear();
 		gNewVertices.clear();
+	}
+//	std::cout << " Mappings fvert = "; for(std::map<xVert, xVert>::iterator it = fvert.begin(); it != fvert.end(); it++) std::cout <<" "<<it->first<<"->"<<it->second; std::cout << std::endl;
+//	std::cout << " Mappings gvert = "; for(std::map<xVert, xVert>::iterator it = gvert.begin(); it != gvert.end(); it++) std::cout <<" "<<it->first<<"->"<<it->second; std::cout << std::endl;
+	for(unsigned int i = 1; i < polygons.size(); i++)
+	{
+		xVert a = polygons[i].a;
+		xVert b = polygons[i].b;
+		xVert c = polygons[i].c;
+		// Add polygon to the correct object.
+		if(gvert.find(a) == gvert.end() && gvert.find(b) == gvert.end() && gvert.find(c) == gvert.end()) // None of the vertices are in Bundle g? Then this polygon is in f.
+		{
+			try
+			{
+				assert(fvert.at(a) < f->ve.size());
+				assert(fvert.at(b) < f->ve.size());
+				assert(fvert.at(c) < f->ve.size());
+				assert(f->ve[fvert.at(a)] < f->vertices.size());
+				assert(f->ve[fvert.at(b)] < f->vertices.size());
+				assert(f->ve[fvert.at(c)] < f->vertices.size());
+			}
+			catch(std::exception &e)
+			{
+				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+			}
+//			std::cout << " Bundle::split() : f has "<<f->polygons.size()<<" polys and an index array of size "<<f->po.size()<<std::endl;
+			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
+		}
+		else if(fvert.find(a) == fvert.end() && fvert.find(b) == fvert.end() && fvert.find(c) == fvert.end()) // None of the vertices are in Bundle f? Then this polygon is in g.
+		{
+			try
+			{
+				assert(gvert.at(a) < g->ve.size());
+				assert(gvert.at(b) < g->ve.size());
+				assert(gvert.at(c) < g->ve.size());
+				assert(g->ve[gvert.at(a)] < g->vertices.size());
+				assert(g->ve[gvert.at(b)] < g->vertices.size());
+				assert(g->ve[gvert.at(c)] < g->vertices.size());
+			}
+			catch(std::exception &e)
+			{
+				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+			}
+//			std::cout << " Bundle::split() : g has "<<g->polygons.size()<<" polys and an index array of size "<<g->po.size()<<std::endl;
+			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
+		}
+		else
+		{
+			// TODO: Make stitch from the remaining polygons.
+		}
 	}
 }

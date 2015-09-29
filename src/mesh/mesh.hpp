@@ -54,6 +54,7 @@ namespace strata
 				{
 					ve.push_back( vertices.size() );
 					vertices.push_back(v);
+					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
 					vertices.back().index = ve.size()-1;
 					return ve.size()-1;
 				}
@@ -85,11 +86,22 @@ namespace strata
 					ve[j] = 0; // remove from index list
 				}
 
+				/** Add a polygon between vertices a, b and c to the Mesh. Returns true if and only if the polygon was added. Checks for prior
+				  * existence of the polygon so that duplicates are avoided. */
 				bool addPolygon(Vertex &a, Vertex &b, Vertex &c)
 				{
 					// check whether polygon exists (by using a's list)
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(a.poly[i] >= po.size())
+						{
+							std::cout << " Mesh::addPolygon() : Bad poly array for vertex "<<a.index<<" in mesh with "<<po.size()<<" polygons: " << std::endl;
+							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++) std::cout << " poly["<<j<<"] = "<<a.poly[j]<<std::endl;
+						}
+						assert(a.poly[i] < po.size());
+						assert(po[a.poly[i]] < polygons.size());
 						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return false; // Polygon found
+					}
 					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
 					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
 					po.push_back( polygons.size() );
