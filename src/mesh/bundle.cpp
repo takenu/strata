@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vecmath.hpp"
 #include "element.hpp"
 #include "bundle.hpp"
+#include "strip.hpp"
 
 using namespace strata::mesh;
 
@@ -217,7 +218,8 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
 			}
 //			std::cout << " Bundle::split() : f has "<<f->polygons.size()<<" polys and an index array of size "<<f->po.size()<<std::endl;
-			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
+//			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
+			f->addPolygonFromVertexIndices(fvert.at(a), fvert.at(b), fvert.at(c));
 		}
 		else if(fvert.find(a) == fvert.end() && fvert.find(b) == fvert.end() && fvert.find(c) == fvert.end()) // None of the vertices are in Bundle f? Then this polygon is in g.
 		{
@@ -235,11 +237,20 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
 			}
 //			std::cout << " Bundle::split() : g has "<<g->polygons.size()<<" polys and an index array of size "<<g->po.size()<<std::endl;
-			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
+//			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
+			g->addPolygonFromVertexIndices(gvert.at(a), gvert.at(b), gvert.at(c));
 		}
 		else
 		{
 			// TODO: Make stitch from the remaining polygons.
+			Vertex & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
+			Vertex & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
+			Vertex & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
+			long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
+			long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
+			long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());
+			std::cout << " Bundle::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
+			s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stich, and specify which vertices from which meshes it is using
 		}
 	}
 }

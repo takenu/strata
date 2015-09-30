@@ -46,6 +46,11 @@ namespace strata
 						const std::map<xVert, xVert> & otherVertices);
 				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
 						const std::map<xVert, xVert> & otherVertices, Bundle * b);
+
+
+				xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
+				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
+				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			public:
 				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
 

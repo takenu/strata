@@ -50,7 +50,7 @@ namespace strata
 				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
 				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
 				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
-				xVert addVertex(const Vertex &v)
+				xVert addVertex(const VertexType &v)
 				{
 					ve.push_back( vertices.size() );
 					vertices.push_back(v);
@@ -58,8 +58,6 @@ namespace strata
 					vertices.back().index = ve.size()-1;
 					return ve.size()-1;
 				}
-				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
-				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			protected:
 				using TopologicalMesh<VertexType>::vertices;
 				using TopologicalMesh<VertexType>::polygons;
@@ -86,9 +84,24 @@ namespace strata
 					ve[j] = 0; // remove from index list
 				}
 
+				/** Add a vertex v if it isn't added already. The tolerance determines the maximal difference between v's position
+				  * and an existing vertex's position for which v is considered 'already present' in the mesh. */
+				xVert addIfNewVertex(const VertexType &v, float tolerance)
+				{
+					for(unsigned int i = 0; i < vertices.size(); i++)
+						if( tiny::length2(v.pos - vertices[i].pos) < tolerance*tolerance ) return vertices[i].index;
+					return addVertex(v);
+				}
+
+				/** Add a polygon using vertex indices rather than vertex references. */
+				bool addPolygonFromVertexIndices(xVert _a, xVert _b, xVert _c)
+				{
+					return addPolygon(vertices[ve[_a]], vertices[ve[_b]], vertices[ve[_c]]); // Add polygon using vertices from this mesh.
+				}
+
 				/** Add a polygon between vertices a, b and c to the Mesh. Returns true if and only if the polygon was added. Checks for prior
 				  * existence of the polygon so that duplicates are avoided. */
-				bool addPolygon(Vertex &a, Vertex &b, Vertex &c)
+				bool addPolygon(VertexType &a, VertexType &b, VertexType &c)
 				{
 					// check whether polygon exists (by using a's list)
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)

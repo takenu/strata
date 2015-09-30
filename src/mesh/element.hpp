@@ -34,7 +34,7 @@ namespace strata
 		{
 			tiny::vec3 pos;
 			xVert index; /**< The index of this vertex in the 've' array of the Mesh. Uses '0' as an error value (valid vertices should not have index==0). */
-			xVert nextEdgeVertex; /**< The next edge vertex, if this vertex itself is on the edge. Otherwise 0. */
+			xVert nextEdgeVertex; /**< The next edge vertex, if this vertex itself is on the edge of a mesh. Otherwise 0. */
 			xPoly poly[STRATA_VERTEX_MAX_LINKS]; /**< Enforce max number of links (to avoid having to (de)allocate memory when creating a Vertex). */
 
 			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0)

@@ -36,12 +36,23 @@ namespace strata
 		{
 			private:
 				xVert remoteIndex;
-			public:
 				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
-				StripVertex(tiny::vec3 _pos, xVert _vertex, long unsigned int _mfid) : Vertex(_pos), mfid(_mfid)
+			public:
+				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. */
+				StripVertex(tiny::vec3 _pos, long unsigned int _mfid, xVert _remoteIndex) : Vertex(_pos), mfid(_mfid), remoteIndex(_remoteIndex)
 				{
-					index = _vertex;
 				}
+
+				/** Allow construction from existing vertex plus mfid.
+				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
+				StripVertex(const Vertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.index) {}
+
+				StripVertex(const StripVertex &v) : Vertex(v), remoteIndex(v.remoteIndex), mfid(v.mfid)
+				{
+				}
+
+				const xVert & getRemoteIndex(void) const { return remoteIndex; }
+				void setRemoteIndex(const xVert &v) { remoteIndex = v; }
 		};
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
@@ -52,12 +63,35 @@ namespace strata
 				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
 				{
 				}
+			protected:
 			public:
+				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
+				bool addPolygonWithVertices(const Vertex &a, long unsigned int aid, const Vertex &b, long unsigned int bid,
+						const Vertex &c, long unsigned int cid, float relativeTolerance = 0.001)
+				{
+					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
+					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
+					xVert _a = addIfNewVertex(StripVertex(a,aid), tolerance);
+					xVert _b = addIfNewVertex(StripVertex(b,bid), tolerance);
+					xVert _c = addIfNewVertex(StripVertex(c,cid), tolerance);
+					return addPolygonFromVertexIndices(_a, _b, _c);
+				}
+
 				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, core::intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
 					Mesh<StripVertex>(_renderer)
 				{
 				}
+
+				unsigned int nPolys(void) const { return polygons.size(); }
+				unsigned int nPolyIndices(void) const { return po.size(); }
+
+//				virtual xVert addVertex(const StitchVertex &v)
+//				{
+//					return Mesh<StripVertex>::addVertex(v);
+////					xVert _v = Mesh<StripVertex>::addVertex(v);
+////					vertices[ve[_v]].setRemoteIndex(v.getRemoteIndex()); // Copy remote index of vertex in owner's mesh. (Shouldn't be necessary if copy constructor does what it is expected to do.)
+//				}
 
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
