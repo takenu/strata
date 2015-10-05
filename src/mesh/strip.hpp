@@ -39,7 +39,7 @@ namespace strata
 				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
 			public:
 				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. */
-				StripVertex(tiny::vec3 _pos, long unsigned int _mfid, xVert _remoteIndex) : Vertex(_pos), mfid(_mfid), remoteIndex(_remoteIndex)
+				StripVertex(tiny::vec3 _pos, long unsigned int _mfid, xVert _remoteIndex) : Vertex(_pos), remoteIndex(_remoteIndex), mfid(_mfid)
 				{
 				}
 
@@ -103,7 +103,7 @@ namespace strata
 					return analyseShapeDirect(farthestPair);
 				}
 
-				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
+				virtual void split(std::function<Bundle * (void)> /*makeNewBundle*/, std::function<Strip * (void)> /*makeNewStrip*/)
 				{
 				}
 		};

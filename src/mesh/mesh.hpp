@@ -31,6 +31,8 @@ namespace strata
 {
 	namespace mesh
 	{
+		class Layer; // for parentLayer, a pointer to the Layer to which this Mesh belongs
+
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex. It 
 		  * needs a constructor that takes the form VertexType(float, float, float).
@@ -46,18 +48,6 @@ namespace strata
 		template <typename VertexType>
 		class Mesh : public TopologicalMesh<VertexType>
 		{
-			public:
-				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
-				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
-				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
-				xVert addVertex(const VertexType &v)
-				{
-					ve.push_back( vertices.size() );
-					vertices.push_back(v);
-					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
-					vertices.back().index = ve.size()-1;
-					return ve.size()-1;
-				}
 			protected:
 				using TopologicalMesh<VertexType>::vertices;
 				using TopologicalMesh<VertexType>::polygons;
@@ -65,6 +55,8 @@ namespace strata
 				using TopologicalMesh<VertexType>::po;
 
 				using TopologicalMesh<VertexType>::comparePolygons;
+
+				Layer * parentLayer;
 
 				Mesh(core::intf::RenderInterface * _renderer) :
 					TopologicalMesh<VertexType>(_renderer)
@@ -125,6 +117,21 @@ namespace strata
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
 					return true;
 				}
+			public:
+				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
+				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
+				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
+				xVert addVertex(const VertexType &v)
+				{
+					ve.push_back( vertices.size() );
+					vertices.push_back(v);
+					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
+					vertices.back().index = ve.size()-1;
+					return ve.size()-1;
+				}
+
+				void setParentLayer(Layer * layer) { parentLayer = layer; }
+				Layer * getParentLayer(void) const { return parentLayer; }
 		};
 	} // end namespace mesh
 } // end namespace strata

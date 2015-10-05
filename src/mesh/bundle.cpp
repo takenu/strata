@@ -172,9 +172,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 //	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
 	VertPair farthestPair(0,0);
 	findFarthestPair(farthestPair);
-	Bundle * f = makeNewBundle();
-	Bundle * g = makeNewBundle();
-	Strip * s = makeNewStrip();
+	Bundle * f = makeNewBundle(); f->setParentLayer(parentLayer); // Parent layer is shared among Bundles of the same Layer
+	Bundle * g = makeNewBundle(); g->setParentLayer(parentLayer);
+	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
 
 	std::map<xVert, xVert> fvert, gvert; // Mapping with key = old xVert and value = new xVert
 	xVert v;

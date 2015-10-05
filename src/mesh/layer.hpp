@@ -69,14 +69,20 @@ namespace strata
 				{
 				}
 
-				/** Initialize the MeshFragment as a flat, square layer. */
-				void createFlatLayer(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip, float size, unsigned int ndivs, float height = 0.0f)
+				Bundle * createBundle(std::function<Bundle * (void)> makeNewBundle)
 				{
 					Bundle * bundle = makeNewBundle();
+					bundle->setParentLayer(this);
 					bundles.push_back( bundle->getKey() );
-					bundle->createFlatLayer(size, ndivs, height);
+					return bundle;
+				}
 
-					bundle->initMesh(bundle);
+				/** Initialize the MeshFragment as a flat, square layer. */
+				void createFlatLayer(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> /*makeNewStrip*/, float size, unsigned int ndivs, float height = 0.0f)
+				{
+					Bundle * bundle = createBundle(makeNewBundle);
+					bundle->createFlatLayer(size, ndivs, height);
+					bundle->initMesh(bundle); // uses mesh::Drawable::initMesh() which calls TopologicalMesh::convertToMesh()
 				}
 
 //				xVert addVertex(tiny::vec3 pos) { return mesh.addVertex(pos); }
