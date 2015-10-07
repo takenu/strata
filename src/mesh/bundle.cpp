@@ -242,14 +242,13 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 		}
 		else
 		{
-			// TODO: Make stitch from the remaining polygons.
 			Vertex & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
 			Vertex & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
 			Vertex & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
 			long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
 			long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
 			long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());
-			std::cout << " Bundle::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
+//			std::cout << " Bundle::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
 			s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stich, and specify which vertices from which meshes it is using
 		}
 	}

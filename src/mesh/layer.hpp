@@ -34,11 +34,15 @@ namespace strata
 		class Layer;
 		class Stitch;
 
-		/** A Stitch is a class for long but narrow meshes that form the edge of a layer. Every layer can have one or several
+		/** A Stitch is a class for long but narrow meshes that form the topological edge of a layer. Every layer can have one or several
 		  * stitches which connect it to layers under it. Large layers may be cut and then reconnected via stitches in order
 		  * to reduce layer size when desirable.
 		  * Stitches are more general and less coherent than layers since they define polygons that incorporate vertices
-		  * belonging to adjacent objects (layers and other stitches). */
+		  * belonging to adjacent objects (layers and other stitches).
+		  * Stitches are implemented as Strips (since they borrow vertices and do not contain any vertices themselves) but
+		  * it is important to emphasize that Stitches are special Strips in that only they can connect one layer to another layer,
+		  * and that they never used to connect several parts of a Layer.
+		  */
 		class Stitch
 		{
 			private:
@@ -77,7 +81,8 @@ namespace strata
 					return bundle;
 				}
 
-				/** Initialize the MeshFragment as a flat, square layer. */
+				/** Add a single Bundle to the layer, and initialize it as a flat, roughly square mesh of equilateral triangles
+				  * with size 'size' and 'ndivs' subdivisions. */
 				void createFlatLayer(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> /*makeNewStrip*/, float size, unsigned int ndivs, float height = 0.0f)
 				{
 					Bundle * bundle = createBundle(makeNewBundle);

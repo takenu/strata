@@ -31,6 +31,10 @@ namespace strata
 		typedef tiny::algo::TypeCluster<long unsigned int, Bundle> BundleTC;
 		typedef tiny::algo::TypeCluster<long unsigned int, Strip> StripTC;
 
+		/** The Terrain is the master class for an entire terrain object. It manages a set of Bundles, which are small
+		  * mesh fragments, and Layers, which are stratigraphical components of the terrain. The Bundles are joined into
+		  * Layers using Strip objects, which define the polygons required to join distinct meshes but which do not contain
+		  * vertices of their own. Then, the Layers are glued on top of each other using Stitches. */
 		class Terrain
 		{
 			private:
@@ -42,9 +46,17 @@ namespace strata
 				BundleTC bundles;
 				StripTC strips;
 
+				/** A function for adding a new Bundle to the Terrain. Most functions for modifying the Terrain are not
+				  * implemented by the Terrain but inside by the object on which the modification is performed. Therefore,
+				  * modifying functions are given access to this function by taking it as an argument, typically using std::bind. */
 				Bundle * makeNewBundle(void);
+				/** A function for adding a new Strip to the Terrain. Most functions for modifying the Terrain are not
+				  * implemented by the Terrain but inside by the object on which the modification is performed. Therefore,
+				  * modifying functions are given access to this function by taking it as an argument, typically using std::bind. */
 				Strip * makeNewStrip(void);
 
+				/** Split very large meshes (either Bundles or Strips) of this Terrain into smaller fragments. The criterium for splitting
+				  * is exceedance of the maximal vertex-to-vertex distance of the mesh of a threshold size '_maxSize'. */
 				template <typename MeshType>
 				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize = 700.0f)
 				{
