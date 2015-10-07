@@ -22,17 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::mesh;
 
-void DrawableMesh::initMesh(MeshInterface * mesh)
+void DrawableMesh::initMesh(void)
 {
-	renderMesh = new tiny::draw::StaticMesh( mesh->convertToMesh() );
+	renderMesh = new tiny::draw::StaticMesh( convertToMesh() );
 	renderMesh->setDiffuseTexture(*texture);
 	renderer->addWorldRenderable(renderMesh);
 }
 
-void DrawableMesh::resetTexture(MeshInterface * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
+void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
 {
 	delete texture;
 	texture = createTestTexture(_size, _r, _g, _b);
 	renderer->freeWorldRenderable(renderMesh);
-	initMesh(mesh);
+	initMesh();
 }

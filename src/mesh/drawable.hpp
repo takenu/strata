@@ -48,9 +48,9 @@ namespace strata
 				{
 				}
 
-				void initMesh(MeshInterface * mesh);
+				void initMesh(void);
 
-				void resetTexture(MeshInterface * mesh, unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
+				void resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
 
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 
