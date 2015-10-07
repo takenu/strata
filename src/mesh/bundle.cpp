@@ -252,4 +252,14 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 			s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stich, and specify which vertices from which meshes it is using
 		}
 	}
+
+	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
+
+	f->setScaleFactor(scale);
+	g->setScaleFactor(scale);
+	s->setScaleFactor(scale);
+
+	f->initMesh();
+	g->initMesh();
+	s->initMesh();
 }

@@ -70,6 +70,7 @@ namespace strata
 					{
 						std::cout << " Terrain::splitLargeMeshes() : splitting mesh... "<<std::endl;
 						largeMeshes[i]->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this));
+						delete largeMeshes[i];
 					}
 				}
 			public:

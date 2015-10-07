@@ -54,7 +54,7 @@ namespace strata
 
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 
-				virtual ~DrawableMesh(void) {}
+				virtual ~DrawableMesh(void);
 		};
 	} // end namespace mesh
 } // end namespace strata

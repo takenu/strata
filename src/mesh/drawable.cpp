@@ -36,3 +36,8 @@ void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned c
 	renderer->freeWorldRenderable(renderMesh);
 	initMesh();
 }
+
+DrawableMesh::~DrawableMesh(void)
+{
+	renderer->freeWorldRenderable(renderMesh);
+}

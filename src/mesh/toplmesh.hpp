@@ -74,6 +74,9 @@ namespace strata
 
 				tiny::vec3 getVertexPosition(xVert v) { return vertices[ve[v]].pos; }
 
+				/** Set the scale multiplier for the terrain's texture coordinates. */
+				void setScaleFactor(float _scale) { scale = _scale; }
+
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
 			protected:
@@ -169,6 +172,7 @@ namespace strata
 
 				TopologicalMesh(core::intf::RenderInterface * _renderer) :
 					MeshInterface(_renderer),
+					scale(1.0f),
 					hasDesignatedEdgeVertices(false)
 				{
 					polygons.push_back( Polygon(0,0,0) );
