@@ -233,6 +233,35 @@ namespace strata
 					}
 					return vertexIndicesAreValid;
 				}
+
+				/** Check whether there exists a vertex that is connected by a direct edge to both
+				  * _a and _b. This is done by checking for all polygons of _a that all vertices in the
+				  * polygon are not part of any of _b's polygons.
+				  * A faster implementation could be developed using a directed loop around '_a' and '_b'
+				  * where every time we find the next vertex, but this would require a bit more topological
+				  * programming and therefore the current approach was chosen for the time being.
+				  */
+				inline bool verticesHaveCommonNeighbor(const xVert & _a, const xVert & _b)
+				{
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[_a]].poly[i] == 0) break;
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(vertices[ve[_b]].poly[i] == 0) break;
+							if (vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].a]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].b]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].c]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].a]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].b]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].c]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].a]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].b]].index ||
+								vertices[ve[polygons[po[vertices[ve[_a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[_b]].poly[j]]].c]].index ) return true;
+						}
+					}
+					return false;
+				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
 				  * reliable and can be used to follow the edge. If false, the former is not guaranteed to be correct and, in general, should not be

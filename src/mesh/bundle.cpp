@@ -190,26 +190,10 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 
 	// Check that the farthest pair vertices are not part of the same polygon (by checking that b is not part of any of a's polygons),
 	// and that they also are not connected to the same vertex.
-	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+	if( verticesHaveCommonNeighbor(farthestPair.a, farthestPair.b) )
 	{
-		if(vertices[ve[farthestPair.a]].poly[i] == 0) break;
-		for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
-		{
-			// For all 9 vertex-vertex pairs check inequality of vertex indices.
-			if(	vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].a]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].b]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].a]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].c]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].a]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].b]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].b]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].c]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].a]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].b]].index ||
-				vertices[ve[polygons[po[vertices[ve[farthestPair.a]].poly[i]]].c]].index == vertices[ve[polygons[po[vertices[ve[farthestPair.b]].poly[j]]].c]].index )
-			{
-				std::cout << " Bundle::split() : Farthest pair vertices seem to be members of the same (very large) polygon. Cannot split! "<<std::endl;
-				return;
-			}
-		}
+		std::cout << " Bundle::split() : Farthest pair vertices seem to be members of the same (very large) polygon. Cannot split! "<<std::endl;
+		return;
 	}
 
 	Bundle * f = makeNewBundle(); f->setParentLayer(parentLayer); // Parent layer is shared among Bundles of the same Layer

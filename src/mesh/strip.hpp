@@ -1,4 +1,3 @@
-
 /*
 This file is part of Chathran Strata: https://github.com/takenu/strata
 Copyright 2015, Matthijs van Dorp.
@@ -103,9 +102,7 @@ namespace strata
 					return analyseShapeDirect(farthestPair);
 				}
 
-				virtual void split(std::function<Bundle * (void)> /*makeNewBundle*/, std::function<Strip * (void)> /*makeNewStrip*/)
-				{
-				}
+				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
 		};
 	}
 }
