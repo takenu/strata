@@ -45,7 +45,7 @@ namespace strata
 				{
 					tiny::mesh::StaticMesh mesh;
 					for(unsigned int i = 1; i < vertices.size(); i++) mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
-								tiny::vec2(vertices[i].pos.z/scale + 0.5, vertices[i].pos.x/scale + 0.5), // texture coordinate
+								tiny::vec2(vertices[i].pos.z/scaleTexture + 0.5, vertices[i].pos.x/scaleTexture + 0.5), // texture coordinate
 								tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
 								(vertices[i].poly[0] > 0 ? computeNormal(vertices[i].poly[0]) : tiny::vec3(0.0f,1.0f,0.0f)),
 								vertices[i].pos ) ); // position
@@ -75,7 +75,7 @@ namespace strata
 				tiny::vec3 getVertexPosition(xVert v) { return vertices[ve[v]].pos; }
 
 				/** Set the scale multiplier for the terrain's texture coordinates. */
-				void setScaleFactor(float _scale) { scale = _scale; }
+				void setScaleFactor(float _scale) { scaleTexture = _scale; }
 
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
@@ -86,7 +86,7 @@ namespace strata
 				std::vector<xVert> ve;
 				std::vector<xPoly> po;
 
-				float scale; /**< Scale factor - coordinates should range from -scale/2 to scale/2 (used for texture coords) */
+				float scaleTexture; /**< Scale factor - coordinates should range from -scaleTexture/2 to scaleTexture/2 (used for texture coords) */
 
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
 				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
@@ -172,7 +172,7 @@ namespace strata
 
 				TopologicalMesh(core::intf::RenderInterface * _renderer) :
 					MeshInterface(_renderer),
-					scale(1.0f),
+					scaleTexture(1.0f),
 					hasDesignatedEdgeVertices(false)
 				{
 					polygons.push_back( Polygon(0,0,0) );

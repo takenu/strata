@@ -87,11 +87,11 @@ void Bundle::createFlatLayerPolygon(std::deque<VertPair> & plist, xVert _a, xVer
 
 void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 {
-	scale = _size;
-	float step = scale/ndivs;
-	float xstart = floor(scale/(2*step*sqrt(0.75)))*(step*sqrt(0.75));
-	Vertex v1(-xstart, height, -scale/2);
-	Vertex v2(-xstart, height, -scale/2 + step);
+	scaleTexture = _size;
+	float step = scaleTexture/ndivs;
+	float xstart = floor(scaleTexture/(2*step*sqrt(0.75)))*(step*sqrt(0.75));
+	Vertex v1(-xstart, height, -scaleTexture/2);
+	Vertex v2(-xstart, height, -scaleTexture/2 + step);
 	xVert b = addVertex(v1);
 	xVert a = addVertex(v2);
 //	printLists();
@@ -100,7 +100,7 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	plist.push_back( VertPair(a,b) );
 	while(plist.size() > 0)
 	{
-		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*scale/2, step);
+		createFlatLayerPolygon(plist, plist.front().a, plist.front().b, 1.00001*scaleTexture/2, step);
 		plist.pop_front();
 		if(polygons.size() > 10 * ndivs * ndivs)
 		{
@@ -324,11 +324,12 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 
 	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
 
-	f->setScaleFactor(scale);
-	g->setScaleFactor(scale);
-	s->setScaleFactor(scale);
+	f->setScaleFactor(scaleTexture);
+	g->setScaleFactor(scaleTexture);
+	s->setScaleFactor(scaleTexture);
 
 	f->initMesh();
 	g->initMesh();
 	s->initMesh();
+	s->resetTexture(scaleTexture, 250, 200, 0);
 }

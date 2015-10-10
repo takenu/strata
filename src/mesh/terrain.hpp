@@ -84,7 +84,7 @@ namespace strata
 					layers.push_back(new Layer());
 					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 5, 0.0f);
 					splitLargeMeshes<Bundle>(bundles);
-					splitLargeMeshes<Strip>(strips);
+//					splitLargeMeshes<Strip>(strips);
 				}
 
 				void update(void)
