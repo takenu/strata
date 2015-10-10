@@ -45,6 +45,7 @@ namespace strata
 
 				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 
+				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
 				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
 						const std::map<xVert, xVert> & otherVertices);
 				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
