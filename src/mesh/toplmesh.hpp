@@ -91,6 +91,9 @@ namespace strata
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
 				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
 
+				/** Declare a function for adding vertices, which must be overloaded in the end-using class. */
+				virtual xVert addVertex(const VertexType &v) = 0;
+
 				/** Analyse the shape of the mesh, and return the pair of most distant vertices in the set. This only considers edge vertices (such
 				  * that the calculation is easiest, also because for most sane meshes edge vertices are most distant, and because it is easier to
 				  * work with edge vertices when e.g. splitting meshes). */

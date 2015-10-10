@@ -48,13 +48,34 @@ namespace strata
 		template <typename VertexType>
 		class Mesh : public TopologicalMesh<VertexType>
 		{
+			public:
+				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
+				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
+				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
+				virtual xVert addVertex(const VertexType &v)
+				{
+					ve.push_back( vertices.size() );
+					vertices.push_back(v);
+					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
+					vertices.back().index = ve.size()-1;
+					return ve.size()-1;
+				}
+
+				void setParentLayer(Layer * layer) { parentLayer = layer; }
+				Layer * getParentLayer(void) const { return parentLayer; }
 			protected:
+				friend class Bundle; // the Bundle also must use this class's protected functions for creating Strip objects
+
 				using TopologicalMesh<VertexType>::vertices;
 				using TopologicalMesh<VertexType>::polygons;
 				using TopologicalMesh<VertexType>::ve;
 				using TopologicalMesh<VertexType>::po;
 
 				using TopologicalMesh<VertexType>::comparePolygons;
+				using TopologicalMesh<VertexType>::findPolyNeighbor;
+				using TopologicalMesh<VertexType>::findFarthestPair;
+				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
+				using TopologicalMesh<VertexType>::getVertexPosition;
 
 				Layer * parentLayer;
 
@@ -117,21 +138,217 @@ namespace strata
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) if(c.poly[i] == 0) { c.poly[i] = po.size()-1; break; }
 					return true;
 				}
-			public:
-				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
-				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
-				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
-				xVert addVertex(const VertexType &v)
+
+				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
+				template <typename AnotherVertexType>
+				bool addPolygonWithVertices(const AnotherVertexType &a, long unsigned int aid, const AnotherVertexType &b, long unsigned int bid,
+						const AnotherVertexType &c, long unsigned int cid, float relativeTolerance = 0.001)
 				{
-					ve.push_back( vertices.size() );
-					vertices.push_back(v);
-					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
-					vertices.back().index = ve.size()-1;
-					return ve.size()-1;
+					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
+					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
+					xVert _a = addIfNewVertex(VertexType(a,aid), tolerance);
+					xVert _b = addIfNewVertex(VertexType(b,bid), tolerance);
+					xVert _c = addIfNewVertex(VertexType(c,cid), tolerance);
+					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
-				void setParentLayer(Layer * layer) { parentLayer = layer; }
-				Layer * getParentLayer(void) const { return parentLayer; }
+				/** Add a new vertex provided that it has not yet been assigned a new TopologicalMesh.
+				  *
+				  * Parameters:
+				  * - w             : the Vertex whose neighbours are to be considered as new members of Bundle 'b'
+				  * - b             : the Bundle to which this function should add new vertices
+				  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
+				  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
+				  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
+				  */
+				template <typename MeshType>
+				void splitAddIfNewVertex(const xVert & w, MeshType * m, std::vector<xVert> & newVertices,
+						std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices)
+				{
+				//	std::cout << " Mesh::splitAddIfNewVertex() : attempt to add "<<w<<"..."<<std::endl;
+					if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0)
+					{
+				//		std::cout << " Mesh::splitAddIfNewVertex() : Added vertex "<<w<<" to Mesh "<<m->getKey()<<std::endl;
+						newVertices.push_back(w);
+						addedVertices.insert( std::make_pair(w, m->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of m's vertices
+					}
+				}
+
+				/** Check whether a Vertex has at least one polygon for which both neighbours are already in a post-split Bundle. */
+				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const
+				{
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[w]].poly[i] == 0) break;
+						if(	addedVertices.find(findPolyNeighbor(polygons[po[vertices[ve[w]].poly[i]]], w, true)) != addedVertices.end() &&
+							addedVertices.find(findPolyNeighbor(polygons[po[vertices[ve[w]].poly[i]]], w, false)) != addedVertices.end())
+							return true; // Both poly neighbors are found in the mapping
+					}
+					return false;
+				}
+
+				/** Find new vertices to be added to a Bundle under construction, during the process of splitting an existing Bundle.
+				  *
+				  * Parameters:
+				  * - oldVertices   : list of vertices of the original Bundle that were most recently added to Bundle 'b'
+				  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
+				  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
+				  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
+				  * - b             : the Bundle to which this function should add new vertices
+				  */
+				template <typename MeshType>
+				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices,
+						std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices, MeshType * m)
+				{
+					for(unsigned int i = 0; i < oldVertices.size(); i++)
+					{
+						VertexType & v = vertices[ve[oldVertices[i]]];
+						xVert w = 0;
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(v.poly[j] == 0) break;
+							assert(v.poly[j] < po.size());
+							assert(po[v.poly[j]] < polygons.size());
+							w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], true);
+							if(splitVertexHasConnectedPolygon(w, addedVertices))
+								splitAddIfNewVertex(w, m, newVertices, addedVertices, otherVertices);
+							assert(v.poly[j] < po.size());
+							assert(po[v.poly[j]] < polygons.size());
+							w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], false);
+							if(splitVertexHasConnectedPolygon(w, addedVertices))
+								splitAddIfNewVertex(w, m, newVertices, addedVertices, otherVertices);
+						}
+					}
+				}
+
+				/** Split the 'this' Mesh object by distributing its vertices among the meshes 'f' and 'g'. */
+				template <typename MeshType>
+				void splitMesh(std::function<MeshType * (void)> makeNewMesh, MeshType * & f, MeshType * & g,
+						std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
+				{
+					VertPair farthestPair(0,0);
+					findFarthestPair(farthestPair);
+
+					// Check that the farthest pair vertices are not part of the same polygon (by checking that b is not part of any of a's polygons),
+					// and that they also are not connected to the same vertex.
+					if( verticesHaveCommonNeighbor(farthestPair.a, farthestPair.b) )
+					{
+						std::cout << " Mesh::splitMesh() : Farthest pair vertices seem to be members of the same (very large) polygon. Cannot split! "<<std::endl;
+						return;
+					}
+
+					f = makeNewMesh(); f->setParentLayer(parentLayer); // Parent layer is shared among Bundles of the same Layer
+					g = makeNewMesh(); g->setParentLayer(parentLayer);
+
+					xVert v;
+
+					v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
+					v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
+
+					std::vector<xVert> fOldVertices, fNewVertices, gOldVertices, gNewVertices;
+					fOldVertices.push_back(farthestPair.a);
+					gOldVertices.push_back(farthestPair.b);
+					// First add all the neighbours of the initial vertex, while avoiding the usual check that it is well-connected to the Bundle.
+					// That check only works well if there is at least 1 edge already present in the Bundle.
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[farthestPair.a]].poly[i] != 0)
+						{
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].a, f, fNewVertices, fvert, gvert);
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].b, f, fNewVertices, fvert, gvert);
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].c, f, fNewVertices, fvert, gvert);
+						}
+						if(vertices[ve[farthestPair.b]].poly[i] != 0)
+						{
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].a, g, gNewVertices, gvert, fvert);
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].b, g, gNewVertices, gvert, fvert);
+							splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].c, g, gNewVertices, gvert, fvert);
+						}
+					}
+					fOldVertices.swap(fNewVertices);
+					gOldVertices.swap(gNewVertices);
+					fNewVertices.clear();
+					gNewVertices.clear();
+					// Now add all other vertices using splitAddNewVertices() which looks for well-connected neighbors.
+					while(fOldVertices.size() > 0 || gOldVertices.size() > 0)
+					{
+						splitAddNewVertices(fOldVertices, fNewVertices, fvert, gvert, f);
+						splitAddNewVertices(gOldVertices, gNewVertices, gvert, fvert, g);
+						fOldVertices.swap(fNewVertices);
+						gOldVertices.swap(gNewVertices);
+						fNewVertices.clear();
+						gNewVertices.clear();
+					}
+				}
+
+				/** Assign all polygons of the Mesh to the three Mesh objects passed to this function.
+				  * If all vertices of a polygon are in the 'fvert' mapping, the polygon is added to 'f'.
+				  * If all vertices of a polygon are in the 'gvert' mapping, the polygon is added to 'g'.
+				  * In all other cases (where the vertices are split) the polygon is added to 's'.
+				  * The latter object is typically a Strip since it doesn't make sense to add
+				  * polygons to Bundles if the vertices are not in a single Mesh object.
+				  */
+				template <typename MeshTypeA, typename MeshTypeB, typename MeshTypeC>
+				void splitAssignPolygonsToConstituentMeshes(MeshTypeA * f, MeshTypeB * g, MeshTypeC * s,
+						std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
+				{
+					for(unsigned int i = 1; i < polygons.size(); i++)
+					{
+						xVert a = polygons[i].a;
+						xVert b = polygons[i].b;
+						xVert c = polygons[i].c;
+						// Add polygon to the correct object.
+						if(gvert.find(a) == gvert.end() && gvert.find(b) == gvert.end() && gvert.find(c) == gvert.end()) // None of the vertices are in Bundle g? Then this polygon is in f.
+						{
+							try
+							{
+								assert(fvert.at(a) < f->ve.size());
+								assert(fvert.at(b) < f->ve.size());
+								assert(fvert.at(c) < f->ve.size());
+								assert(f->ve[fvert.at(a)] < f->vertices.size());
+								assert(f->ve[fvert.at(b)] < f->vertices.size());
+								assert(f->ve[fvert.at(c)] < f->vertices.size());
+							}
+							catch(std::exception &e)
+							{
+								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+							}
+				//			std::cout << " Mesh::split() : f has "<<f->polygons.size()<<" polys and an index array of size "<<f->po.size()<<std::endl;
+				//			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
+							f->addPolygonFromVertexIndices(fvert.at(a), fvert.at(b), fvert.at(c));
+						}
+						else if(fvert.find(a) == fvert.end() && fvert.find(b) == fvert.end() && fvert.find(c) == fvert.end()) // None of the vertices are in Bundle f? Then this polygon is in g.
+						{
+							try
+							{
+								assert(gvert.at(a) < g->ve.size());
+								assert(gvert.at(b) < g->ve.size());
+								assert(gvert.at(c) < g->ve.size());
+								assert(g->ve[gvert.at(a)] < g->vertices.size());
+								assert(g->ve[gvert.at(b)] < g->vertices.size());
+								assert(g->ve[gvert.at(c)] < g->vertices.size());
+							}
+							catch(std::exception &e)
+							{
+								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+							}
+				//			std::cout << " Mesh::split() : g has "<<g->polygons.size()<<" polys and an index array of size "<<g->po.size()<<std::endl;
+				//			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
+							g->addPolygonFromVertexIndices(gvert.at(a), gvert.at(b), gvert.at(c));
+						}
+						else
+						{
+							VertexType & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
+							VertexType & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
+							VertexType & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
+							long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
+							long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
+							long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());
+				//			std::cout << " Mesh::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
+							s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stitch, and specify which vertices from which meshes it is using
+						}
+					}
+				}
 		};
 	} // end namespace mesh
 } // end namespace strata

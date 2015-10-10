@@ -42,9 +42,13 @@ namespace strata
 				{
 				}
 
-				/** Allow construction from existing vertex plus mfid.
+				/** Allow construction from existing vertex plus mfid. Used when copying a Vertex from a Bundle into a Strip.
 				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
 				StripVertex(const Vertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.index) {}
+
+				/** Allow construction from existing strip vertex plus mfid.
+				  * This duplicates the remoteIndex, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
+				StripVertex(const StripVertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.remoteIndex) {}
 
 				StripVertex(const StripVertex &v) : Vertex(v), remoteIndex(v.remoteIndex), mfid(v.mfid)
 				{
@@ -59,23 +63,14 @@ namespace strata
 		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<StripVertex>
 		{
 			private:
+//				friend class Mesh<StripVertex>;
+				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
+
 				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
 				{
 				}
 			protected:
 			public:
-				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
-				bool addPolygonWithVertices(const Vertex &a, long unsigned int aid, const Vertex &b, long unsigned int bid,
-						const Vertex &c, long unsigned int cid, float relativeTolerance = 0.001)
-				{
-					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
-					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
-					xVert _a = addIfNewVertex(StripVertex(a,aid), tolerance);
-					xVert _b = addIfNewVertex(StripVertex(b,bid), tolerance);
-					xVert _c = addIfNewVertex(StripVertex(c,cid), tolerance);
-					return addPolygonFromVertexIndices(_a, _b, _c);
-				}
-
 				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, core::intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
 					Mesh<StripVertex>(_renderer)

@@ -113,133 +113,17 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
-/** Check whether a Vertex has at least one polygon for which both neighbours are already in a post-split Bundle. */
-bool Bundle::splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const
-{
-	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-	{
-		if(vertices[ve[w]].poly[i] == 0) break;
-		if(	addedVertices.find(findPolyNeighbor(polygons[po[vertices[ve[w]].poly[i]]], w, true)) != addedVertices.end() &&
-			addedVertices.find(findPolyNeighbor(polygons[po[vertices[ve[w]].poly[i]]], w, false)) != addedVertices.end())
-			return true; // Both poly neighbors are in Bundle 'b'
-	}
-	return false;
-}
-
-/** Add a new vertex provided that it has not yet been assigned a new Bundle.
-  *
-  * Parameters:
-  * - w             : the Vertex whose neighbours are to be considered as new members of Bundle 'b'
-  * - b             : the Bundle to which this function should add new vertices
-  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
-  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
-  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
-  */
-void Bundle::splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices,
-		std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices)
-{
-//	std::cout << " Bundle::splitAddIfNewVertex() : attempt to add "<<w<<"..."<<std::endl;
-	if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0)
-	{
-//		std::cout << " Bundle::splitAddIfNewVertex() : Added vertex "<<w<<" to Bundle "<<b->getKey()<<std::endl;
-		newVertices.push_back(w);
-		addedVertices.insert( std::make_pair(w, b->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of b's vertices
-	}
-}
-
-/** Find new vertices to be added to a Bundle under construction, during the process of splitting an existing Bundle.
-  *
-  * Parameters:
-  * - oldVertices   : list of vertices of the original Bundle that were most recently added to Bundle 'b'
-  * - newVertices   : list of vertices newly added to Bundle 'b', to be filled by this function
-  * - addedVertices : map of vertices from the original Bundle that already became members of the new Bundle 'b' (every vertex only should have 1 new Bundle)
-  * - otherVertices : list of vertices from the original Bundle that became members of a new Bundle other than 'b'
-  * - b             : the Bundle to which this function should add new vertices
-  */
-void Bundle::splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices,
-		std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices, Bundle * b)
-{
-	for(unsigned int i = 0; i < oldVertices.size(); i++)
-	{
-		Vertex & v = vertices[ve[oldVertices[i]]];
-		xVert w = 0;
-		for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
-		{
-			if(v.poly[j] == 0) break;
-			assert(v.poly[j] < po.size());
-			assert(po[v.poly[j]] < polygons.size());
-			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], true);
-			if(splitVertexHasConnectedPolygon(w, addedVertices))
-				splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
-			assert(v.poly[j] < po.size());
-			assert(po[v.poly[j]] < polygons.size());
-			w = findPolyNeighbor(polygons[po[v.poly[j]]], oldVertices[i], false);
-			if(splitVertexHasConnectedPolygon(w, addedVertices))
-				splitAddIfNewVertex(w, b, newVertices, addedVertices, otherVertices);
-		}
-	}
-}
-
 /** Split a Bundle into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 {
 //	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
-	VertPair farthestPair(0,0);
-	findFarthestPair(farthestPair);
-
-	// Check that the farthest pair vertices are not part of the same polygon (by checking that b is not part of any of a's polygons),
-	// and that they also are not connected to the same vertex.
-	if( verticesHaveCommonNeighbor(farthestPair.a, farthestPair.b) )
-	{
-		std::cout << " Bundle::split() : Farthest pair vertices seem to be members of the same (very large) polygon. Cannot split! "<<std::endl;
-		return;
-	}
-
-	Bundle * f = makeNewBundle(); f->setParentLayer(parentLayer); // Parent layer is shared among Bundles of the same Layer
-	Bundle * g = makeNewBundle(); g->setParentLayer(parentLayer);
-	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
-
+	Bundle * f = 0;
+	Bundle * g = 0;
 	std::map<xVert, xVert> fvert, gvert; // Mapping with key = old xVert and value = new xVert
-	xVert v;
+	splitMesh(makeNewBundle, f, g, fvert, gvert);
+	if(f==0 || g==0) std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl;
 
-	v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
-	v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
-
-	std::vector<xVert> fOldVertices, fNewVertices, gOldVertices, gNewVertices;
-	fOldVertices.push_back(farthestPair.a);
-	gOldVertices.push_back(farthestPair.b);
-	// First add all the neighbours of the initial vertex, while avoiding the usual check that it is well-connected to the Bundle.
-	// That check only works well if there is at least 1 edge already present in the Bundle.
-	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-	{
-		if(vertices[ve[farthestPair.a]].poly[i] != 0)
-		{
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].a, f, fNewVertices, fvert, gvert);
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].b, f, fNewVertices, fvert, gvert);
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.a]].poly[i]]].c, f, fNewVertices, fvert, gvert);
-		}
-		if(vertices[ve[farthestPair.b]].poly[i] != 0)
-		{
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].a, g, gNewVertices, gvert, fvert);
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].b, g, gNewVertices, gvert, fvert);
-			splitAddIfNewVertex(polygons[po[vertices[ve[farthestPair.b]].poly[i]]].c, g, gNewVertices, gvert, fvert);
-		}
-	}
-	fOldVertices.swap(fNewVertices);
-	gOldVertices.swap(gNewVertices);
-	fNewVertices.clear();
-	gNewVertices.clear();
-	// Now add all other vertices using splitAddNewVertices() which looks for well-connected neighbors.
-	while(fOldVertices.size() > 0 || gOldVertices.size() > 0)
-	{
-		splitAddNewVertices(fOldVertices, fNewVertices, fvert, gvert, f);
-		splitAddNewVertices(gOldVertices, gNewVertices, gvert, fvert, g);
-		fOldVertices.swap(fNewVertices);
-		gOldVertices.swap(gNewVertices);
-		fNewVertices.clear();
-		gNewVertices.clear();
-	}
 	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
 	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
 	// same bundle).
@@ -249,62 +133,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 		std::cout << " Mappings fvert = "; for(std::map<xVert, xVert>::iterator it = fvert.begin(); it != fvert.end(); it++) std::cout <<" "<<it->first<<"->"<<it->second; std::cout << std::endl;
 		std::cout << " Mappings gvert = "; for(std::map<xVert, xVert>::iterator it = gvert.begin(); it != gvert.end(); it++) std::cout <<" "<<it->first<<"->"<<it->second; std::cout << std::endl;
 	}
-	for(unsigned int i = 1; i < polygons.size(); i++)
-	{
-		xVert a = polygons[i].a;
-		xVert b = polygons[i].b;
-		xVert c = polygons[i].c;
-		// Add polygon to the correct object.
-		if(gvert.find(a) == gvert.end() && gvert.find(b) == gvert.end() && gvert.find(c) == gvert.end()) // None of the vertices are in Bundle g? Then this polygon is in f.
-		{
-			try
-			{
-				assert(fvert.at(a) < f->ve.size());
-				assert(fvert.at(b) < f->ve.size());
-				assert(fvert.at(c) < f->ve.size());
-				assert(f->ve[fvert.at(a)] < f->vertices.size());
-				assert(f->ve[fvert.at(b)] < f->vertices.size());
-				assert(f->ve[fvert.at(c)] < f->vertices.size());
-			}
-			catch(std::exception &e)
-			{
-				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
-			}
-//			std::cout << " Bundle::split() : f has "<<f->polygons.size()<<" polys and an index array of size "<<f->po.size()<<std::endl;
-//			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
-			f->addPolygonFromVertexIndices(fvert.at(a), fvert.at(b), fvert.at(c));
-		}
-		else if(fvert.find(a) == fvert.end() && fvert.find(b) == fvert.end() && fvert.find(c) == fvert.end()) // None of the vertices are in Bundle f? Then this polygon is in g.
-		{
-			try
-			{
-				assert(gvert.at(a) < g->ve.size());
-				assert(gvert.at(b) < g->ve.size());
-				assert(gvert.at(c) < g->ve.size());
-				assert(g->ve[gvert.at(a)] < g->vertices.size());
-				assert(g->ve[gvert.at(b)] < g->vertices.size());
-				assert(g->ve[gvert.at(c)] < g->vertices.size());
-			}
-			catch(std::exception &e)
-			{
-				std::cout << " Bundle::split() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
-			}
-//			std::cout << " Bundle::split() : g has "<<g->polygons.size()<<" polys and an index array of size "<<g->po.size()<<std::endl;
-//			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
-			g->addPolygonFromVertexIndices(gvert.at(a), gvert.at(b), gvert.at(c));
-		}
-		else
-		{
-			Vertex & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
-			Vertex & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
-			Vertex & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
-			long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
-			long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
-			long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());
-//			std::cout << " Bundle::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
-			s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stich, and specify which vertices from which meshes it is using
-		}
-	}
+
+	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
+	splitAssignPolygonsToConstituentMeshes(f,g,s,fvert,gvert);
 
 	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
 

@@ -41,18 +41,20 @@ namespace strata
 		class Bundle : public tiny::algo::TypeClusterObject<long unsigned int, Bundle>, public Mesh<Vertex>
 		{
 			private:
+				friend class Mesh<Vertex>; /**< Our base class can add vertices to us. */
+
 				long unsigned int polyAttempts;
 
 				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
 
 				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
-				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
-						const std::map<xVert, xVert> & otherVertices);
-				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
-						const std::map<xVert, xVert> & otherVertices, Bundle * b);
+//				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
+//						const std::map<xVert, xVert> & otherVertices);
+//				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
+//						const std::map<xVert, xVert> & otherVertices, Bundle * b);
 
 
-				xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
+				virtual xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			public:
