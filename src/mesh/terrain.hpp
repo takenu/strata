@@ -58,7 +58,7 @@ namespace strata
 				/** Split very large meshes (either Bundles or Strips) of this Terrain into smaller fragments. The criterium for splitting
 				  * is exceedance of the maximal vertex-to-vertex distance of the mesh of a threshold size '_maxSize'. */
 				template <typename MeshType>
-				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize = 700.0f)
+				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize = 400.0f)
 				{
 					std::vector<MeshType*> largeMeshes;
 					for(typename std::map<long unsigned int, MeshType*>::iterator it = tc.begin(); it != tc.end(); it++)
@@ -82,8 +82,8 @@ namespace strata
 					strips((long unsigned int)(-1), "StripTC")
 				{
 					layers.push_back(new Layer());
-					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 8, 0.0f);
-					for(unsigned int i = 0; i < 3; i++)
+					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 15, 0.0f);
+					for(unsigned int i = 0; i < 5; i++)
 					{
 						splitLargeMeshes<Bundle>(bundles);
 						splitLargeMeshes<Strip>(strips);

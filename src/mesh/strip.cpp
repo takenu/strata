@@ -50,4 +50,13 @@ void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	g->initMesh();
 	f->resetTexture(scaleTexture, 250, 100, 0);
 	g->resetTexture(scaleTexture, 250, 200, 100);
+
+	// Copy the references to all adjacent meshes of 'this', when required.
+	// This copying is done both ways: the adjacent mesh is added to the newly added one,
+	// and the newly added one is added to the adjacent mesh.
+//	duplicateAdjacentMeshes(f);
+//	duplicateAdjacentMeshes(g);
+
+//	f->addAdjacentMesh(g); <-- Not necessary, Strips do not use vertices from other Strips but only from Bundles
+//	g->addAdjacentMesh(f);
 }

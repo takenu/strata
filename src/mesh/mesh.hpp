@@ -76,12 +76,14 @@ namespace strata
 				using TopologicalMesh<VertexType>::findFarthestPair;
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
+//				using TopologicalMesh<VertexType>::duplicateAdjacentMeshes;
 
 				using TopologicalMesh<VertexType>::printPolygons;
 				using TopologicalMesh<VertexType>::printLists;
 
 				using MeshInterface::purgeVertexFromAdjacentMeshes;
 				using MeshInterface::getMeshFragmentId;
+//				using MeshInterface::updateRemoteVertexIndices;
 
 				Layer * parentLayer;
 

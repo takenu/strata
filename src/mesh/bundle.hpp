@@ -69,6 +69,8 @@ namespace strata
 				{
 				}
 
+				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> &, long unsigned int, long unsigned int) { return false; }
+
 				virtual ~Bundle(void) {}
 
 				/** Create a complete flat layer in this Bundle object. */
