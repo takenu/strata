@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <vector>
+#include <sstream>
 
 #include <tiny/math/vec.h>
 #include <tiny/algo/typecluster.h>
@@ -99,6 +100,13 @@ namespace strata
 							}
 						}
 					}
+				}
+
+				virtual std::string printVertexInfo(const StripVertex & v) const
+				{
+					std::stringstream ss;
+					ss << " r="<<v.getRemoteIndex()<<" mfid="<<v.getMeshFragmentId();
+					return ss.str();
 				}
 			protected:
 			public:

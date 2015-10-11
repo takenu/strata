@@ -77,7 +77,11 @@ namespace strata
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
 
+				using TopologicalMesh<VertexType>::printPolygons;
+				using TopologicalMesh<VertexType>::printLists;
+
 				using MeshInterface::purgeVertexFromAdjacentMeshes;
+				using MeshInterface::getMeshFragmentId;
 
 				Layer * parentLayer;
 
@@ -103,7 +107,7 @@ namespace strata
 				  * and an existing vertex's position for which v is considered 'already present' in the mesh. */
 				xVert addIfNewVertex(const VertexType &v, float tolerance)
 				{
-					for(unsigned int i = 0; i < vertices.size(); i++)
+					for(unsigned int i = 1; i < vertices.size(); i++)
 						if( tiny::length2(v.pos - vertices[i].pos) < tolerance*tolerance ) return vertices[i].index;
 					return addVertex(v);
 				}
@@ -111,6 +115,7 @@ namespace strata
 				/** Add a polygon using vertex indices rather than vertex references. */
 				bool addPolygonFromVertexIndices(xVert _a, xVert _b, xVert _c)
 				{
+//					std::cout << " Mesh::addPolygonFromVertexIndices() : Adding polygon "<<_a<<","<<_b<<","<<_c<<" to Mesh "<<getMeshFragmentId()<<std::endl;
 					return addPolygon(vertices[ve[_a]], vertices[ve[_b]], vertices[ve[_c]]); // Add polygon using vertices from this mesh.
 				}
 
@@ -408,18 +413,20 @@ namespace strata
 				/** Delete a polygon from the array of polygons. */
 				void deletePolygonFromArray(const xPoly &p)
 				{
+//					Polygon & _p = polygons[po[p]]; std::cout << " Mesh::deletePolygonFromArray() : Deleting polygon "<<p<<":"<<po[p]<<"="<<_p<<" at "<<vertices[ve[_p.a]].pos<<","<<vertices[ve[_p.b]].pos<<","<<vertices[ve[_p.c]].pos<<std::endl;
 					po[polygons.back().index] = po[p]; // Change indexing of last polygon to p's location in 'polygons'
-					po[p] = 0; // Refer to nowhere for the to-be-deleted polygon. (No one should be using 'p.index' anymore.)
 					polygons[po[p]] = polygons.back(); // Move last polygon in the list to p's position
+					po[p] = 0; // Refer to nowhere for the to-be-deleted polygon. (No one should be using 'p.index' anymore.)
 					polygons.pop_back(); // Delete the (now unreferenced, duplicate) polygon at the end of the list.
+//					std::cout << " Mesh::deletePolygonFromArray() : Printing resulting Mesh: "<<std::endl; printPolygons(); printLists();
 				}
 
 				/** Delete a vertex from the vertices array. */
 				void deleteVertexFromArray(const xVert &v)
 				{
 					ve[vertices.back().index] = ve[v];
-					ve[v] = 0;
 					vertices[ve[v]] = vertices.back();
+					ve[v] = 0;
 					vertices.pop_back();
 				}
 

@@ -48,6 +48,6 @@ void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 
 	f->initMesh();
 	g->initMesh();
-	f->resetTexture(scaleTexture, 250, 200, 0);
+	f->resetTexture(scaleTexture, 250, 100, 0);
 	g->resetTexture(scaleTexture, 250, 200, 100);
 }

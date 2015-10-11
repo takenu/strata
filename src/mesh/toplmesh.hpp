@@ -146,30 +146,33 @@ namespace strata
 					else return false;
 				}
 
+				/** Allow the Strip to print the remoteIndex and origin of a borrowed vertex. */
+				virtual std::string printVertexInfo(const VertexType &) const { return std::string(""); }
+
 				void printLists(void) const
 				{
-					std::cout << " Printing MeshBundle lists: "<<std::endl;
-					std::cout << " vertices: "; for(unsigned int i = 1; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<" (E="<<findEdgeVertex(vertices[i].index)<<"), "; std::cout << std::endl;
-					std::cout << " vertex index: "; for(unsigned int i = 1; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
-					std::cout << " vertex check: "; for(unsigned int i = 1; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
+					std::cout << " Printing TopologicalMesh lists: "<<std::endl;
+					std::cout << " vertices: "; for(unsigned int i = 0; i < vertices.size(); i++) std::cout << i << ":"<<vertices[i].pos<<" (E="<<findEdgeVertex(vertices[i].index)<<"), "; std::cout << std::endl;
+					std::cout << " vertex index: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<ve[i]<<" @ "<<&vertices[ve[i]]<<", "; std::cout << std::endl;
+					std::cout << " vertex check: "; for(unsigned int i = 0; i < ve.size(); i++) std::cout << i << ":"<<vertices[ve[i]].index<<", "; std::cout << std::endl;
 					std::cout << " vertex polys: "<<std::endl;
 					for(unsigned int i = 0; i < vertices.size(); i++)
 					{
 						std::cout << " vertex "<<i<<": index = "<<vertices[i].index<<", polys = ";
 						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++) std::cout << vertices[i].poly[j] << ", ";
-						std::cout <<(isEdgeVertex(vertices[i].index)?"(E)":"")<< std::endl;
+						std::cout <<(isEdgeVertex(vertices[i].index)?"(E)":"")<< printVertexInfo(vertices[i])<<std::endl;
 					}
 				}
 
-				void printPolygons(float step, unsigned int iterstep = 1) const
+				void printPolygons(void) const //float step, unsigned int iterstep = 1) const
 				{
-					float div = 0.5f/step;
-					std::cout << " polygons: ";
-					for(unsigned int i = 0; i < polygons.size(); i+=iterstep)
+//					float div = 0.5f/step;
+					std::cout << " Printing TopologicalMesh polygons: ";
+					for(unsigned int i = 0; i < polygons.size(); i++)
 					{
-						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
-						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
-						std::cout << std::endl;
+//						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
+//						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
+						std::cout << i << ": "<<polygons[i].a<<","<<polygons[i].b<<","<<polygons[i].c<<std::endl;
 					}
 				}
 
@@ -305,6 +308,7 @@ namespace strata
 						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
 						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
 					}
+					if(!edgeVerticesAreValid) { printPolygons(); printLists(); }
 					return edgeVerticesAreValid;
 				}
 
@@ -355,12 +359,12 @@ namespace strata
 				  * in a clockwise fashion (looking from the direction of the normals, or typically, from above the terrain). */
 				xVert findAdjacentEdgeVertex(xVert v, bool clockwise) const
 				{
-					if(v<=0) printLists();
+					if(v<=0) {printPolygons(); printLists(); }
 					assert(v>0);
 					xVert result = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
-						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex! "<<std::endl; break; }
+						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex to vertex "<<v<<"! "<<std::endl; break; }
 						else if( isEdgeVertex( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise) ) )
 						{
 							result = findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise);
