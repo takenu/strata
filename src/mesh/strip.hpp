@@ -63,8 +63,8 @@ namespace strata
 		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<StripVertex>
 		{
 			private:
-//				friend class Mesh<StripVertex>;
 				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
+				friend class Mesh<StripVertex>; // to let the Mesh access our protected getkey()
 
 				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
 				{

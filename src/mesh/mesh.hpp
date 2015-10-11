@@ -242,8 +242,8 @@ namespace strata
 
 					xVert v;
 
-					v = f->addVertex(getVertexPosition(farthestPair.a)); fvert.emplace(farthestPair.a, v);
-					v = g->addVertex(getVertexPosition(farthestPair.b)); gvert.emplace(farthestPair.b, v);
+					v = f->addVertex(vertices[ve[farthestPair.a]]); fvert.emplace(farthestPair.a, v);
+					v = g->addVertex(vertices[ve[farthestPair.b]]); gvert.emplace(farthestPair.b, v);
 
 					std::vector<xVert> fOldVertices, fNewVertices, gOldVertices, gNewVertices;
 					fOldVertices.push_back(farthestPair.a);

@@ -122,7 +122,7 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	Bundle * g = 0;
 	std::map<xVert, xVert> fvert, gvert; // Mapping with key = old xVert and value = new xVert
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
-	if(f==0 || g==0) std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl;
+	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return; }
 
 	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
 	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
