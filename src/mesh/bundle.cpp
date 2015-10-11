@@ -127,6 +127,8 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
 	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
 	// same bundle).
+	splitMergeOrphanVertices(f,g,fvert,gvert);
+
 	if(vertices.size()+1 > f->vertices.size() + g->vertices.size())
 	{
 		std::cout << " Bundle::split() : ERROR: Not all vertices were assigned a Bundle! "<<std::endl;
@@ -147,4 +149,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	g->initMesh();
 	s->initMesh();
 	s->resetTexture(scaleTexture, 250, 200, 0);
+
+	f->addAdjacentMesh(s);
+	g->addAdjacentMesh(s);
+	s->addAdjacentMesh(f);
+	s->addAdjacentMesh(g);
 }

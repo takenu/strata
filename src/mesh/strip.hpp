@@ -47,8 +47,8 @@ namespace strata
 				StripVertex(const Vertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.index) {}
 
 				/** Allow construction from existing strip vertex plus mfid.
-				  * This duplicates the remoteIndex, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
-				StripVertex(const StripVertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.remoteIndex) {}
+				  * This duplicates the remoteIndex and mfid, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
+				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.mfid, v.remoteIndex) {}
 
 				StripVertex(const StripVertex &v) : Vertex(v), remoteIndex(v.remoteIndex), mfid(v.mfid)
 				{
@@ -56,6 +56,9 @@ namespace strata
 
 				const xVert & getRemoteIndex(void) const { return remoteIndex; }
 				void setRemoteIndex(const xVert &v) { remoteIndex = v; }
+
+				long unsigned int getMeshFragmentId(void) const { return mfid; }
+				void setMeshFragmentId(long unsigned int _mfid) { mfid = _mfid; }
 		};
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
@@ -66,8 +69,36 @@ namespace strata
 				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
 				friend class Mesh<StripVertex>; // to let the Mesh access our protected getkey()
 
-				virtual void purgeVertex(long unsigned int /*mfid*/, xVert /*oldVert*/, xVert /*newVert*/)
+				/** Find a vertex neighbor to 'v' with remoteIndex 'r'. */
+				virtual xVert findVertexNeighborByRemoteIndex(const Vertex &v, const xVert &r)
 				{
+					for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+					{
+						if(v.poly[j] == 0)
+						{
+							std::cout << " Strip::findVertexNeighborByRemoteIndex() : ERROR: Failed to find neighbor to vertex "<<v.index<<"! "<<std::endl;
+						}
+						xVert n = findPolyNeighbor(polygons[po[v.poly[j]]],v.index,true);
+						if(vertices[ve[n]].getRemoteIndex() == r) return n;
+						n = findPolyNeighbor(polygons[po[v.poly[j]]],v.index,false);
+						if(vertices[ve[n]].getRemoteIndex() == r) return n;
+					}
+					return 0;
+				}
+
+				/** Look through all vertices for the vertex to be removed. */
+				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].getMeshFragmentId() == mfid)
+						{
+							if(vertices[i].getRemoteIndex() == oldVert)
+							{
+								mergeVertices(vertices[i].index, findVertexNeighborByRemoteIndex(vertices[i],newVert));
+							}
+						}
+					}
 				}
 			protected:
 			public:
@@ -76,6 +107,8 @@ namespace strata
 					Mesh<StripVertex>(_renderer)
 				{
 				}
+
+				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
 				unsigned int nPolys(void) const { return polygons.size(); }
 				unsigned int nPolyIndices(void) const { return po.size(); }

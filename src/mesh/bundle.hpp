@@ -45,7 +45,9 @@ namespace strata
 
 				long unsigned int polyAttempts;
 
-				virtual void purgeVertex(long unsigned int , xVert , xVert ) {}
+				virtual void purgeVertex(long unsigned int, const xVert &, const xVert &) {}
+
+				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
 				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
 //				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,

@@ -89,7 +89,7 @@ namespace strata
 				float scaleTexture; /**< Scale factor - coordinates should range from -scaleTexture/2 to scaleTexture/2 (used for texture coords) */
 
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
-				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
+				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
 
 				/** Declare a function for adding vertices, which must be overloaded in the end-using class. */
 				virtual xVert addVertex(const VertexType &v) = 0;
@@ -225,6 +225,12 @@ namespace strata
 					return (p.a == v ? (clockwise ? p.b : p.c) :
 							(p.b == v ? (clockwise ? p.c : p.a) :
 							 			 (clockwise ? p.a : p.b) ) );
+				}
+
+				/** Find a neighbor vertex in a polygon using the index of the polygon in the vertex. Redirects to findPolyNeighbor. */
+				inline const xVert & findPolyNeighbor(unsigned int i, const xVert &v, bool clockwise) const
+				{
+					return findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]],v,clockwise);
 				}
 
 				bool checkVertexIndices(void) const

@@ -77,6 +77,8 @@ namespace strata
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
 
+				using MeshInterface::purgeVertexFromAdjacentMeshes;
+
 				Layer * parentLayer;
 
 				Mesh(core::intf::RenderInterface * _renderer) :
@@ -85,7 +87,7 @@ namespace strata
 				}
 
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
-				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
+				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
 
 				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
@@ -150,6 +152,45 @@ namespace strata
 					xVert _b = addIfNewVertex(VertexType(b,bid), tolerance);
 					xVert _c = addIfNewVertex(VertexType(c,cid), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
+				}
+
+				/** Merge a vertex 'v' with another vertex 'w', effectively removing 'v' from the Mesh. */
+				void mergeVertices(const xVert &v, const xVert &w)
+				{
+					// All polygons currently using 'v' should use 'w' instead
+					for(unsigned int i = 1; i < polygons.size(); i++)
+						mergeAdjustPolygonIndices(polygons[i], v, w);
+					// All adjacent meshes should stop using the vertex 'v'.
+					purgeVertexFromAdjacentMeshes(v, w);
+					// Remove the vertex from the list.
+					deleteVertexFromArray(v);
+				}
+
+				/** Merge unallocated vertices with some neighbor that is allocated. This operation may be necessary
+				  * to avoid situations where a vertex cannot be assigned either of the two split parts because doing
+				  * so would result in a not-well-connected mesh. The solution is to merge it with a neighbor. */
+				template <typename MeshType>
+				void splitMergeOrphanVertices(MeshType * & f, MeshType * & g, std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+						if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
+						{
+							std::cout << " Mesh::splitMergeOrphanVertices() : Vertex "<<vertices[i].index<<" was not allocated, merging it with a neighbor... "<<std::endl;
+							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+							{
+								if(vertices[i].poly[j] == 0)
+								{
+									std::cout << " Mesh::splitMergeOrphanVertices() : ERROR: Vertex "<<vertices[i].index<<" FAILED to be merged with a neighbor! "<<std::endl;
+									break;
+								}
+								if(fvert.find(findPolyNeighbor(j, vertices[i].index, true)) != fvert.end())
+								{
+									std::cout << " Mesh::splitMergeOrphanVertices() : Vertex "<<vertices[i].index<<" to be merged with "<<findPolyNeighbor(j, vertices[i].index, true)<<"... "<<std::endl;
+									mergeVertices(vertices[i].index, findPolyNeighbor(j, vertices[i].index, true));
+									break;
+								}
+							}
+						}
 				}
 
 				/** Add a new vertex provided that it has not yet been assigned a new TopologicalMesh.
@@ -348,6 +389,61 @@ namespace strata
 							s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stitch, and specify which vertices from which meshes it is using
 						}
 					}
+				}
+			private:
+				/** While merging, adjust polygon indices such that all references to 'v' become references to 'w' instead. */
+				void mergeAdjustPolygonIndices(Polygon &p, const xVert &v, const xVert &w)
+				{
+						if(p.a == v) { p.a = w; cleanupIfDegeneratePolygon(p); }
+						if(p.b == v) { p.b = w; cleanupIfDegeneratePolygon(p); }
+						if(p.c == v) { p.c = w; cleanupIfDegeneratePolygon(p); }
+				}
+
+				/** Cleanup polygons with two identical vertex indices (i.e. with zero area). */
+				void cleanupIfDegeneratePolygon(Polygon &p)
+				{
+					if(p.a == p.b || p.a == p.c || p.b == p.c) deletePolygon(p);
+				}
+
+				/** Delete a polygon from the array of polygons. */
+				void deletePolygonFromArray(const xPoly &p)
+				{
+					po[polygons.back().index] = po[p]; // Change indexing of last polygon to p's location in 'polygons'
+					po[p] = 0; // Refer to nowhere for the to-be-deleted polygon. (No one should be using 'p.index' anymore.)
+					polygons[po[p]] = polygons.back(); // Move last polygon in the list to p's position
+					polygons.pop_back(); // Delete the (now unreferenced, duplicate) polygon at the end of the list.
+				}
+
+				/** Delete a vertex from the vertices array. */
+				void deleteVertexFromArray(const xVert &v)
+				{
+					ve[vertices.back().index] = ve[v];
+					ve[v] = 0;
+					vertices[ve[v]] = vertices.back();
+					vertices.pop_back();
+				}
+
+				/** Delete a polygon from the Mesh, and clean up all references to it.
+				  * This is a subtle function and careless use could result in meshes that are not well-connected. */
+				void deletePolygon(Polygon &p)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(vertices[i].poly[j] == 0) break;
+							else if(vertices[i].poly[j] == p.index)
+							{
+								std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<vertices[i].index<<"..."<<std::endl;
+								for(unsigned int k = j; k < STRATA_VERTEX_MAX_LINKS-1; k++)
+								{
+									vertices[i].poly[k] = vertices[i].poly[k+1];
+								}
+								vertices[i].poly[STRATA_VERTEX_MAX_LINKS-1] = 0;
+							}
+						}
+					}
+					deletePolygonFromArray(p.index);
 				}
 		};
 	} // end namespace mesh

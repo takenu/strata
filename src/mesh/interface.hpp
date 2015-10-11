@@ -42,7 +42,17 @@ namespace strata
 				/** Purge a vertex, cleaning it from all references. After this operation, the derived class should consider the vertex with
 				  * index "oldVert" belonging to the mesh fragment with id "mfid" as no longer existing. The vertex with index "newVert" is the
 				  * suggested replacement of the old vertex. */
-				virtual void purgeVertex(long unsigned int mfid, xVert oldVert, xVert newVert) = 0;
+				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
+
+				/** Get the Mesh fragment identifier used to identify the Mesh, which is used in e.g. purgeVertex. */
+				virtual long unsigned int getMeshFragmentId(void) const = 0;
+
+				/** Purge a vertex from all adjacent meshes. */
+				void purgeVertexFromAdjacentMeshes(const xVert & oldVert, const xVert & newVert)
+				{
+					for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
+						adjacentMeshes[i]->purgeVertex(getMeshFragmentId(), oldVert, newVert);
+				}
 
 				/** Purge an adjacent mesh, removing it from the adjacentMeshes list. After this action is performed, the adjacent mesh
 				  * removed from the list will no longer be informed of changes and communication (e.g. regarding vertices being deleted
