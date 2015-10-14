@@ -154,4 +154,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	g->addAdjacentMesh(s);
 	s->addAdjacentMesh(f);
 	s->addAdjacentMesh(g);
+
+	duplicateAdjacentMeshes(f);
+
+	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
+	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
 }

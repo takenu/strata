@@ -47,14 +47,13 @@ namespace strata
 
 				virtual void purgeVertex(long unsigned int, const xVert &, const xVert &) {}
 
-				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
-
 				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
 //				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
 //						const std::map<xVert, xVert> & otherVertices);
 //				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
 //						const std::map<xVert, xVert> & otherVertices, Bundle * b);
 
+				virtual bool isAdjacentToVertices(const Bundle *) const { return false; }
 
 				virtual xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
@@ -68,6 +67,8 @@ namespace strata
 					polyAttempts(0)
 				{
 				}
+
+				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
 				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> &, long unsigned int, long unsigned int) { return false; }
 

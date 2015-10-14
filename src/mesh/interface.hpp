@@ -61,12 +61,6 @@ namespace strata
 				  */
 				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> & vmap, long unsigned int _oldmfid, long unsigned int _newmfid) = 0;
 
-				/** Check whether we are adjacent to any of the vertices in the list. */
-//				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid) const = 0;
-
-				/** Check whether the MeshInterface 'm' is an adjacent mesh. */
-//				virtual bool isAdjacentToMesh(MeshInterface * m) const = 0;
-
 				/** Purge a vertex from all adjacent meshes. */
 				void purgeVertexFromAdjacentMeshes(const xVert & oldVert, const xVert & newVert)
 				{
@@ -102,20 +96,18 @@ namespace strata
 						}
 				}
 
+				/** Check whether we are adjacent to any of the vertices in the list. */
+//				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid) const = 0;
+				virtual bool isAdjacentToVertices(const Bundle * b) const = 0;
+
+				/** Check whether the MeshInterface 'm' is an adjacent mesh. */
+//				virtual bool isAdjacentToMesh(MeshInterface * m) const = 0;
+
 				/** Copy all members of the adjacentMeshes array from the MeshInterface into the adjacent meshes of the TopologicalMesh
 				  * 'm', if required. The adjacency is established by comparing 'vlist' (typically all vertices of 'm') to our vertices.
 				  * Checking whether adjacency is already present is not done in this function but only in addAdjacentMesh().
 				  */
-/*				void duplicateAdjacentMeshes(MeshInterface * m, const std::vector<Vertex> & vlist)
-				{
-					for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
-						if(isAdjacentToVertices(vlist))
-						{
-							std::cout << " Adding mesh adjacency for "<<adjacentMeshes[i]->getMeshFragmentId()<<" and "<<m->getMeshFragmentId()<<"... "<<std::endl;
-							addAdjacentMesh(m);
-							m->addAdjacentMesh(this);
-						}
-				}*/
+				void duplicateAdjacentMeshes(Bundle * b);//, const std::vector<Vertex> & vlist)
 
 				/** Check whether a given mesh is already listed as adjacent to this mesh. */
 				bool hasAdjacentMesh(MeshInterface * _mesh)

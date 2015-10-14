@@ -104,12 +104,8 @@ namespace strata
 
 				/** Find out whether a set of vertices is adjacent to this mesh. The vertices are 'adjacent' if at least one
 				  * of the vertices in the list is also present as a remoteIndex on one of this Strip's vertices. */
-/*				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid)
-				{
-					for(unsigned int i = 1; i < vertices.size(); i++)
-						for(unsigned int j = 0; j < vlist.size(); j++)
-							if(vertices[i].getMeshFragmentId() == _mfid && vertices[i].getRemoteIndex() == vlist[j].index)
-				}*/
+//				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid)
+				virtual bool isAdjacentToVertices(const Bundle * b) const;
 
 				/** Update all vertices in the Strip to refer to the new indices of the new MeshFragment. */
 				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> & vmap, long unsigned int _oldmfid, long unsigned int _newmfid)

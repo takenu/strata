@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "strip.hpp"
+#include "bundle.hpp"
 
 using namespace strata::mesh;
 
@@ -59,4 +60,13 @@ void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 
 //	f->addAdjacentMesh(g); <-- Not necessary, Strips do not use vertices from other Strips but only from Bundles
 //	g->addAdjacentMesh(f);
+}
+
+bool Strip::isAdjacentToVertices(const Bundle * b) const
+{
+	for(unsigned int i = 1; i < vertices.size(); i++)
+//		for(unsigned int j = 0; j < vlist.size(); j++)
+//			if(vertices[i].getMeshFragmentId() == _mfid && vertices[i].getRemoteIndex() == vlist[j].index)
+		if(vertices[i].getMeshFragmentId() == b->getKey()) return true;
+	return false;
 }
