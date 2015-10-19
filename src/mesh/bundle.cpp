@@ -160,3 +160,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
 	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
 }
+
+Bundle::~Bundle(void)
+{
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+		assert(adjacentStrips[i]->releaseAdjacentBundle(this));
+}

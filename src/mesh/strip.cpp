@@ -70,3 +70,9 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
 		if(vertices[i].getMeshFragmentId() == b->getKey()) return true;
 	return false;
 }
+
+Strip::~Strip(void)
+{
+	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+		assert(adjacentBundles[i]->releaseAdjacentStrip(this));
+}

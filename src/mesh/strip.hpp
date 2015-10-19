@@ -70,6 +70,8 @@ namespace strata
 				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
 				friend class Mesh<StripVertex>; // to let the Mesh access our protected getkey()
 
+				std::vector<Bundle*> adjacentBundles; /**< A list of all Bundles that contain vertices used by polygons of this Strip. */
+
 				/** Find a vertex neighbor to 'v' with remoteIndex 'r'. */
 				virtual xVert findVertexNeighborByRemoteIndex(const Vertex &v, const xVert &r)
 				{
@@ -103,7 +105,7 @@ namespace strata
 				}
 
 				/** Find out whether a set of vertices is adjacent to this mesh. The vertices are 'adjacent' if at least one
-				  * of the vertices in the list is also present as a remoteIndex on one of this Strip's vertices. */
+				  * of the vertices of this Strip has a remoteIndex equal to b's index. */
 //				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid)
 				virtual bool isAdjacentToVertices(const Bundle * b) const;
 
@@ -134,6 +136,26 @@ namespace strata
 					Mesh<StripVertex>(_renderer)
 				{
 				}
+
+				/** A function called by an adjacent Bundle that ceases to exist. All references to the Bundle should be considered invalid.
+				  * In practice, except when the program is shutting down, the function that destroys the Bundle is responsible for repairing
+				  * all the vertex references of the Strip, since the Strip cannot own vertices and needs to borrow its vertices from a valid
+				  * Bundle.
+				  */
+				bool releaseAdjacentBundle(Bundle * bundle)
+				{
+					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+						if(adjacentBundles[i] == bundle)
+						{
+							adjacentBundles[i] = adjacentBundles.back();
+							adjacentBundles.pop_back();
+							return true;
+						}
+					std::cout << " Strip::releaseAdjacentBundle() : Bundle should be adjacent but was not found! "<<std::endl;
+					return false;
+				}
+
+				~Strip(void);
 
 				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 

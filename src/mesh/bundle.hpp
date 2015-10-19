@@ -43,6 +43,8 @@ namespace strata
 			private:
 				friend class Mesh<Vertex>; /**< Our base class can add vertices to us. */
 
+				std::vector<Strip*> adjacentStrips; /**< A list of all Strips that use vertices belonging to this Bundle. */
+
 				long unsigned int polyAttempts;
 
 				virtual void purgeVertex(long unsigned int, const xVert &, const xVert &) {}
@@ -68,11 +70,24 @@ namespace strata
 				{
 				}
 
+				bool releaseAdjacentStrip(Strip * strip)
+				{
+					for(unsigned int i = 0; i< adjacentStrips.size(); i++)
+						if(adjacentStrips[i] == strip)
+						{
+							adjacentStrips[i] = adjacentStrips.back();
+							adjacentStrips.pop_back();
+							return true;
+						}
+					std::cout << " Bundle::releaseAdjacentStrip() : ERROR: Failed to find adjacent strip!"<<std::endl;
+					return false;
+				}
+
 				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
 				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> &, long unsigned int, long unsigned int) { return false; }
 
-				virtual ~Bundle(void) {}
+				virtual ~Bundle(void);
 
 				/** Create a complete flat layer in this Bundle object. */
 				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
