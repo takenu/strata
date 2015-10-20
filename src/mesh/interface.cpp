@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::mesh;
 
-void MeshInterface::duplicateAdjacentMeshes(Bundle * b)//, const std::vector<Vertex> & vlist)
+/*void MeshInterface::duplicateAdjacentMeshes(Bundle * b)//, const std::vector<Vertex> & vlist)
 {
 	for(unsigned int i = 0; i < adjacentMeshes.size(); i++)
 		//if(isAdjacentToVertices(vlist))
@@ -31,4 +31,4 @@ void MeshInterface::duplicateAdjacentMeshes(Bundle * b)//, const std::vector<Ver
 			addAdjacentMesh(b);
 			b->addAdjacentMesh(this);
 		}
-}
+}*/

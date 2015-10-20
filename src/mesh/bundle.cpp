@@ -150,15 +150,15 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	s->initMesh();
 	s->resetTexture(scaleTexture, 250, 200, 0);
 
-	f->addAdjacentMesh(s);
-	g->addAdjacentMesh(s);
-	s->addAdjacentMesh(f);
-	s->addAdjacentMesh(g);
+//	f->addAdjacentMesh(s);
+//	g->addAdjacentMesh(s);
+//	s->addAdjacentMesh(f);
+//	s->addAdjacentMesh(g);
 
-	duplicateAdjacentMeshes(f);
+//	duplicateAdjacentMeshes(f);
 
-	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
-	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
+//	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
+//	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
 }
 
 Bundle::~Bundle(void)

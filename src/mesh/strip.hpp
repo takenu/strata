@@ -109,20 +109,6 @@ namespace strata
 //				virtual bool isAdjacentToVertices(const std::vector<xVert> & vlist, long unsigned int _mfid)
 				virtual bool isAdjacentToVertices(const Bundle * b) const;
 
-				/** Update all vertices in the Strip to refer to the new indices of the new MeshFragment. */
-				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> & vmap, long unsigned int _oldmfid, long unsigned int _newmfid)
-				{
-					bool isAdjacentMesh = false;
-					for(unsigned int i = 1; i < vertices.size(); i++)
-						if(vertices[i].getMeshFragmentId() == _oldmfid && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
-						{
-							vertices[i].setMeshFragmentId(_newmfid);
-							vertices[i].setRemoteIndex(vmap.at(vertices[i].getRemoteIndex()));
-							isAdjacentMesh = true;
-						}
-					return isAdjacentMesh;
-				}
-
 				virtual std::string printVertexInfo(const StripVertex & v) const
 				{
 					std::stringstream ss;
@@ -153,6 +139,32 @@ namespace strata
 						}
 					std::cout << " Strip::releaseAdjacentBundle() : Bundle should be adjacent but was not found! "<<std::endl;
 					return false;
+				}
+
+				/** Add the Bundle as being adjacent to this Strip. */
+				void addAdjacentBundle(Bundle * bundle)
+				{
+					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+						if(adjacentBundles[i] == bundle) return;
+					adjacentBundles.push_back(bundle);
+				}
+
+				/** Update all vertices in the Strip to refer to the new indices of the new Bundle, instead of the old one.
+				  * This function also checks whether the old Bundle is actually adjacent to this Strip, and if so it returns
+				  * 'true'. In that case the Bundle is expected to also add this Strip to its adjacentStrips vector.
+				  */
+				bool updateAdjacentBundle(const std::map<xVert, xVert> & vmap, long unsigned int oldBundleId, long unsigned int newBundleId, Bundle * bundle)
+				{
+					bool isAdjacentMesh = false;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+						if(vertices[i].getMeshFragmentId() == oldBundleId && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
+						{
+							vertices[i].setMeshFragmentId(newBundleId);
+							vertices[i].setRemoteIndex(vmap.at(vertices[i].getRemoteIndex()));
+							isAdjacentMesh = true;
+						}
+					if(isAdjacentMesh) addAdjacentBundle(bundle);
+					return isAdjacentMesh;
 				}
 
 				~Strip(void);

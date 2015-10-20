@@ -76,14 +76,9 @@ namespace strata
 				using TopologicalMesh<VertexType>::findFarthestPair;
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
-//				using TopologicalMesh<VertexType>::duplicateAdjacentMeshes;
 
 				using TopologicalMesh<VertexType>::printPolygons;
 				using TopologicalMesh<VertexType>::printLists;
-
-				using MeshInterface::purgeVertexFromAdjacentMeshes;
-				using MeshInterface::getMeshFragmentId;
-//				using MeshInterface::updateRemoteVertexIndices;
 
 				Layer * parentLayer;
 
@@ -93,7 +88,7 @@ namespace strata
 				}
 
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
-				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
+//				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
 
 				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
@@ -168,7 +163,7 @@ namespace strata
 					for(unsigned int i = 1; i < polygons.size(); i++)
 						mergeAdjustPolygonIndices(polygons[i], v, w);
 					// All adjacent meshes should stop using the vertex 'v'.
-					purgeVertexFromAdjacentMeshes(v, w);
+//					purgeVertexFromAdjacentMeshes(v, w);
 					// Remove the vertex from the list.
 					deleteVertexFromArray(v);
 				}
@@ -177,7 +172,7 @@ namespace strata
 				  * to avoid situations where a vertex cannot be assigned either of the two split parts because doing
 				  * so would result in a not-well-connected mesh. The solution is to merge it with a neighbor. */
 				template <typename MeshType>
-				void splitMergeOrphanVertices(MeshType * & f, MeshType * & g, std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
+				void splitMergeOrphanVertices(MeshType * & /*f*/, MeshType * & /*g*/, std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
 				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
 						if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
