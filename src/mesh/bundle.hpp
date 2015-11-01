@@ -32,8 +32,9 @@ namespace strata
 	{
 		class Strip;
 
-		/** A mesh, consisting of vertices and polygons that link the vertices together. It is used intensely as a container object so data is public.
-		  * However, since some helper functions are never required as outside functions, they are hidden (as opposed to the data).
+		/** A Bundle is a mesh, consisting of vertices and polygons that link the vertices together. Some helper functions
+		  * are never required as 'outside' functions, therefore they are hidden (as opposed to some direct mesh alteration
+		  * functions which are made publicly available to aid smoothly and effectively carrying out mesh manipulations).
 		  *
 		  * Bundles are identified by their key of the TypeCluster, which is globally unique ('globally' in the scope of
 		  * the Terrain object). This key is used to find the owning Bundle of a Vertex.
@@ -47,21 +48,23 @@ namespace strata
 
 				long unsigned int polyAttempts;
 
-				virtual void purgeVertex(long unsigned int, const xVert &, const xVert &) {}
+//				virtual void purgeVertex(long unsigned int, const xVert &, const xVert &) {}
 
 				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
-//				void splitAddIfNewVertex(const xVert & w, Bundle * b, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
-//						const std::map<xVert, xVert> & otherVertices);
-//				void splitAddNewVertices(const std::vector<xVert> & oldVertices, std::vector<xVert> & newVertices, std::map<xVert, xVert> & addedVertices,
-//						const std::map<xVert, xVert> & otherVertices, Bundle * b);
 
-				virtual bool isAdjacentToVertices(const Bundle *) const { return false; }
+				/** Update the adjacent strips to refer to the new Bundle instead of 'this'. */
+				void splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * newBundle);
 
 				virtual xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			public:
 				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
+
+				/** Get the owning bundle of a Vertex. Since Bundles are always owner of vertices
+				  * belonging to them, there is no other possibility than 'this' Checks that the vertex
+				  * is really in this Bundle are not performed. */
+				virtual Bundle * getVertexOwner(const xVert &) { return this; }
 
 				Bundle(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Bundle> &tc, core::intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Bundle>(meshId, this, tc),
@@ -70,6 +73,15 @@ namespace strata
 				{
 				}
 
+				/** Add a Strip as being adjacent to this Bundle. */
+				void addAdjacentStrip(Strip * strip)
+				{
+					for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+						if(adjacentStrips[i] == strip) return;
+					adjacentStrips.push_back(strip);
+				}
+
+				/** Remove a Strip currently listed as adjacent, so that it can be removed safely. */
 				bool releaseAdjacentStrip(Strip * strip)
 				{
 					for(unsigned int i = 0; i< adjacentStrips.size(); i++)
@@ -83,9 +95,9 @@ namespace strata
 					return false;
 				}
 
-				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
+//				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
-				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> &, long unsigned int, long unsigned int) { return false; }
+//				virtual bool updateRemoteVertexIndices(const std::map<xVert,xVert> &, long unsigned int, long unsigned int) { return false; }
 
 				virtual ~Bundle(void);
 

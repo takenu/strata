@@ -35,31 +35,39 @@ namespace strata
 		class StripVertex : public Vertex
 		{
 			private:
-				xVert remoteIndex;
-				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
+				Bundle * owner; /**< The Bundle that owns this Vertex. */
+				xVert remoteIndex; /**< The index of this Vertex in its owning Bundle. */
+//				long unsigned int mfid; /**< The id of the MeshFragment that owns this vertex. */
 			public:
 				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. */
-				StripVertex(tiny::vec3 _pos, long unsigned int _mfid, xVert _remoteIndex) : Vertex(_pos), remoteIndex(_remoteIndex), mfid(_mfid)
+				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) : Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex)
 				{
 				}
 
 				/** Allow construction from existing vertex plus mfid. Used when copying a Vertex from a Bundle into a Strip.
 				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
-				StripVertex(const Vertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.index) {}
+//				StripVertex(const Vertex &v, long unsigned int _mfid) : StripVertex(v.pos,  _mfid, v.index) {}
+				StripVertex(const Vertex &v, Bundle * _owner) : StripVertex(v.pos,  _owner, v.index) {}
 
-				/** Allow construction from existing strip vertex plus mfid.
+				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as the generic VertexType constructor. */
+				StripVertex(tiny::vec3 _pos) : StripVertex(_pos, 0, 0) {}
+
+				/** Allow construction from existing strip vertex.
 				  * This duplicates the remoteIndex and mfid, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
-				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.mfid, v.remoteIndex) {}
+				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.owner, v.remoteIndex) {}
 
-				StripVertex(const StripVertex &v) : Vertex(v), remoteIndex(v.remoteIndex), mfid(v.mfid)
+				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex)
 				{
 				}
 
 				const xVert & getRemoteIndex(void) const { return remoteIndex; }
 				void setRemoteIndex(const xVert &v) { remoteIndex = v; }
 
-				long unsigned int getMeshFragmentId(void) const { return mfid; }
-				void setMeshFragmentId(long unsigned int _mfid) { mfid = _mfid; }
+				Bundle * getOwningBundle(void) { return owner; }
+				const Bundle * getOwningBundle(void) const { return owner; }
+				void setOwningBundle(Bundle * _owner) { owner = _owner; }
+//				long unsigned int getMeshFragmentId(void) const { return mfid; }
+//				void setMeshFragmentId(long unsigned int _mfid) { mfid = _mfid; }
 		};
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
@@ -89,12 +97,13 @@ namespace strata
 					return 0;
 				}
 
-				/** Look through all vertices for the vertex to be removed. */
-				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert)
+				/** Look through all vertices for the vertex to be removed. When found, merge the removed vertex with the designated new vertex. */
+				void purgeVertex(Bundle * _owner, const xVert & oldVert, const xVert & newVert)
 				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
 					{
-						if(vertices[i].getMeshFragmentId() == mfid)
+//						if(vertices[i].getMeshFragmentId() == mfid)
+						if(vertices[i].getOwningBundle() == _owner)
 						{
 							if(vertices[i].getRemoteIndex() == oldVert)
 							{
@@ -102,6 +111,12 @@ namespace strata
 							}
 						}
 					}
+				}
+
+				virtual Bundle * getVertexOwner(const xVert &v)
+				{
+					assert(v < ve.size());
+					return vertices[ve[v]].getOwningBundle();
 				}
 
 				/** Find out whether a set of vertices is adjacent to this mesh. The vertices are 'adjacent' if at least one
@@ -112,7 +127,7 @@ namespace strata
 				virtual std::string printVertexInfo(const StripVertex & v) const
 				{
 					std::stringstream ss;
-					ss << " r="<<v.getRemoteIndex()<<" mfid="<<v.getMeshFragmentId();
+					ss << " r="<<v.getRemoteIndex();//<<" mfid="<<v.getMeshFragmentId();
 					return ss.str();
 				}
 			protected:
@@ -153,23 +168,26 @@ namespace strata
 				  * This function also checks whether the old Bundle is actually adjacent to this Strip, and if so it returns
 				  * 'true'. In that case the Bundle is expected to also add this Strip to its adjacentStrips vector.
 				  */
-				bool updateAdjacentBundle(const std::map<xVert, xVert> & vmap, long unsigned int oldBundleId, long unsigned int newBundleId, Bundle * bundle)
+//				bool updateAdjacentBundle(const std::map<xVert, xVert> & vmap, long unsigned int oldBundleId, long unsigned int newBundleId, Bundle * bundle)
+				bool updateAdjacentBundle(const std::map<xVert, xVert> & vmap, Bundle * oldBundle, Bundle * newBundle)
 				{
 					bool isAdjacentMesh = false;
 					for(unsigned int i = 1; i < vertices.size(); i++)
-						if(vertices[i].getMeshFragmentId() == oldBundleId && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
+//						if(vertices[i].getMeshFragmentId() == oldBundleId && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
+						if(vertices[i].getOwningBundle() == oldBundle && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
 						{
-							vertices[i].setMeshFragmentId(newBundleId);
+//							vertices[i].setMeshFragmentId(newBundleId);
+							vertices[i].setOwningBundle(newBundle);
 							vertices[i].setRemoteIndex(vmap.at(vertices[i].getRemoteIndex()));
 							isAdjacentMesh = true;
 						}
-					if(isAdjacentMesh) addAdjacentBundle(bundle);
+					if(isAdjacentMesh) addAdjacentBundle(newBundle);
 					return isAdjacentMesh;
 				}
 
 				~Strip(void);
 
-				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
+//				virtual long unsigned int getMeshFragmentId(void) const { return getKey(); }
 
 				unsigned int nPolys(void) const { return polygons.size(); }
 				unsigned int nPolyIndices(void) const { return po.size(); }

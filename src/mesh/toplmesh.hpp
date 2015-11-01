@@ -88,9 +88,6 @@ namespace strata
 
 				float scaleTexture; /**< Scale factor - coordinates should range from -scaleTexture/2 to scaleTexture/2 (used for texture coords) */
 
-				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
-				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
-
 				/** Declare a function for adding vertices, which must be overloaded in the end-using class. */
 				virtual xVert addVertex(const VertexType &v) = 0;
 
@@ -183,7 +180,7 @@ namespace strata
 				{
 					polygons.push_back( Polygon(0,0,0) );
 					po.push_back(0); // po[0] shouldn't be used as a polygon because 0 is the "N/A" value for the Vertex's poly[] array
-					vertices.push_back( VertexType(0.0f, 0.0f, 0.0f) );
+					vertices.push_back( tiny::vec3(0.0f, 0.0f, 0.0f) );
 					ve.push_back(0); // ve[0] shouldn't be used either because 0 is the "N/A" value for the Vertex's nextEdgeVertex variable.
 				}
 

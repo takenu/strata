@@ -87,6 +87,10 @@ namespace strata
 				{
 				}
 
+				/** Get the owning Bundle of a vertex. If called on a Bundle, returns 'this'. If called on a
+				  * Strip, returns the owning Bundle of the vertex v instead. */
+				virtual Bundle * getVertexOwner(const xVert &v) = 0;
+
 				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
 //				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
 
@@ -145,14 +149,16 @@ namespace strata
 
 				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
 				template <typename AnotherVertexType>
-				bool addPolygonWithVertices(const AnotherVertexType &a, long unsigned int aid, const AnotherVertexType &b, long unsigned int bid,
-						const AnotherVertexType &c, long unsigned int cid, float relativeTolerance = 0.001)
+//				bool addPolygonWithVertices(const AnotherVertexType &a, long unsigned int aid, const AnotherVertexType &b, long unsigned int bid,
+//						const AnotherVertexType &c, long unsigned int cid, float relativeTolerance = 0.001)
+				bool addPolygonWithVertices(const AnotherVertexType &a, Bundle * _abundle, const AnotherVertexType &b, Bundle * _bbundle,
+						const AnotherVertexType &c, Bundle * _cbundle, float relativeTolerance = 0.001)
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
-					xVert _a = addIfNewVertex(VertexType(a,aid), tolerance);
-					xVert _b = addIfNewVertex(VertexType(b,bid), tolerance);
-					xVert _c = addIfNewVertex(VertexType(c,cid), tolerance);
+					xVert _a = addIfNewVertex(VertexType(a,_abundle), tolerance);
+					xVert _b = addIfNewVertex(VertexType(b,_bbundle), tolerance);
+					xVert _c = addIfNewVertex(VertexType(c,_cbundle), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
@@ -330,9 +336,14 @@ namespace strata
 				  * In all other cases (where the vertices are split) the polygon is added to 's'.
 				  * The latter object is typically a Strip since it doesn't make sense to add
 				  * polygons to Bundles if the vertices are not in a single Mesh object.
+				  *
+				  * Note that the index mappings fvert and gvert map the vertices of 'this' into the
+				  * Mesh objects 'f' and 'g'. Therefore one needs to use the mapping to access the
+				  * proper indexation for the polygons when adding them to their new mesh.
 				  */
-				template <typename MeshTypeA, typename MeshTypeB, typename MeshTypeC>
-				void splitAssignPolygonsToConstituentMeshes(MeshTypeA * f, MeshTypeB * g, MeshTypeC * s,
+//				template <typename MeshTypeA, typename MeshTypeB>
+				template <typename MeshType, typename StripMeshType>
+				void splitAssignPolygonsToConstituentMeshes(MeshType * f, MeshType * g, StripMeshType * s,
 						std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
 				{
 					for(unsigned int i = 1; i < polygons.size(); i++)
@@ -384,11 +395,15 @@ namespace strata
 							VertexType & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
 							VertexType & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
 							VertexType & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
-							long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
+/*							long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
 							long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
-							long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());
+							long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());*/
+							Bundle * _abundle = (fvert.find(a) == fvert.end() ? g->getVertexOwner(gvert.at(a)) : f->getVertexOwner(fvert.at(a)));
+							Bundle * _bbundle = (fvert.find(b) == fvert.end() ? g->getVertexOwner(gvert.at(b)) : f->getVertexOwner(fvert.at(b)));
+							Bundle * _cbundle = (fvert.find(c) == fvert.end() ? g->getVertexOwner(gvert.at(c)) : f->getVertexOwner(fvert.at(c)));
 				//			std::cout << " Mesh::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
-							s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stitch, and specify which vertices from which meshes it is using
+//							s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stitch, and specify which vertices from which meshes it is using
+							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 						}
 					}
 				}

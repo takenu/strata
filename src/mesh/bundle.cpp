@@ -113,6 +113,15 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
+void Bundle::splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * newBundle)
+{
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		if(adjacentStrips[i]->updateAdjacentBundle(vmap, this, newBundle))
+			newBundle->addAdjacentStrip(adjacentStrips[i]);
+	}
+}
+
 /** Split a Bundle into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
@@ -149,6 +158,9 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	g->initMesh();
 	s->initMesh();
 	s->resetTexture(scaleTexture, 250, 200, 0);
+
+	splitUpdateAdjacentStrips(fvert, f);
+	splitUpdateAdjacentStrips(gvert, g);
 
 //	f->addAdjacentMesh(s);
 //	g->addAdjacentMesh(s);
