@@ -66,7 +66,7 @@ namespace strata
 		class Layer
 		{
 			private:
-				std::vector<long unsigned int> bundles; /** The bundles forming this Layer. */
+				std::vector<Bundle*> bundles; /** The bundles forming this Layer. */
 				double thickness;
 			public:
 				Layer(void)
@@ -77,7 +77,7 @@ namespace strata
 				{
 					Bundle * bundle = makeNewBundle();
 					bundle->setParentLayer(this);
-					bundles.push_back( bundle->getKey() );
+					bundles.push_back(bundle);
 					return bundle;
 				}
 
