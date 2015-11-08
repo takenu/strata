@@ -132,6 +132,14 @@ namespace strata
 				{
 				}
 
+				bool isAdjacentToBundle(const Bundle * bundle) const
+				{
+					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+						if(adjacentBundles[i] == bundle)
+							return true;
+					return false;
+				}
+
 				/** A function called by an adjacent Bundle that ceases to exist. All references to the Bundle should be considered invalid.
 				  * In practice, except when the program is shutting down, the function that destroys the Bundle is responsible for repairing
 				  * all the vertex references of the Strip, since the Strip cannot own vertices and needs to borrow its vertices from a valid
@@ -199,6 +207,13 @@ namespace strata
 				}
 
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
+
+				/** A function to check:
+				  * - whether all vertices of this Strip refer to a Bundle that is in the adjacentBundles list,
+				  * - whether the referred Bundle actually contains a valid vertex referenced by the Strip vertex's remoteIndex,
+				  * - whether the Bundle also has a reference to this Strip.
+				  */
+				bool isAdjacencyComplete(void) const;
 		};
 	}
 }

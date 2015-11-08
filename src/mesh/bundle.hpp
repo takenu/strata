@@ -79,6 +79,13 @@ namespace strata
 					adjacentStrips.push_back(strip);
 				}
 
+				bool isAdjacentToStrip(const Strip * strip) const
+				{
+					for(unsigned int i = 0; i< adjacentStrips.size(); i++)
+						if(adjacentStrips[i] == strip)
+							return true;
+					return false;
+				}
 				/** Remove a Strip currently listed as adjacent, so that it can be removed safely. */
 				bool releaseAdjacentStrip(Strip * strip)
 				{
@@ -105,6 +112,9 @@ namespace strata
 
 				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
 				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
+
+				/** Provide a means to detect invalid vertex indices. */
+				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
 		};
 	}
 }

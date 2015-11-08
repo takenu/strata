@@ -74,3 +74,29 @@ Strip::~Strip(void)
 	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
 		assert(adjacentBundles[i]->releaseAdjacentStrip(this));
 }
+
+bool Strip::isAdjacencyComplete(void) const
+{
+	for(unsigned int i = 1; i < vertices.size(); i++)
+	{
+		if(!(isAdjacentToBundle(vertices[i].getOwningBundle())))
+		{
+			std::cout << " Strip::isAdjacencyComplete() :";
+			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to unknown Bundle!"<<std::endl;
+			return false;
+		}
+		if(!(vertices[i].getOwningBundle()->isAdjacentToStrip(this)))
+		{
+			std::cout << " Strip::isAdjacencyComplete() :";
+			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
+			return false;
+		}
+		if(!(vertices[i].getOwningBundle()->isValidVertexIndex(vertices[i].getRemoteIndex())))
+		{
+			std::cout << " Strip::isAdjacencyComplete() :";
+			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
+			return false;
+		}
+	}
+	return true;
+}
