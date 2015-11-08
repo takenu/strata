@@ -91,9 +91,6 @@ namespace strata
 				  * Strip, returns the owning Bundle of the vertex v instead. */
 				virtual Bundle * getVertexOwner(const xVert &v) = 0;
 
-				/** Re-declare pure virtual function purgeVertex, originally from the MeshInterface. */
-//				virtual void purgeVertex(long unsigned int mfid, const xVert & oldVert, const xVert & newVert) = 0;
-
 				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
 				{
@@ -116,7 +113,6 @@ namespace strata
 				/** Add a polygon using vertex indices rather than vertex references. */
 				bool addPolygonFromVertexIndices(xVert _a, xVert _b, xVert _c)
 				{
-//					std::cout << " Mesh::addPolygonFromVertexIndices() : Adding polygon "<<_a<<","<<_b<<","<<_c<<" to Mesh "<<getMeshFragmentId()<<std::endl;
 					return addPolygon(vertices[ve[_a]], vertices[ve[_b]], vertices[ve[_c]]); // Add polygon using vertices from this mesh.
 				}
 
@@ -149,8 +145,6 @@ namespace strata
 
 				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
 				template <typename AnotherVertexType>
-//				bool addPolygonWithVertices(const AnotherVertexType &a, long unsigned int aid, const AnotherVertexType &b, long unsigned int bid,
-//						const AnotherVertexType &c, long unsigned int cid, float relativeTolerance = 0.001)
 				bool addPolygonWithVertices(const AnotherVertexType &a, Bundle * _abundle, const AnotherVertexType &b, Bundle * _bbundle,
 						const AnotherVertexType &c, Bundle * _cbundle, float relativeTolerance = 0.001)
 				{
@@ -168,8 +162,6 @@ namespace strata
 					// All polygons currently using 'v' should use 'w' instead
 					for(unsigned int i = 1; i < polygons.size(); i++)
 						mergeAdjustPolygonIndices(polygons[i], v, w);
-					// All adjacent meshes should stop using the vertex 'v'.
-//					purgeVertexFromAdjacentMeshes(v, w);
 					// Remove the vertex from the list.
 					deleteVertexFromArray(v);
 				}
@@ -214,10 +206,8 @@ namespace strata
 				void splitAddIfNewVertex(const xVert & w, MeshType * m, std::vector<xVert> & newVertices,
 						std::map<xVert, xVert> & addedVertices, const std::map<xVert, xVert> & otherVertices)
 				{
-				//	std::cout << " Mesh::splitAddIfNewVertex() : attempt to add "<<w<<"..."<<std::endl;
 					if( addedVertices.count(w) == 0 && otherVertices.count(w) == 0)
 					{
-				//		std::cout << " Mesh::splitAddIfNewVertex() : Added vertex "<<w<<" to Mesh "<<m->getKey()<<std::endl;
 						newVertices.push_back(w);
 						addedVertices.insert( std::make_pair(w, m->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of m's vertices
 					}
@@ -395,14 +385,10 @@ namespace strata
 							VertexType & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
 							VertexType & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
 							VertexType & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
-/*							long unsigned int aid = (fvert.find(a) == fvert.end() ? g->getKey() : f->getKey());
-							long unsigned int bid = (fvert.find(b) == fvert.end() ? g->getKey() : f->getKey());
-							long unsigned int cid = (fvert.find(c) == fvert.end() ? g->getKey() : f->getKey());*/
 							Bundle * _abundle = (fvert.find(a) == fvert.end() ? g->getVertexOwner(gvert.at(a)) : f->getVertexOwner(fvert.at(a)));
 							Bundle * _bbundle = (fvert.find(b) == fvert.end() ? g->getVertexOwner(gvert.at(b)) : f->getVertexOwner(fvert.at(b)));
 							Bundle * _cbundle = (fvert.find(c) == fvert.end() ? g->getVertexOwner(gvert.at(c)) : f->getVertexOwner(fvert.at(c)));
 				//			std::cout << " Mesh::split() : s has "<<s->nPolys()<<" polys and an index array of size "<<s->nPolyIndices()<<std::endl;
-//							s->addPolygonWithVertices(_a, aid, _b, bid, _c, cid); // Add to Stitch, and specify which vertices from which meshes it is using
 							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 						}
 					}

@@ -161,14 +161,11 @@ namespace strata
 					}
 				}
 
-				void printPolygons(void) const //float step, unsigned int iterstep = 1) const
+				void printPolygons(void) const
 				{
-//					float div = 0.5f/step;
 					std::cout << " Printing TopologicalMesh polygons: ";
 					for(unsigned int i = 0; i < polygons.size(); i++)
 					{
-//						std::cout << i << ":"<<polygons[i]<<" at "<<vertices[ve[polygons[i].a]].pos*div<<", "<<vertices[ve[polygons[i].b]].pos*div<<", "<<vertices[ve[polygons[i].c]].pos*div;
-//						std::cout << " diffs at "; printDifferentials(vertices[ve[polygons[i].a]].pos,div);
 						std::cout << i << ": "<<polygons[i].a<<","<<polygons[i].b<<","<<polygons[i].c<<std::endl;
 					}
 				}

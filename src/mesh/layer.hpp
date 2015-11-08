@@ -89,9 +89,6 @@ namespace strata
 					bundle->createFlatLayer(size, ndivs, height);
 					bundle->initMesh(); // uses mesh::Drawable::initMesh() which calls TopologicalMesh::convertToMesh()
 				}
-
-//				xVert addVertex(tiny::vec3 pos) { return mesh.addVertex(pos); }
-//				tiny::vec3 getVertexPosition(xVert v) { return mesh.getVertexPosition(v); }
 		};
 	}
 }
