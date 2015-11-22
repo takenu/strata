@@ -163,6 +163,7 @@ namespace strata
 				{
 					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
 						if(adjacentBundles[i] == bundle) return;
+					std::cout << " Adding adjacent Bundle... "<<std::endl;
 					adjacentBundles.push_back(bundle);
 				}
 

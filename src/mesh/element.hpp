@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 
-#define STRATA_VERTEX_MAX_LINKS 11
+#define STRATA_VERTEX_MAX_LINKS 11 /**< The maximal number of links allowed for any vertex. */
+#define STRATA_VERTEX_LINK_THRESHOLD 8 /** The threshold after which attempts should be made to reduce the number of links of a vertex. */
 
 namespace strata
 {
@@ -51,6 +52,14 @@ namespace strata
 			{
 				for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					poly[i] = 0;
+			}
+
+			/** Count the number of polygons this Vertex is part of. */
+			inline unsigned int nPolys(void) const
+			{
+				for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					if(poly[i] == 0) return i;
+				return STRATA_VERTEX_MAX_LINKS;
 			}
 		};
 

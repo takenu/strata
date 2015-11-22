@@ -72,13 +72,19 @@ namespace strata
 				using TopologicalMesh<VertexType>::po;
 
 				using TopologicalMesh<VertexType>::comparePolygons;
+				using TopologicalMesh<VertexType>::computePolygonSkew;
+				using TopologicalMesh<VertexType>::findPolygon;
 				using TopologicalMesh<VertexType>::findPolyNeighbor;
+				using TopologicalMesh<VertexType>::findPolyNeighborFromIndex;
 				using TopologicalMesh<VertexType>::findFarthestPair;
+				using TopologicalMesh<VertexType>::findCommonEdgeVertex;
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
 
 				using TopologicalMesh<VertexType>::printPolygons;
 				using TopologicalMesh<VertexType>::printLists;
+
+//				using TopologicalMesh<VertexType>::checkVertexIndices;
 
 				Layer * parentLayer;
 
@@ -111,7 +117,7 @@ namespace strata
 				}
 
 				/** Add a polygon using vertex indices rather than vertex references. */
-				bool addPolygonFromVertexIndices(xVert _a, xVert _b, xVert _c)
+				bool addPolygonFromVertexIndices(const xVert & _a, const xVert & _b, const xVert & _c)
 				{
 					return addPolygon(vertices[ve[_a]], vertices[ve[_b]], vertices[ve[_c]]); // Add polygon using vertices from this mesh.
 				}
@@ -133,7 +139,7 @@ namespace strata
 						if(a.poly[i] > 0 && comparePolygons(a.index, b.index, polygons[po[a.poly[i]]])) return false; // Polygon found
 					}
 					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
-					{ std::cerr << " Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
+					{ std::cerr << " Mesh::addPolygon() : ERROR: Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
 					po.push_back( polygons.size() );
 					polygons.push_back( Polygon(a.index, b.index, c.index) );
 					polygons.back().index = po.size()-1;
@@ -156,6 +162,33 @@ namespace strata
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
+				/** Adjust the indexation of a polygon 'p' such that references to 'a' are replaced by references to 'b'.
+				  * Additionally, this function removes the reference to 'p' in vertex 'a'.
+				  */
+				void adjustPolygonIndices(Polygon &p, const xVert &a, const xVert &b)
+				{
+					if(p.a == a) { p.a = b; deletePolygonFromVertex(p, vertices[ve[a]]); }
+					if(p.b == a) { p.b = b; deletePolygonFromVertex(p, vertices[ve[a]]); }
+					if(p.c == a) { p.c = b; deletePolygonFromVertex(p, vertices[ve[a]]); }
+				}
+
+				/** Adjust the indexation of all polygons next to vertex 'v', such that all references to vertex
+				  * 'a' are replaced by references to vertex 'b'.
+				  * This operation may be performed when an edge is split, e.g. by splitEdge().
+				  * However, one can alternatively delete obsolete polygons and then add all necessary polygons.
+				  */
+				void adjustPolygons(const xVert &_v, const xVert &a, const xVert &b)
+				{
+					assert(_v!=a); // Forbid adjusting the vertex itself.
+					assert(_v!=b);
+					Vertex & v = vertices[ve[_v]];
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(v.poly[i] == 0) break;
+						adjustPolygonIndices(polygons[po[v.poly[i]]], a, b);
+					}
+				}
+
 				/** Merge a vertex 'v' with another vertex 'w', effectively removing 'v' from the Mesh. */
 				void mergeVertices(const xVert &v, const xVert &w)
 				{
@@ -164,6 +197,292 @@ namespace strata
 						mergeAdjustPolygonIndices(polygons[i], v, w);
 					// Remove the vertex from the list.
 					deleteVertexFromArray(v);
+				}
+
+				/** Swap the common edge between polygons p and q.
+				  * This deletes the current polygons p and q and replaces them by two new polygons. It also updates
+				  * the polygon indices of all involved vertices.
+				  *
+				  * The picture is as follows:
+				  *        * c                * c
+				  *       /|\                /r\
+				  *    a *p|q* b  ---->   a *---* b
+				  *       \|/                \s/
+				  *        * v                * v
+				  */
+				void swapEdge(const xPoly &p, const xPoly &q)
+				{
+					xVert v = findCommonEdgeVertex(p, q);
+					if(v==0) { std::cout << " Mesh::swapEdge error: p="<<polygons[po[p]].a<<","<<polygons[po[p]].b<<","<<polygons[po[p]].c
+						<<", q="<<polygons[po[q]].a<<","<<polygons[po[q]].b<<","<<polygons[po[q]].c<<std::endl; }
+					assert(v>0);
+					xVert a = findPolyNeighborFromIndex(p, v, true); // First collect vertex indices so we can delete p and q
+					xVert b = findPolyNeighborFromIndex(q, v, false);
+					xVert c = findPolyNeighborFromIndex(q, v, true);
+					deletePolygon(p);
+					deletePolygon(q);
+					addPolygonFromVertexIndices(v, a, b);
+					addPolygonFromVertexIndices(b, a, c);
+				}
+
+				/** Try to swap either of the two edges of 'p' of which 'v' is one of the two ends.
+				  * The function first finds the vertices that could participate in the swap (getting an additional
+				  * link in the process), and then carries out the swap provided both of the new polygons would have
+				  * a skew (determined by TopologicalMesh::computePolygonSkew) that is better than the skew
+				  * of 'p', and that both vertices that would add a link currently have fewer links than 'v'.
+				  *
+				  * The topology logic is as follows:
+				  *        * p_b              *
+				  *       /|\                / \
+				  *   p_a*p| * b  ---->     *---*       (such that 'v' loses the connection to the top vertex)
+				  *     / \|/              / \ /
+				  *  a *---* v            *---* v
+				  *
+				  */
+				bool attemptEdgeSwap(const xVert &v, const xPoly &p)
+				{
+					xVert p_a = findPolyNeighborFromIndex(p, v, true);
+					xVert p_b = findPolyNeighborFromIndex(p, v, false);
+					xPoly vaa = findPolygon(p_a, v, false);
+					xPoly vbb = findPolygon(v, p_b, false);
+					float pScore = computePolygonSkew(p);
+					float aScore = (vaa > 0 ? computePolygonSkew(polygons[po[vaa]]) : pScore + 1.0f);
+					float bScore = (vbb > 0 ? computePolygonSkew(polygons[po[vbb]]) : pScore + 1.0f);
+					// Check all requirements for swapping the v-p_a edge to a a-p_b edge. This one also includes that a must score better than b.
+					if(vaa > 0 && !(aScore < pScore && vertices[ve[findPolyNeighborFromIndex(vaa, v, true)]].nPolys() < vertices[ve[v]].nPolys()
+								&& vertices[ve[p_b]].nPolys() < vertices[ve[v]].nPolys()))
+						aScore = pScore + 1.0f; // If the swap is impossible, signal it by resetting its score.
+					if(vbb > 0 && !(bScore < pScore && vertices[ve[findPolyNeighborFromIndex(vbb, v, false)]].nPolys() < vertices[ve[v]].nPolys()
+								&& vertices[ve[p_a]].nPolys() < vertices[ve[v]].nPolys()))
+						bScore = pScore + 1.0f;
+					if(aScore < bScore && aScore < 0.999*pScore)
+					{
+						std::cout << " Swapping edge a, aScore="<<aScore<<", bScore="<<bScore<<", pScore="<<pScore<<std::endl;
+						swapEdge(p, vaa);
+						return true;
+					}
+					else if(bScore < 0.999*pScore)
+					{
+						std::cout << " Swapping edge b, aScore="<<aScore<<", bScore="<<bScore<<", pScore="<<pScore<<std::endl;
+						swapEdge(p, vbb);
+						return true;
+					}
+					else return false;
+				}
+
+				/** Balance a vertex's connections such that it is guaranteed to have space in its poly array.
+				  * This function is allowed to modify a Mesh's polygon structure but it may not modify a Mesh's
+				  * vertex structure.
+				  *
+				  * In order to rebalance, we search for the worst polygon adjacent to the Vertex referenced
+				  * by 'v'. We then try to reduce v's connections by swapping one of the two edges of that polygon
+				  * that are connecting to 'v'. If this edge is on the edge, it cannot be swapped. If the edge
+				  * swapping would result in a polygon with a worse score (as determined by computePolygonSkew)
+				  * the swap is also rejected.
+				  *
+				  * If both edges are not swappable, the function goes to the next worst edge, and so on, until
+				  * either all edges are tried or a swap is successful (reducing the number of connections to 'v'
+				  * by 1).
+				  */
+				void pruneExcessiveConnections(const xVert &v)
+				{
+					float pruneScore[STRATA_VERTEX_MAX_LINKS];
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+//						pruneScore[i] = computePolygonSkew(polygons[po[vertices[ve[v]].poly[i]]]); // Note that computePolygonSkew should return a number >= 1.0f
+						if(vertices[ve[v]].poly[i] == 0) pruneScore[i] = 0.0f;
+						else pruneScore[i] = computePolygonSkew(i,v); // Note that computePolygonSkew should return a number >= 1.0f
+					}
+					unsigned int highestPruneScoreIndex = 0;
+					bool pruningIsSuccessful = false;
+					while(!pruningIsSuccessful)
+					{
+						highestPruneScoreIndex = 0;
+						for(unsigned int i = 1; i < STRATA_VERTEX_MAX_LINKS; i++)
+						{
+							if(vertices[ve[v]].poly[i] == 0) break;
+							if(pruneScore[i] > pruneScore[highestPruneScoreIndex])
+								highestPruneScoreIndex = i;
+						}
+						if(pruneScore[highestPruneScoreIndex] == 0.0f) break; // Give up if all polygons have been attempted without success.
+						else
+						{
+							pruningIsSuccessful = attemptEdgeSwap(v, vertices[ve[v]].poly[highestPruneScoreIndex]); // Try to swap either of the two edges of the polygon.
+							pruneScore[highestPruneScoreIndex] = 0.0f; // Reset this polygon - we've tried it and if it didn't work we should not try it again.
+						}
+					}
+					if(!pruningIsSuccessful)
+					{
+						std::cout << " Mesh::pruneExcessiveConnections() : NOTE: None of the "<<vertices[ve[v]].nPolys()
+							<<" links of vertex "<<v<<" could be pruned. This may happen incidentally. "<<std::endl;
+					}
+				}
+
+				/** Balance a mesh by swapping edges, in order to avoid situations where a vertex is a part of many
+				  * long and thin polygons. */
+				void rebalanceVertexConnections(void)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						unsigned int num_retries = 0;
+						while(vertices[i].nPolys() > STRATA_VERTEX_LINK_THRESHOLD && num_retries < STRATA_VERTEX_MAX_LINKS - STRATA_VERTEX_LINK_THRESHOLD)
+						{
+							pruneExcessiveConnections(vertices[i].index);
+							++num_retries;
+						}
+					}
+				}
+
+				/** Split the edge between vertices 'b' and 'c'. Assume the following layout and splitting:
+				  *   a *                a *
+				  *    / \                /|\
+				  * b *---* c  ---->   b *-*-* c     (the new vertex in the center will be called 'v')
+				  *    \ /                \|/
+				  *     * d                * d
+				  * The vertices 'a' and 'd' do not need to exist, since bc could be at the edge of the mesh.
+				  */
+//				void splitEdge(const xVert &b, const xVert &c) <--- Don't do that! xVert may change while adding polys and then everything gets fucked!
+				void splitEdge(xVert b, xVert c)
+				{
+					// Get the polygons next to bc. If bc is on the edge of the mesh, one of the xPoly's will be 0 and be ignored.
+					xPoly cba = findPolygon(c, b, false);
+					xPoly bcd = findPolygon(b, c, false);
+//					std::cout << " Mesh::splitEdge() : cba="<<cba<<": "<<polygons[po[cba]].a<<","<<polygons[po[cba]].b<<","<<polygons[po[cba]].c<<std::endl;
+//					std::cout << " Mesh::splitEdge() : bcd="<<bcd<<": "<<polygons[po[bcd]].a<<","<<polygons[po[bcd]].b<<","<<polygons[po[bcd]].c<<std::endl;
+					xVert a = 0;
+					xVert d = 0;
+					// Ensure that a and d are not excessively connected.
+					if(cba > 0)
+					{
+//						std::cout << " Mesh::splitEdge() : cba="<<cba<<": "<<polygons[po[cba]].a<<","<<polygons[po[cba]].b<<","<<polygons[po[cba]].c<<std::endl;
+//						pruneExcessiveConnections(findPolyNeighbor(cba, c, false)); <-- don't, make sure connections are OK beforehand to avoid creating badly connected Bundles (which could happen if polygon structure is altered at this stage).
+//						cba = findPolygon(c, b, false); // Re-find cba since pruning might have changed which vertex 
+//						a = findPolyNeighbor(c, b, true);
+						a = findPolyNeighborFromIndex(cba, b, true);
+						if(a == 0) std::cout << " Mesh::splitEdge() : WARNING: Couldn't find vertex 'a'! "<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Poly counts: "<<vertices[ve[a]].nPolys()<<","<<vertices[ve[b]].nPolys()<<","
+//							<<vertices[ve[c]].nPolys()<<","<<vertices[ve[d]].nPolys()<<"... there are "<<polygons.size()<<" polys and "<<po.size()<<" indices..."<<std::endl;
+//						deletePolygon(polygons[po[cba]]);
+						deletePolygon(cba);
+					}
+					if(bcd > 0)
+					{
+//						std::cout << " Mesh::splitEdge() : bcd="<<bcd<<": "<<polygons[po[bcd]].a<<","<<polygons[po[bcd]].b<<","<<polygons[po[bcd]].c<<std::endl;
+//						d = findPolyNeighbor(b, c, true);
+						d = findPolyNeighborFromIndex(bcd, c, true);
+						if(d == 0) std::cout << " Mesh::splitEdge() : WARNING: Couldn't find vertex 'd'! "<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Poly counts: "<<vertices[ve[a]].nPolys()<<","<<vertices[ve[b]].nPolys()<<","
+//							<<vertices[ve[c]].nPolys()<<","<<vertices[ve[d]].nPolys()<<"... there are "<<polygons.size()<<" polys and "<<po.size()<<" indices..."<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Vertex indices: a="<<a<<", b="<<b<<", c="<<c<<", d="<<d<<"..."<<std::endl;
+//						deletePolygon(polygons[po[bcd]]);
+						deletePolygon(bcd);
+					}
+					tiny::vec3 pos = (vertices[ve[b]].pos + vertices[ve[c]].pos)*0.5; // Take the midpoint
+					xVert v = addVertex(pos);
+//					std::cout << " Mesh::splitEdge() : Repeat: Vertex indices: a="<<a<<", b="<<b<<", c="<<c<<", d="<<d<<"..."<<std::endl;
+//					adjustPolygons(b, c, v); // Replace 'c' by 'v' in all of b's polygons.
+//					adjustPolygons(c, b, v); // Replace 'b' by 'v' in all of c's polygons.
+					// Add polygons to replace the deleted ones, this time using 'v' as one of the indices.
+//					std::cout << " Mesh::splitEdge() : Poly counts: "<<vertices[ve[a]].nPolys()<<","<<vertices[ve[b]].nPolys()<<","
+//						<<vertices[ve[c]].nPolys()<<","<<vertices[ve[d]].nPolys()<<"..."<<std::endl;
+					if(a>0)
+					{
+						std::cout << " Mesh::splitEdge() : Adding polygons for 'a' using new vertex v="<<v<<"..."<<std::endl;
+//						addPolygonFromVertexIndices(v,b,a);
+//						addPolygonFromVertexIndices(v,a,c);
+						// Issue a warning if poly not added: the mesh cannot already have the polygon.
+//						std::cout << " Mesh::splitEdge() : Repeat2: Vertex indices: a="<<a<<", b="<<b<<", c="<<c<<", d="<<d<<"..."<<std::endl;
+						if(!addPolygonFromVertexIndices(v,b,a)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vba not added! "<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Repeat2a: Vertex indices: a="<<a<<", b="<<b<<", c="<<c<<", d="<<d<<"..."<<std::endl;
+						if(!addPolygonFromVertexIndices(v,a,c)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vac not added! "<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Repeat3: Vertex indices: a="<<a<<", b="<<b<<", c="<<c<<", d="<<d<<"..."<<std::endl;
+//						std::cout << " Mesh::splitEdge() : vcd should be "<<v<<","<<c<<","<<d<<", listing v's polygons: ";
+//						for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+//							if(vertices[ve[v]].poly[i] > 0)
+//								std::cout<<"("<<polygons[po[vertices[ve[v]].poly[i]]].a<<","<<polygons[po[vertices[ve[v]].poly[i]]].b<<","<<polygons[po[vertices[ve[v]].poly[i]]].c<<")";
+//						std::cout << std::endl;
+					}
+					if(d>0)
+					{
+						std::cout << " Mesh::splitEdge() : Adding polygons for 'd'..."<<std::endl;
+//						addPolygonFromVertexIndices(v,d,b);
+//						addPolygonFromVertexIndices(v,c,d);
+						if(!addPolygonFromVertexIndices(v,d,b)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vdb not added! "<<std::endl;
+//						std::cout << " Mesh::splitEdge() : vcd should be "<<v<<","<<c<<","<<d<<", listing v's polygons: ";
+//						for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+//							if(vertices[ve[v]].poly[i] > 0)
+//								std::cout<<"("<<polygons[po[vertices[ve[v]].poly[i]]].a<<","<<polygons[po[vertices[ve[v]].poly[i]]].b<<","<<polygons[po[vertices[ve[v]].poly[i]]].c<<")";
+//						std::cout << std::endl;
+						if(!addPolygonFromVertexIndices(v,c,d)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vcd not added! "<<std::endl;
+					}
+//					std::cout << " Mesh::splitEdge() : Poly counts: "<<vertices[ve[a]].nPolys()<<","<<vertices[ve[b]].nPolys()<<","
+//						<<vertices[ve[c]].nPolys()<<","<<vertices[ve[d]].nPolys()<<"..."<<std::endl;
+				}
+
+				/** Split an edge opposite to vertex a across a's i-th polygon, by creating a new vertex at its midpoint.
+				  * Redirects to splitEdge() called on only the edge vertices. */
+				void splitEdgeFromPolygonIndex(unsigned int i, const xVert &a)
+				{
+					splitEdge(findPolyNeighbor(i, a, false), findPolyNeighbor(i, a, true));
+				}
+
+				/** Assign unassigned vertices to either f or g, whenever possible.
+				  * This function supplements the primary assignment function (splitMesh()) by providing a way to add
+				  * vertices to meshes in cases where splitMesh() was unable to add the vertex to either f or g because doing so would
+				  * result in an invalid topology. Therefore, this function should be used after a topological correction
+				  * has taken place (otherwise it would be unable to add it as well).
+				  * This function should not be used in general for splitting meshes, since it does not make any efforts
+				  * to split the mesh into two equal halves.
+				  *
+				  * Usage:
+				  * To be used for assigning vertices not yet in 'f' or 'g' to either of these two. Assignment is done
+				  * only if a polygon is found, containing the orphan vertex, for which both other vertices belong to the
+				  * same mesh (i.e. f or g).
+				  * The function returns 'true' if all vertices were assigned to either f or g.
+				  */
+				template <typename MeshType>
+				bool splitAssignOrphanVertices(MeshType * f, MeshType * g, std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
+				{
+					bool retryAssignment = true; // This flag can be used to keep trying. Often, several iterations are required to assign all.
+					bool allVerticesAreAssigned = true;
+					while(retryAssignment)
+					{
+						retryAssignment = false;
+						for(unsigned int i = 1; i < vertices.size(); i++)
+						{
+							if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
+							{
+								std::cout << " Mesh::splitAssignOrphanVertices() : Trying to assign vertex "<<vertices[i].index<<" with "
+									<< vertices[i].nPolys()<<" polys..."<<std::endl;
+								for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+								{
+									if(vertices[i].poly[j] == 0)
+									{
+										allVerticesAreAssigned = false; // At least one vertex remains unassigned.
+										break;
+									}
+									if( fvert.find(findPolyNeighbor(j, vertices[i].index, true)) != fvert.end() &&
+										fvert.find(findPolyNeighbor(j, vertices[i].index, false)) != fvert.end() )
+									{
+										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to f..."<<std::endl;
+										retryAssignment = true; // Added a new vertex so we can try another iteration to add even more vertices
+										fvert.insert( std::make_pair(vertices[i].index, f->addVertex(vertices[i])) );
+										break;
+									}
+									else if( gvert.find(findPolyNeighbor(j, vertices[i].index, true)) != gvert.end() &&
+										gvert.find(findPolyNeighbor(j, vertices[i].index, false)) != gvert.end() )
+									{
+										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to g..."<<std::endl;
+										retryAssignment = true;
+										gvert.insert( std::make_pair(vertices[i].index, g->addVertex(vertices[i])) );
+										break;
+									}
+								}
+							}
+						}
+						if(allVerticesAreAssigned) retryAssignment = false; // Stop assignment loop if all vertices are done.
+					}
+					return allVerticesAreAssigned;
 				}
 
 				/** Merge unallocated vertices with some neighbor that is allocated. This operation may be necessary
@@ -260,7 +579,9 @@ namespace strata
 					}
 				}
 
-				/** Split the 'this' Mesh object by distributing its vertices among the meshes 'f' and 'g'. */
+				/** Split the 'this' Mesh object by distributing its vertices among the meshes 'f' and 'g'.
+				  * This function should be called only once since it creates the new mesh objects 'f' and 'g'.
+				  */
 				template <typename MeshType>
 				void splitMesh(std::function<MeshType * (void)> makeNewMesh, MeshType * & f, MeshType * & g,
 						std::map<xVert,xVert> &fvert, std::map<xVert,xVert> &gvert)
@@ -268,11 +589,18 @@ namespace strata
 					VertPair farthestPair(0,0);
 					findFarthestPair(farthestPair);
 
+					// Make sure all vertices have less than their max number of links available, such that we can
+					// add new polygons while splitting.
+/*					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						pruneExcessiveConnections(vertices[i].index);
+					}*/
+
 					// Check that the farthest pair vertices are not part of the same polygon (by checking that b is not part of any of a's polygons),
 					// and that they also are not connected to the same vertex.
 					if( verticesHaveCommonNeighbor(farthestPair.a, farthestPair.b) )
 					{
-						std::cout << " Mesh::splitMesh() : Farthest pair vertices seem to be members of the same (very large) polygon. Cannot split! "<<std::endl;
+						std::cout << " Mesh::splitMesh() : There exists a vertex that is a neighbor to both of the farthestPair vertices. Cannot split! "<<std::endl;
 						return;
 					}
 
@@ -344,7 +672,7 @@ namespace strata
 						// Add polygon to the correct object.
 						if(gvert.find(a) == gvert.end() && gvert.find(b) == gvert.end() && gvert.find(c) == gvert.end()) // None of the vertices are in Bundle g? Then this polygon is in f.
 						{
-							try
+//							try
 							{
 								assert(fvert.at(a) < f->ve.size());
 								assert(fvert.at(b) < f->ve.size());
@@ -353,9 +681,9 @@ namespace strata
 								assert(f->ve[fvert.at(b)] < f->vertices.size());
 								assert(f->ve[fvert.at(c)] < f->vertices.size());
 							}
-							catch(std::exception &e)
+//							catch(std::exception &e)
 							{
-								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+//								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
 							}
 				//			std::cout << " Mesh::split() : f has "<<f->polygons.size()<<" polys and an index array of size "<<f->po.size()<<std::endl;
 				//			f->addPolygon(f->vertices[f->ve[fvert.at(a)]], f->vertices[f->ve[fvert.at(b)]], f->vertices[f->ve[fvert.at(c)]]);
@@ -363,7 +691,7 @@ namespace strata
 						}
 						else if(fvert.find(a) == fvert.end() && fvert.find(b) == fvert.end() && fvert.find(c) == fvert.end()) // None of the vertices are in Bundle f? Then this polygon is in g.
 						{
-							try
+//							try
 							{
 								assert(gvert.at(a) < g->ve.size());
 								assert(gvert.at(b) < g->ve.size());
@@ -372,9 +700,9 @@ namespace strata
 								assert(g->ve[gvert.at(b)] < g->vertices.size());
 								assert(g->ve[gvert.at(c)] < g->vertices.size());
 							}
-							catch(std::exception &e)
+//							catch(std::exception &e)
 							{
-								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
+//								std::cout << " Mesh::splitAssignPolygonsToConstituentMeshes() : Exception: "<<e.what()<<" with a->"<<a<<" b->"<<b<<" c->"<<c<<" on ve of size "<<ve.size()<<std::endl;
 							}
 				//			std::cout << " Mesh::split() : g has "<<g->polygons.size()<<" polys and an index array of size "<<g->po.size()<<std::endl;
 				//			g->addPolygon(g->vertices[g->ve[gvert.at(a)]], g->vertices[g->ve[gvert.at(b)]], g->vertices[g->ve[gvert.at(c)]]);
@@ -382,6 +710,9 @@ namespace strata
 						}
 						else
 						{
+							assert(fvert.find(a) != fvert.end() || gvert.find(a) != gvert.end()); // Make sure a/b/c are at least somewhere
+							assert(fvert.find(b) != fvert.end() || gvert.find(b) != gvert.end());
+							assert(fvert.find(c) != fvert.end() || gvert.find(c) != gvert.end());
 							VertexType & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
 							VertexType & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
 							VertexType & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
@@ -411,12 +742,19 @@ namespace strata
 				/** Delete a polygon from the array of polygons. */
 				void deletePolygonFromArray(const xPoly &p)
 				{
-//					Polygon & _p = polygons[po[p]]; std::cout << " Mesh::deletePolygonFromArray() : Deleting polygon "<<p<<":"<<po[p]<<"="<<_p<<" at "<<vertices[ve[_p.a]].pos<<","<<vertices[ve[_p.b]].pos<<","<<vertices[ve[_p.c]].pos<<std::endl;
+//					xPoly pback = polygons.back().index;
+//					std::cout << " Mesh::deletePolygonFromArray() : deleting "<<p<<", moving polygon at back ("<<pback<<") with indices "
+//						<<polygons[po[pback]].a<<","<<polygons[po[pback]].b<<","<<polygons[po[pback]].c<<std::endl;
+//					std::cout << " Polygon indexation is "<<p<<"->"<<po[p]<<", "<<pback<<"->"<<po[pback]<<std::endl;
 					po[polygons.back().index] = po[p]; // Change indexing of last polygon to p's location in 'polygons'
-					polygons[po[p]] = polygons.back(); // Move last polygon in the list to p's position
+//					std::cout << " Working, polygon indexation is "<<p<<"->"<<po[p]<<", "<<pback<<"->"<<po[pback]<<std::endl;
 					po[p] = 0; // Refer to nowhere for the to-be-deleted polygon. (No one should be using 'p.index' anymore.)
+					polygons[po[polygons.back().index]] = polygons.back(); // Move last polygon in the list to p's position
+//					std::cout << " Working, polygon indexation is "<<p<<"->"<<po[p]<<", "<<pback<<"->"<<po[pback]<<std::endl;
 					polygons.pop_back(); // Delete the (now unreferenced, duplicate) polygon at the end of the list.
-//					std::cout << " Mesh::deletePolygonFromArray() : Printing resulting Mesh: "<<std::endl; printPolygons(); printLists();
+//					std::cout << " Done, polygon indexation is "<<p<<"->"<<po[p]<<", "<<pback<<"->"<<po[pback]<<std::endl;
+//					std::cout << " Mesh::deletePolygonFromArray() : Polygon at back ("<<pback<<") is now "
+//						<<polygons[po[pback]].a<<","<<polygons[po[pback]].b<<","<<polygons[po[pback]].c<<std::endl;
 				}
 
 				/** Delete a vertex from the vertices array. */
@@ -428,27 +766,42 @@ namespace strata
 					vertices.pop_back();
 				}
 
+				/** Delete the xPoly reference to a Polygon from a Vertex. */
+				inline void deletePolygonFromVertex(Polygon &p, Vertex &v)
+				{
+					for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+					{
+						if(v.poly[j] == 0) break;
+						else if(v.poly[j] == p.index)
+						{
+							std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<v.index<<"..."<<std::endl;
+							for(unsigned int k = j; k < STRATA_VERTEX_MAX_LINKS-1; k++)
+							{
+								v.poly[k] = v.poly[k+1];
+							}
+							v.poly[STRATA_VERTEX_MAX_LINKS-1] = 0;
+						}
+					}
+				}
+
 				/** Delete a polygon from the Mesh, and clean up all references to it.
 				  * This is a subtle function and careless use could result in meshes that are not well-connected. */
 				void deletePolygon(Polygon &p)
 				{
-					for(unsigned int i = 1; i < vertices.size(); i++)
-					{
-						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
-						{
-							if(vertices[i].poly[j] == 0) break;
-							else if(vertices[i].poly[j] == p.index)
-							{
-								std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<vertices[i].index<<"..."<<std::endl;
-								for(unsigned int k = j; k < STRATA_VERTEX_MAX_LINKS-1; k++)
-								{
-									vertices[i].poly[k] = vertices[i].poly[k+1];
-								}
-								vertices[i].poly[STRATA_VERTEX_MAX_LINKS-1] = 0;
-							}
-						}
-					}
+					assert(p.a < ve.size()); assert( ve[p.a] < vertices.size());
+					assert(p.b < ve.size()); assert( ve[p.b] < vertices.size());
+					assert(p.c < ve.size()); assert( ve[p.c] < vertices.size());
+					deletePolygonFromVertex(p, vertices[ve[p.a]]);
+					deletePolygonFromVertex(p, vertices[ve[p.b]]);
+					deletePolygonFromVertex(p, vertices[ve[p.c]]);
 					deletePolygonFromArray(p.index);
+				}
+
+				/** Delete a polygon from the Mesh by its xPoly reference. */
+				void deletePolygon(const xPoly &p)
+				{
+					std::cout << " Mesh::deletePolygon() : Delete polygon from index "<<p<<"..."<<std::endl;
+					deletePolygon(polygons[po[p]]);
 				}
 		};
 	} // end namespace mesh

@@ -122,6 +122,80 @@ void Bundle::splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * n
 	}
 }
 
+/*void Bundle::splitAssignSpikeVertexToNewBundle(Bundle * f, unsigned int i, const xVert &v, std::map<xVert, xVert> &vmap)
+{
+	xVert &w = splitEdge(i, v);
+	// TODO: After the new vertex is added successfully, add that vertex and the spike vertex both to vmap and to the Bundle f.
+}*/
+
+/** While splitting, assign vertices to a bundle in the problematic case that the vertex is isolated
+  * on a 'spike' where it is connected via only 1 edge to a vertex in Bundle f and via 1 other edge to a
+  * vertex in Bundle g.
+  *
+  * If this is the case, we split the edge between the f and g bundle such that 1 vertex is added and
+  * the two polygons adjacent to this edge are replaced by four new ones.
+  *
+  * The procedure for splitting an edge is standard and delegated to the Mesh class. This function itself therefore
+  * has to identify the local topology and determine where the operation should take place. */
+bool Bundle::splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xVert> &fvert, std::map<xVert, xVert> &gvert)
+{
+	bool allVerticesAreAssigned = true;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+	{
+		if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
+		{
+			std::cout << " Bundle::splitAssignSpikeVertices() : Attempting to assign previously unassigned vertex "<<vertices[i].index<<"..."<<std::endl;
+			for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+			{
+				if(vertices[i].poly[j] == 0)
+				{
+					// Stop if all vertices are exhausted (this will leave the vertex unassigned, requiring yet another
+					// call to this function).
+					allVerticesAreAssigned = false;
+					break;
+				}
+				if((fvert.find(findPolyNeighbor(j, vertices[i].index, true)) != fvert.end() ||
+					fvert.find(findPolyNeighbor(j, vertices[i].index, false)) != fvert.end()) &&
+				   (gvert.find(findPolyNeighbor(j, vertices[i].index, true)) != gvert.end() ||
+					gvert.find(findPolyNeighbor(j, vertices[i].index, false)) != gvert.end()) )
+				{
+					// Now we found the polygon for which the unassigned vertex is together with 1 vertex
+					// from Bundle 'f' and 1 vertex from Bundle 'g'. We are going to cut the f-g edge in
+					// order to solve the unassignability problem. The other polygon that the f-g edge is part of,
+					// must have already been assigned to either 'f' or 'g'. (This should be guaranteed for well-connected meshes.)
+					// The new vertex and the unassigned vertex will both be assigned to the same group as that vertex.
+/*					xVert v = findOppositeVertex(j, a); <--- Deactivated: use Mesh::splitEdge() instead, don't do topology here
+					if(fvert.find(v) != fvert.end())
+					{
+					}
+					else if(gvert.find(v) != gvert.end())
+					{
+					}
+					else
+					{
+						std::cout << " Bundle::splitAssignSpikeVertices() : ERROR: Opposite vertex belongs to neither 'f' or 'g'!"<<std::endl;
+						break;
+					}*/
+
+					// Split the edge opposite to the spike vertex.
+					splitEdge(findPolyNeighbor(j, vertices[i].index, true), findPolyNeighbor(j, vertices[i].index, false));
+//					splitEdge(j, vertices[i].index); <-- doesn't work, too much overloading
+
+					// Immediately retry adding vertices to meshes. Both the new vertex and the i-th vertex should now be added.
+					// If we would postpone adding these, we risk trying to manipulate the topology even more while it's not necessary.
+					splitAssignOrphanVertices(f,g,fvert,gvert); // Set to false to signal that we're not done.
+					if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
+					{
+						std::cout << " Bundle::splitAssignSpikeVertices() : WARNING: Failed to assign "<<vertices[i].index<<"!"<<std::endl;
+						allVerticesAreAssigned = false;
+					}
+				}
+			}
+		}
+	}
+	return allVerticesAreAssigned;
+}
+
 /** Split a Bundle into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
 void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
@@ -130,13 +204,32 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	Bundle * f = 0;
 	Bundle * g = 0;
 	std::map<xVert, xVert> fvert, gvert; // Mapping with key = old xVert and value = new xVert
+
+	// Rebalance the mesh, such that vertices have space in their 'poly' array of polygons they are part of.
+	// Splitting may run into issues that are then resolved by modifying the mesh, but this modification is
+	// considerably easier if polygons can be split and new vertices can be introduced.
+	// If splitting does encounter a non-recoverable problem (usually, a full 'poly' array) it will abort,
+	// but with this rebalancing such aborted splits should be extremely rare (since a single vertex would
+	// need to receive more than 3 additional connections, which would require a very peculiar mesh (one can
+	// manually construct such examples).)
+	rebalanceVertexConnections();
+
+	// Split the mesh's vertices, assigning all vertices to either 'f' or 'g'. The splitting may fail if
+	// the mesh has too few polygons, in this case f and g are not created and we abort the splitting.
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
 	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return; }
 
 	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
 	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
 	// same bundle).
-	splitMergeOrphanVertices(f,g,fvert,gvert);
+//	splitMergeOrphanVertices(f,g,fvert,gvert);
+
+	// Assign any vertices not yet in f or g to either f or g. Since the assignment failed during splitMesh,
+	// it will be necessary to modify the mesh such that the resulting meshes f and g will be well-connected.
+	// This modification can add or merge vertices, but it is not allowed to delete vertices or change the polygon
+	// topology (at least of polyogns that are entirely contained in either f or g), since this could cause
+	// the vertex sets 'f' and 'g' to result in improperly connected meshes.
+	splitAssignSpikeVertices(f,g,fvert,gvert);
 
 	if(vertices.size()+1 > f->vertices.size() + g->vertices.size())
 	{
@@ -150,17 +243,25 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 
 	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
 
+	// Copy texture scaling.
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);
 	s->setScaleFactor(scaleTexture);
 
+	// Initialize rendered objects for the new meshes.
 	f->initMesh();
 	g->initMesh();
 	s->initMesh();
-	s->resetTexture(scaleTexture, 250, 200, 0);
+	s->resetTexture(scaleTexture, 250, 200, 0); // Give a fixed color to the Strip to differentiate it.
 
+	// Make strips adjacent to the old Bundle update their adjacency to include the new Bundle objects.
+	addAdjacentStrip(s); // Add the newly created strip as an adjacent strip (so that it will become linked to f and g in the following lines)
+	s->addAdjacentBundle(this); // Also add reverse link to avoid a crash when the Bundle is deleted
 	splitUpdateAdjacentStrips(fvert, f);
 	splitUpdateAdjacentStrips(gvert, g);
+
+//	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+//		assert(adjacentStrips[i]->isAdjacencyComplete());
 
 //	f->addAdjacentMesh(s);
 //	g->addAdjacentMesh(s);

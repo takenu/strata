@@ -170,6 +170,47 @@ namespace strata
 					}
 				}
 
+				/** A function to compute how skewed (or stretched, or non-equilateral) a polygon is.
+				  * Higher values reflect more deformed (less equilateral) polygons. Size is irrelevant, only the
+				  * shape is taken into consideration.
+				  * The test chosen is to compare the cumulative length of each pair of sides to the length of the
+				  * third side. If all sides are roughly comparable in length, two sides will have a total length
+				  * that is roughly twice the length of the third side. In extreme cases, two sides could have a length
+				  * that is only slightly larger than that of the third side.
+				  *
+				  * For polygon edges a, b and c, the ratio c/(a+b-c) is 1 for an equilateral triangle, and can be
+				  * extremely big (or small) for very long and thin polygons. The minimum of all three ratios for a polygon
+				  * also cannot be lower than 1, such that we have a reasonably continuous way to measure the
+				  * 'equilateral-ness' of polygons.
+				  */
+				inline float computePolygonSkew(const Polygon &p) const
+				{
+					return computePolygonSkew(p.a, p.b, p.c);
+				}
+
+				/** The direct version of computePolygonSkew which calculates the skew of a polygon of vertices
+				  * a, b and c. The polygon does not need to exist in this TopologicalMesh. */
+				inline float computePolygonSkew(const xVert &a, const xVert &b, const xVert &c) const
+				{
+					float x = tiny::length( vertices[ve[a]].pos - vertices[ve[b]].pos );
+					float y = tiny::length( vertices[ve[b]].pos - vertices[ve[c]].pos );
+					float z = tiny::length( vertices[ve[c]].pos - vertices[ve[a]].pos );
+					if(x/y < 0.0001 || y/z < 0.0001 || z/x < 0.0001) return 1000000.0f; // Avoid numerical precision issues - sides could have relative length ~0
+					return std::max( z/(x+y-z), std::max( y/(x+z-y), x/(y+z-x)) );
+				}
+
+				/** Compute the skew of a xVert's i-th polygon. */
+				inline float computePolygonSkew(unsigned int i, const xVert &v) const
+				{
+					return computePolygonSkew(polygons[po[vertices[ve[v]].poly[i]]]);
+				}
+
+				/** Compute the skew of the xPoly's polygon. */
+				inline float computePolygonSkew(const xPoly &p)
+				{
+					return computePolygonSkew(polygons[po[p]]);
+				}
+
 				TopologicalMesh(core::intf::RenderInterface * _renderer) :
 					MeshInterface(_renderer),
 					scaleTexture(1.0f),
@@ -230,14 +271,104 @@ namespace strata
 					return findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]],v,clockwise);
 				}
 
-				bool checkVertexIndices(void) const
+				/** Find a neighbor vertex in a polygon using the polygon's index.
+				  * This function cannot be named findPolyNeighbor as its signature would be too similar to the function
+				  * findPolyNeighbor(unsigned int, const xVert &, bool).
+				  */
+				inline const xVert & findPolyNeighborFromIndex(const xPoly &p, const xVert &v, bool clockwise) const
 				{
-					bool vertexIndicesAreValid = true;
-					for(unsigned int i = 1; i < vertices.size(); i++)
+					assert(p>0);
+					assert(p<po.size());
+					assert(po[p]<polygons.size());
+					return findPolyNeighbor(polygons[po[p]],v,clockwise);
+				}
+
+				/** Find the polygon where 'w' is a clockwise neighbor of 'v'. */
+				inline xPoly findPolygon(const xVert &v, const xVert &w, bool abortIfNotFound = true) const
+				{
+					xPoly p = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
-						if(vertices[i].index < 1) vertexIndicesAreValid = false;
+						if(vertices[ve[v]].poly[i] == 0) break;
+						if(findPolyNeighbor(i, v, true) == w) p = vertices[ve[v]].poly[i];
 					}
-					return vertexIndicesAreValid;
+					if(abortIfNotFound) assert(p>0); // Check that the polygon is successfully found
+/*					if(p>0)
+					{
+						std::cout << " TopologicalMesh::findPolygon(): p="<<polygons[po[p]].a<<","<<polygons[po[p]].b<<","<<polygons[po[p]].c<<", v="<<v<<", w="<<w<<std::endl;
+					}*/
+					return p;
+				}
+
+				/** Find a mutual neighbor to a pair of vertices, clockwise to w and counterclockwise to w. */
+				inline xVert findPolyNeighborFromVertexPair(const xVert &v, const xVert &w) const
+				{
+					xPoly p = findPolygon(v, w, false);
+					if(p>0) return findPolyNeighbor(polygons[po[p]], v, false);
+					else return 0;
+				}
+
+				/** Find a vertex opposite to another vertex across a given edge. Example:
+				  *   a *
+				  *    / \
+				  * b *---* c
+				  *    \ /
+				  *     * d
+				  * If this function is called with (b,a,c) or (b,c,a) it should return d's index. */
+				inline xVert findOppositeVertex(const xVert &a, const xVert &b, const xVert &c) const
+				{
+					xVert d = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[b]].poly[i] == 0) break;
+						if(	findPolyNeighbor(i, b, true) == c && findPolyNeighbor(i, b, false) != a)
+						{
+							d = findPolyNeighbor(i, b, false);
+							break;
+						}
+						if(	findPolyNeighbor(i, b, false) == c && findPolyNeighbor(i, b, true) != a)
+						{
+							d = findPolyNeighbor(i, b, true);
+							break;
+						}
+					}
+					assert(d>0); // Make sure that this function returns a valid result. Caller must ensure it makes sense.
+					return d;
+				}
+
+				/** Find an opposite vertex from polygon 'a' across a's polygon with index 'i'.
+				  * Redirects to the standard findOppositeVertex(). */
+				inline const xVert & findOppositeVertex(unsigned int i, const xVert &a) const
+				{
+					return findOppositeVertex(a, findPolyNeighbor(i, a, true), findPolyNeighbor(i, a, false));
+				}
+
+				/** Find the common vertex 'v' between polygons 'p' and 'q', with the additional requirement that the
+				  * vertex that is counterclockwise from v in 'p' equals the vertex that is clockwise from v in 'q'.
+				  * Graphically:
+				  *   *
+				  *  /q\
+				  * *---* v   (the 'p' and 'q' are given here, we only need to find the xVert that refers to 'v'.)
+				  *  \p/
+				  *   *
+				  */
+				inline xVert findCommonEdgeVertex(const Polygon &p, const Polygon &q) const
+				{
+					if(p.a == q.a && findPolyNeighbor(p, p.a, false) == findPolyNeighbor(q, p.a, true)) return p.a;
+					if(p.a == q.b && findPolyNeighbor(p, p.a, false) == findPolyNeighbor(q, p.a, true)) return p.a;
+					if(p.a == q.c && findPolyNeighbor(p, p.a, false) == findPolyNeighbor(q, p.a, true)) return p.a;
+					if(p.b == q.a && findPolyNeighbor(p, p.b, false) == findPolyNeighbor(q, p.b, true)) return p.b;
+					if(p.b == q.b && findPolyNeighbor(p, p.b, false) == findPolyNeighbor(q, p.b, true)) return p.b;
+					if(p.b == q.c && findPolyNeighbor(p, p.b, false) == findPolyNeighbor(q, p.b, true)) return p.b;
+					if(p.c == q.a && findPolyNeighbor(p, p.c, false) == findPolyNeighbor(q, p.c, true)) return p.c;
+					if(p.c == q.b && findPolyNeighbor(p, p.c, false) == findPolyNeighbor(q, p.c, true)) return p.c;
+					if(p.c == q.c && findPolyNeighbor(p, p.c, false) == findPolyNeighbor(q, p.c, true)) return p.c;
+					return 0;
+				}
+
+				xVert findCommonEdgeVertex(const xPoly &p, const xPoly &q) const
+				{
+					return findCommonEdgeVertex(polygons[po[p]],polygons[po[q]]);
 				}
 
 				/** Check whether there exists a vertex that is connected by a direct edge to both
@@ -247,7 +378,7 @@ namespace strata
 				  * where every time we find the next vertex, but this would require a bit more topological
 				  * programming and therefore the current approach was chosen for the time being.
 				  */
-				inline bool verticesHaveCommonNeighbor(const xVert & _a, const xVert & _b)
+				inline bool verticesHaveCommonNeighbor(const xVert & _a, const xVert & _b) const
 				{
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
@@ -267,6 +398,92 @@ namespace strata
 						}
 					}
 					return false;
+				}
+
+				/** Check whether all vertex indices refer to the correct index of 've'. */
+				bool checkVertexIndices(void) const
+				{
+					bool vertexIndicesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].index < 1)
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+						else if(vertices[i].index >= ve.size())
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<" on ve array of size "<<ve.size()<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+						else if(i != ve[vertices[i].index])
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index referring to "<<ve[vertices[i].index]<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+					}
+					return vertexIndicesAreValid;
+				}
+
+				/** Check the validity of edge vertex values in Vertex::nextEdgeVertex. A value of 'true' is returned if and only if all such
+				  * values are valid. */
+				bool checkEdgeVertices(void) const
+				{
+					bool edgeVerticesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].nextEdgeVertex == 0 && isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has zero nextEdgeVertex but is an edge vertex! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+					}
+					if(!edgeVerticesAreValid) { printPolygons(); printLists(); }
+//					assert(edgeVerticesAreValid);
+					return edgeVerticesAreValid;
+				}
+
+				/** Check whether polygon indices are consistent and valid.
+				  * This checks the following:
+				  * - Polygon indices are correctly ordered (i.e. all zeroes in the array are at the end)
+				  * - Polygon indices refer to valid elements of the po array
+				  */
+				bool checkVertexPolyArrays(void) const
+				{
+					bool polyArraysAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(j+1 < STRATA_VERTEX_MAX_LINKS && vertices[i].poly[j] == 0 && vertices[i].poly[j+1] > 0)
+							{
+								std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon array has bad ordering! "<<std::endl;
+								polyArraysAreValid = false;
+							}
+							else if(vertices[i].poly[j] > 0)
+							{
+								if(vertices[i].poly[j] >= po.size())
+								{
+									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index too high! "<<std::endl;
+									polyArraysAreValid = false;
+								}
+								else if( po[vertices[i].poly[j]] == 0)
+								{
+									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index references zeroth polygon! "<<std::endl;
+									polyArraysAreValid = false;
+								}
+								else
+								{
+									Polygon & p = polygons[po[vertices[i].poly[j]]];
+									if(p.a != vertices[i].index && p.b != vertices[i].index && p.c != vertices[i].index)
+									{
+										std::cout << " TopologicalMesh::checkVertexPolyArrays() : Vertex is not a member of polygon ";
+										std::cout << vertices[i].poly[j]<<"! "<<std::endl;
+										polyArraysAreValid = false;
+									}
+								}
+							}
+						}
+					}
+					return polyArraysAreValid;
 				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
@@ -289,21 +506,6 @@ namespace strata
 					}
 					if(checkEdgeVertices())
 						hasDesignatedEdgeVertices = true;
-				}
-
-				/** Check the validity of edge vertex values in Vertex::nextEdgeVertex. A value of 'true' is returned if and only if all such
-				  * values are valid. */
-				bool checkEdgeVertices(void) const
-				{
-					bool edgeVerticesAreValid = true;
-					for(unsigned int i = 1; i < vertices.size(); i++)
-					{
-						if(vertices[i].nextEdgeVertex == 0 && isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has zero nextEdgeVertex but is an edge vertex! "<<std::endl; edgeVerticesAreValid = false; }
-						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
-						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
-					}
-					if(!edgeVerticesAreValid) { printPolygons(); printLists(); }
-					return edgeVerticesAreValid;
 				}
 
 				/** Calculate the normal of a polygon. */

@@ -53,6 +53,14 @@ namespace strata
 				/** Update the adjacent strips to refer to the new Bundle instead of 'this'. */
 				void splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * newBundle);
 
+				/** Assign a thus-far-unassigned spike vertex with index 'v' to the mapping 'vmap' by splitting the edge
+				  * opposite to it on its i-th polygon. */
+				void splitAssignSpikeVertexToNewBundle(Bundle * f, unsigned int i, const xVert &v, std::map<xVert, xVert> &vmap);
+
+				/** Assign so-far-not-connected vertices by adding a new vertex along one of its connected edges and then
+				  * redoing the assignment. */
+				bool splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xVert> &fvert, std::map<xVert, xVert> &gvert);
+
 				virtual xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
