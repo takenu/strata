@@ -69,8 +69,8 @@ namespace strata
 					for(unsigned int i = 0; i < largeMeshes.size(); i++)
 					{
 						std::cout << " Terrain::splitLargeMeshes() : splitting mesh... "<<std::endl;
-						largeMeshes[i]->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this));
-						delete largeMeshes[i];
+						if(largeMeshes[i]->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this)))
+							delete largeMeshes[i];
 					}
 				}
 			public:
@@ -84,6 +84,7 @@ namespace strata
 					layers.push_back(new Layer());
 					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 15, 0.0f);
 					for(unsigned int i = 0; i < 5; i++)
+//					for(unsigned int i = 0; i < 3; i++)
 					{
 						splitLargeMeshes<Bundle>(bundles);
 						splitLargeMeshes<Strip>(strips);

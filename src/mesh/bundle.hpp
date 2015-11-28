@@ -119,7 +119,7 @@ namespace strata
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
 
 				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
-				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
+				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
 
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }

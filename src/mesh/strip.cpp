@@ -24,7 +24,7 @@ using namespace strata::mesh;
 /** Split the Strip object. This function is roughly similar to the Bundle implementation for splitting Bundles,
   * but it is simpler since the Strip is only split into two Strips that are each roughly half as long as the
   * original Strip. */
-void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> makeNewStrip)
+bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> makeNewStrip)
 {
 	Strip * f = 0;
 	Strip * g = 0;
@@ -32,7 +32,7 @@ void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	std::map<xVert,xVert> fvert,gvert;
 	
 	splitMesh(makeNewStrip, f, g, fvert, gvert);
-	if(f==0 || g==0) { std::cout << " Strip::split() : New Strips do not exist, splitting aborted. "<<std::endl; return; }
+	if(f==0 || g==0) { std::cout << " Strip::split() : New Strips do not exist, splitting aborted. "<<std::endl; return false; }
 
 	if(vertices.size()+1 > f->vertices.size() + g->vertices.size())
 	{
@@ -60,6 +60,7 @@ void Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 
 //	f->addAdjacentMesh(g); <-- Not necessary, Strips do not use vertices from other Strips but only from Bundles
 //	g->addAdjacentMesh(f);
+	return true;
 }
 
 bool Strip::isAdjacentToVertices(const Bundle * b) const

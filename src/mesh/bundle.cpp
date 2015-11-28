@@ -178,6 +178,7 @@ bool Bundle::splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xV
 					}*/
 
 					// Split the edge opposite to the spike vertex.
+					std::cout << " Bundle::splitAssignSpikeVertices() : Splitting edge for unassigned vertex "<<vertices[i].index<<"..."<<std::endl;
 					splitEdge(findPolyNeighbor(j, vertices[i].index, true), findPolyNeighbor(j, vertices[i].index, false));
 //					splitEdge(j, vertices[i].index); <-- doesn't work, too much overloading
 
@@ -189,6 +190,7 @@ bool Bundle::splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xV
 						std::cout << " Bundle::splitAssignSpikeVertices() : WARNING: Failed to assign "<<vertices[i].index<<"!"<<std::endl;
 						allVerticesAreAssigned = false;
 					}
+					break;
 				}
 			}
 		}
@@ -198,7 +200,7 @@ bool Bundle::splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xV
 
 /** Split a Bundle into two parts. The splitting is done such that each vertex is assigned to the member
   * of farthestPair that it can reach in the smallest number of steps. */
-void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
+bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip)
 {
 //	std::cout << " Bundle::split() : Preparing to split the following mesh: "<<std::endl; printLists();
 	Bundle * f = 0;
@@ -217,12 +219,14 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	// Split the mesh's vertices, assigning all vertices to either 'f' or 'g'. The splitting may fail if
 	// the mesh has too few polygons, in this case f and g are not created and we abort the splitting.
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
-	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return; }
+	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return false; }
 
 	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
 	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
 	// same bundle).
 //	splitMergeOrphanVertices(f,g,fvert,gvert);
+	std::cout << " Bundle::split() : Of a total of "<<vertices.size()-1<<" vertices, assigned "<<f->vertices.size()-1<<" to 'f' and assigned "
+		<< g->vertices.size() <<" to 'g', leaving "<<vertices.size()+1 - f->vertices.size() - g->vertices.size()<<" unassigned."<<std::endl;
 
 	// Assign any vertices not yet in f or g to either f or g. Since the assignment failed during splitMesh,
 	// it will be necessary to modify the mesh such that the resulting meshes f and g will be well-connected.
@@ -272,6 +276,7 @@ void Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 
 //	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
 //	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
+	return true;
 }
 
 Bundle::~Bundle(void)

@@ -207,7 +207,7 @@ namespace strata
 					return analyseShapeDirect(farthestPair);
 				}
 
-				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
+				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
 
 				/** A function to check:
 				  * - whether all vertices of this Strip refer to a Bundle that is in the adjacentBundles list,

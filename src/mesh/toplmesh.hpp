@@ -78,7 +78,7 @@ namespace strata
 				void setScaleFactor(float _scale) { scaleTexture = _scale; }
 
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
-				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
+				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
 			protected:
 				std::vector<VertexType> vertices;
 				std::vector<Polygon> polygons;

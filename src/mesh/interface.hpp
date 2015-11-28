@@ -41,7 +41,7 @@ namespace strata
 				}
 			public:
 				/** Split the Mesh into two parts. This operation should always reduce the size() of the Mesh. */
-				virtual void split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
+				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
 
 				/** Determine the size of the fragment, defined as the maximal end-to-end distance between two edge vertices. */
 				virtual float meshSize(void) = 0;
