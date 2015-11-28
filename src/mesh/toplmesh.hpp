@@ -293,10 +293,6 @@ namespace strata
 						if(findPolyNeighbor(i, v, true) == w) p = vertices[ve[v]].poly[i];
 					}
 					if(abortIfNotFound) assert(p>0); // Check that the polygon is successfully found
-/*					if(p>0)
-					{
-						std::cout << " TopologicalMesh::findPolygon(): p="<<polygons[po[p]].a<<","<<polygons[po[p]].b<<","<<polygons[po[p]].c<<", v="<<v<<", w="<<w<<std::endl;
-					}*/
 					return p;
 				}
 

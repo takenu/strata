@@ -122,12 +122,6 @@ void Bundle::splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * n
 	}
 }
 
-/*void Bundle::splitAssignSpikeVertexToNewBundle(Bundle * f, unsigned int i, const xVert &v, std::map<xVert, xVert> &vmap)
-{
-	xVert &w = splitEdge(i, v);
-	// TODO: After the new vertex is added successfully, add that vertex and the spike vertex both to vmap and to the Bundle f.
-}*/
-
 /** While splitting, assign vertices to a bundle in the problematic case that the vertex is isolated
   * on a 'spike' where it is connected via only 1 edge to a vertex in Bundle f and via 1 other edge to a
   * vertex in Bundle g.
@@ -164,23 +158,10 @@ bool Bundle::splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xV
 					// order to solve the unassignability problem. The other polygon that the f-g edge is part of,
 					// must have already been assigned to either 'f' or 'g'. (This should be guaranteed for well-connected meshes.)
 					// The new vertex and the unassigned vertex will both be assigned to the same group as that vertex.
-/*					xVert v = findOppositeVertex(j, a); <--- Deactivated: use Mesh::splitEdge() instead, don't do topology here
-					if(fvert.find(v) != fvert.end())
-					{
-					}
-					else if(gvert.find(v) != gvert.end())
-					{
-					}
-					else
-					{
-						std::cout << " Bundle::splitAssignSpikeVertices() : ERROR: Opposite vertex belongs to neither 'f' or 'g'!"<<std::endl;
-						break;
-					}*/
 
 					// Split the edge opposite to the spike vertex.
 					std::cout << " Bundle::splitAssignSpikeVertices() : Splitting edge for unassigned vertex "<<vertices[i].index<<"..."<<std::endl;
 					splitEdge(findPolyNeighbor(j, vertices[i].index, true), findPolyNeighbor(j, vertices[i].index, false));
-//					splitEdge(j, vertices[i].index); <-- doesn't work, too much overloading
 
 					// Immediately retry adding vertices to meshes. Both the new vertex and the i-th vertex should now be added.
 					// If we would postpone adding these, we risk trying to manipulate the topology even more while it's not necessary.
@@ -221,10 +202,6 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
 	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return false; }
 
-	// TODO: Write code to swap vertices between bundles in order to fix leftover vertices at the end of a stitch (i.e. situations
-	// where a vertex is part of only 1 polygon from the original bundle, and the other 2 vertices of the polygon are not in the
-	// same bundle).
-//	splitMergeOrphanVertices(f,g,fvert,gvert);
 	std::cout << " Bundle::split() : Of a total of "<<vertices.size()-1<<" vertices, assigned "<<f->vertices.size()-1<<" to 'f' and assigned "
 		<< g->vertices.size() <<" to 'g', leaving "<<vertices.size()+1 - f->vertices.size() - g->vertices.size()<<" unassigned."<<std::endl;
 
