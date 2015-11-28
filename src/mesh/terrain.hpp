@@ -68,10 +68,25 @@ namespace strata
 					}
 					for(unsigned int i = 0; i < largeMeshes.size(); i++)
 					{
-						std::cout << " Terrain::splitLargeMeshes() : splitting mesh... "<<std::endl;
+//						std::cout << " Terrain::splitLargeMeshes() : splitting mesh... "<<std::endl;
 						if(largeMeshes[i]->split(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this)))
 							delete largeMeshes[i];
 					}
+				}
+
+				/** Check the consistency and coherence of meshes. */
+				template <typename MeshType>
+				bool checkMeshConsistency(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc)
+				{
+					bool meshesAreConsistent = true;
+					for(typename std::map<long unsigned int, MeshType*>::iterator it = tc.begin(); it != tc.end(); it++)
+					{
+						meshesAreConsistent &= it->second->checkVertexIndices();
+						meshesAreConsistent &= it->second->checkVertexPolyArrays();
+						meshesAreConsistent &= it->second->checkPolyIndices();
+					}
+					if(!meshesAreConsistent) std::cout << " Terrain::checkMeshConsistency() : WARNING: Consistency checks on meshes FAILED; one or more meshes violate requirements! "<<std::endl;
+					return meshesAreConsistent;
 				}
 			public:
 				Terrain(core::intf::RenderInterface * _renderer) :
@@ -85,8 +100,10 @@ namespace strata
 					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 15, 0.0f);
 					for(unsigned int i = 0; i < 5; i++)
 					{
-						splitLargeMeshes<Bundle>(bundles);
-						splitLargeMeshes<Strip>(strips);
+						splitLargeMeshes(bundles);
+						splitLargeMeshes(strips);
+						checkMeshConsistency(bundles);
+						checkMeshConsistency(strips);
 					}
 				}
 

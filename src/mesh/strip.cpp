@@ -42,7 +42,7 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	}
 
 	splitAssignPolygonsToConstituentMeshes(f,g,g,fvert,gvert);
-	std::cout << " Split mesh into strips with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys. "<<std::endl;
+//	std::cout << " Split mesh into strips with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys. "<<std::endl;
 
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);

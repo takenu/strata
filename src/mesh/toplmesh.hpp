@@ -79,6 +79,187 @@ namespace strata
 
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
+
+				/** Check whether all vertex indices refer to the correct index of 've'.
+				  * This checks the following:
+				  * - Vertices do not have index 0 (i.e. the error vertex);
+				  * - Vertices do not have indices outside of the vertex array;
+				  * - Vertices have indices that refer to themselves via the 've' array;
+				  * - No entry of 've' refers to a non-existing vertex or to a vertex without a reverse reference.
+				  * The third implies the first and the second, however to avoid a crash due to the first or the second check
+				  * failing all three are verified. For the 've' a similar multi-step check is done.
+				  */
+				bool checkVertexIndices(void) const
+				{
+//					std::cout << " TopologicalMesh::checkVertexIndices()..."<<std::endl;
+					bool vertexIndicesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].index < 1)
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+						else if(vertices[i].index >= ve.size())
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<" on ve array of size "<<ve.size()<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+						else if(i != ve[vertices[i].index])
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index referring to "<<ve[vertices[i].index]<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+					}
+					for(unsigned int i = 1; i < ve.size(); i++)
+					{
+/*						if(ve[i] < 1) <-- this is actually ok, if a vertex is deleted then its ve index is reset to 0
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : ve["<<i<<"] refers to vertex "<<ve[i]<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}*/
+						if(ve[i] >= vertices.size())
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : ve["<<i<<"] refers to "<<ve[i]<<" on vertices array of size "<<vertices.size()<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+						else if(vertices[ve[i]].index > 0 && vertices[ve[i]].index != i)
+						{
+							std::cout << " TopologicalMesh::checkVertexIndices() : ve["<<i<<"] refers to a vertex which has index "<<vertices[ve[i]].index<<"!"<<std::endl;
+							vertexIndicesAreValid = false;
+						}
+					}
+					return vertexIndicesAreValid;
+				}
+
+				/** Check the validity of edge vertex values in Vertex::nextEdgeVertex. A value of 'true' is returned if and only if all such
+				  * values are valid. */
+				bool checkEdgeVertices(void) const
+				{
+					bool edgeVerticesAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].nextEdgeVertex == 0 && isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has zero nextEdgeVertex but is an edge vertex! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
+					}
+					if(!edgeVerticesAreValid) { printPolygons(); printLists(); }
+//					assert(edgeVerticesAreValid);
+					return edgeVerticesAreValid;
+				}
+
+				/** Check whether polygon indices are consistent and valid.
+				  * This checks the following:
+				  * - Polygon indices are correctly ordered (i.e. all zeroes in the array are at the end)
+				  * - Polygon indices refer to valid elements of the po array
+				  */
+				bool checkVertexPolyArrays(void) const
+				{
+//					std::cout << " TopologicalMesh::checkVertexPolyArrays()..."<<std::endl;
+					bool polyArraysAreValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(j+1 < STRATA_VERTEX_MAX_LINKS && vertices[i].poly[j] == 0 && vertices[i].poly[j+1] > 0)
+							{
+								std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon array has bad ordering! "<<std::endl;
+								polyArraysAreValid = false;
+							}
+							else if(vertices[i].poly[j] > 0)
+							{
+								if(vertices[i].poly[j] >= po.size())
+								{
+									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index too high! "<<std::endl;
+									polyArraysAreValid = false;
+								}
+								else if( po[vertices[i].poly[j]] == 0)
+								{
+									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index references zeroth polygon! "<<std::endl;
+									polyArraysAreValid = false;
+								}
+								else
+								{
+									const Polygon & p = polygons[po[vertices[i].poly[j]]];
+									if(p.a != vertices[i].index && p.b != vertices[i].index && p.c != vertices[i].index)
+									{
+										std::cout << " TopologicalMesh::checkVertexPolyArrays() : Vertex is not a member of polygon ";
+										std::cout << vertices[i].poly[j]<<"! "<<std::endl;
+										polyArraysAreValid = false;
+									}
+								}
+							}
+						}
+					}
+					return polyArraysAreValid;
+				}
+
+				/** Check whether polygons refer to correct indices.
+				  * This checks the following:
+				  * - Polygons have 'index' variables that are valid
+				  * - Polygon indices refer to valid indices of the 've' array
+				  * - Polygon indices refer to vertices that also refer back to the polygon through their 'poly' array
+				  */
+				bool checkPolyIndices(void) const
+				{
+//					std::cout << " TopologicalMesh::checkPolyIndices()..."<<std::endl;
+					bool indicesAreValid = true;
+					for(unsigned int i = 1; i < polygons.size(); i++)
+					{
+						const Polygon & p = polygons[po[i]];
+						if(p.index == 0)
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon has self-index of 0! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(p.index >= po.size())
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon has too lareg self-index of "<<p.index<<"! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(i != po[p.index])
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon index does not refer to itself! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(p.a == 0 || p.b == 0 || p.c == 0)
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon with indices "<<p.a<<","<<p.b<<","<<p.c<<" has error vertex among its indices! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(p.a >= ve.size() || p.b >= ve.size() || p.c >= ve.size())
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon with indices "<<p.a<<","<<p.b<<","<<p.c<<" has too large index on ve of size "<<ve.size()<<"! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(ve[p.a] == 0 || ve[p.b] == 0 || ve[p.c] == 0)
+						{
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon with indices "<<p.a<<","<<p.b<<","<<p.c<<" has error vertex among its indices! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else if(ve[p.a] >= vertices.size() || ve[p.b] >= vertices.size() || ve[p.c] >= vertices.size())
+						{ // No printing of the exact error because checkVertexIndices() already checks for bad values in 've'
+							std::cout << " TopologicalMesh::checkPolyIndices() : Polygon with indices "<<p.a<<","<<p.b<<","<<p.c<<" refers to invalid element in 've'! "<<std::endl;
+							indicesAreValid = false;
+						}
+						else
+						{
+							bool foundIndexA = false;
+							bool foundIndexB = false;
+							bool foundIndexC = false;
+							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+							{
+								if(vertices[ve[p.a]].poly[j] == p.index) foundIndexA = true;
+								if(vertices[ve[p.b]].poly[j] == p.index) foundIndexB = true;
+								if(vertices[ve[p.c]].poly[j] == p.index) foundIndexC = true;
+							}
+							if(!foundIndexA) { indicesAreValid = false; std::cout << " TopologicalMesh::checkPolyIndices() : Polygon "<<i<<" refers to vertex "<<p.a<<" but that vertex does not refer back! "<<std::endl; }
+							if(!foundIndexB) { indicesAreValid = false; std::cout << " TopologicalMesh::checkPolyIndices() : Polygon "<<i<<" refers to vertex "<<p.b<<" but that vertex does not refer back! "<<std::endl; }
+							if(!foundIndexC) { indicesAreValid = false; std::cout << " TopologicalMesh::checkPolyIndices() : Polygon "<<i<<" refers to vertex "<<p.c<<" but that vertex does not refer back! "<<std::endl; }
+						}
+					}
+					return indicesAreValid;
+				}
 			protected:
 				std::vector<VertexType> vertices;
 				std::vector<Polygon> polygons;
@@ -394,92 +575,6 @@ namespace strata
 						}
 					}
 					return false;
-				}
-
-				/** Check whether all vertex indices refer to the correct index of 've'. */
-				bool checkVertexIndices(void) const
-				{
-					bool vertexIndicesAreValid = true;
-					for(unsigned int i = 1; i < vertices.size(); i++)
-					{
-						if(vertices[i].index < 1)
-						{
-							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<"!"<<std::endl;
-							vertexIndicesAreValid = false;
-						}
-						else if(vertices[i].index >= ve.size())
-						{
-							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index "<<vertices[i].index<<" on ve array of size "<<ve.size()<<"!"<<std::endl;
-							vertexIndicesAreValid = false;
-						}
-						else if(i != ve[vertices[i].index])
-						{
-							std::cout << " TopologicalMesh::checkVertexIndices() : Vertex "<<i<<" has index referring to "<<ve[vertices[i].index]<<"!"<<std::endl;
-							vertexIndicesAreValid = false;
-						}
-					}
-					return vertexIndicesAreValid;
-				}
-
-				/** Check the validity of edge vertex values in Vertex::nextEdgeVertex. A value of 'true' is returned if and only if all such
-				  * values are valid. */
-				bool checkEdgeVertices(void) const
-				{
-					bool edgeVerticesAreValid = true;
-					for(unsigned int i = 1; i < vertices.size(); i++)
-					{
-						if(vertices[i].nextEdgeVertex == 0 && isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has zero nextEdgeVertex but is an edge vertex! "<<std::endl; edgeVerticesAreValid = false; }
-						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].index)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
-						if(vertices[i].nextEdgeVertex > 0 && !isEdgeVertex(vertices[i].nextEdgeVertex)) { std::cout << " Mesh::checkEdgeVertices() : Bad vertex "<<i<<" has nonzero nextEdgeVertex but the referenced vertex is not on the edge! "<<std::endl; edgeVerticesAreValid = false; }
-					}
-					if(!edgeVerticesAreValid) { printPolygons(); printLists(); }
-//					assert(edgeVerticesAreValid);
-					return edgeVerticesAreValid;
-				}
-
-				/** Check whether polygon indices are consistent and valid.
-				  * This checks the following:
-				  * - Polygon indices are correctly ordered (i.e. all zeroes in the array are at the end)
-				  * - Polygon indices refer to valid elements of the po array
-				  */
-				bool checkVertexPolyArrays(void) const
-				{
-					bool polyArraysAreValid = true;
-					for(unsigned int i = 1; i < vertices.size(); i++)
-					{
-						for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
-						{
-							if(j+1 < STRATA_VERTEX_MAX_LINKS && vertices[i].poly[j] == 0 && vertices[i].poly[j+1] > 0)
-							{
-								std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon array has bad ordering! "<<std::endl;
-								polyArraysAreValid = false;
-							}
-							else if(vertices[i].poly[j] > 0)
-							{
-								if(vertices[i].poly[j] >= po.size())
-								{
-									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index too high! "<<std::endl;
-									polyArraysAreValid = false;
-								}
-								else if( po[vertices[i].poly[j]] == 0)
-								{
-									std::cout << " TopologicalMesh::checkVertexPolyArrays() : Polygon index references zeroth polygon! "<<std::endl;
-									polyArraysAreValid = false;
-								}
-								else
-								{
-									Polygon & p = polygons[po[vertices[i].poly[j]]];
-									if(p.a != vertices[i].index && p.b != vertices[i].index && p.c != vertices[i].index)
-									{
-										std::cout << " TopologicalMesh::checkVertexPolyArrays() : Vertex is not a member of polygon ";
-										std::cout << vertices[i].poly[j]<<"! "<<std::endl;
-										polyArraysAreValid = false;
-									}
-								}
-							}
-						}
-					}
-					return polyArraysAreValid;
 				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is

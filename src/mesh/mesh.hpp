@@ -363,14 +363,14 @@ namespace strata
 					xVert v = addVertex(pos);
 					if(a>0)
 					{
-						std::cout << " Mesh::splitEdge() : Adding polygons for 'a' using new vertex v="<<v<<"..."<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Adding polygons for 'a' using new vertex v="<<v<<"..."<<std::endl;
 						// Issue a warning if poly not added: the mesh cannot already have the polygon.
 						if(!addPolygonFromVertexIndices(v,b,a)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vba not added! "<<std::endl;
 						if(!addPolygonFromVertexIndices(v,a,c)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vac not added! "<<std::endl;
 					}
 					if(d>0)
 					{
-						std::cout << " Mesh::splitEdge() : Adding polygons for 'd'..."<<std::endl;
+//						std::cout << " Mesh::splitEdge() : Adding polygons for 'd'..."<<std::endl;
 						if(!addPolygonFromVertexIndices(v,d,b)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vdb not added! "<<std::endl;
 						if(!addPolygonFromVertexIndices(v,c,d)) std::cout << " Mesh::splitEdge() : WARNING: Polygon vcd not added! "<<std::endl;
 					}
@@ -409,8 +409,8 @@ namespace strata
 						{
 							if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
 							{
-								std::cout << " Mesh::splitAssignOrphanVertices() : Trying to assign vertex "<<vertices[i].index<<" with "
-									<< vertices[i].nPolys()<<" polys..."<<std::endl;
+//								std::cout << " Mesh::splitAssignOrphanVertices() : Trying to assign vertex "<<vertices[i].index<<" with "
+//									<< vertices[i].nPolys()<<" polys..."<<std::endl;
 								for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
 								{
 									if(vertices[i].poly[j] == 0)
@@ -421,7 +421,7 @@ namespace strata
 									if( fvert.find(findPolyNeighbor(j, vertices[i].index, true)) != fvert.end() &&
 										fvert.find(findPolyNeighbor(j, vertices[i].index, false)) != fvert.end() )
 									{
-										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to f..."<<std::endl;
+//										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to f..."<<std::endl;
 										retryAssignment = true; // Added a new vertex so we can try another iteration to add even more vertices
 										fvert.insert( std::make_pair(vertices[i].index, f->addVertex(vertices[i])) );
 										break;
@@ -429,7 +429,7 @@ namespace strata
 									else if( gvert.find(findPolyNeighbor(j, vertices[i].index, true)) != gvert.end() &&
 										gvert.find(findPolyNeighbor(j, vertices[i].index, false)) != gvert.end() )
 									{
-										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to g..."<<std::endl;
+//										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to g..."<<std::endl;
 										retryAssignment = true;
 										gvert.insert( std::make_pair(vertices[i].index, g->addVertex(vertices[i])) );
 										break;
@@ -696,7 +696,7 @@ namespace strata
 						if(v.poly[j] == 0) break;
 						else if(v.poly[j] == p.index)
 						{
-							std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<v.index<<"..."<<std::endl;
+//							std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<v.index<<"..."<<std::endl;
 							for(unsigned int k = j; k < STRATA_VERTEX_MAX_LINKS-1; k++)
 							{
 								v.poly[k] = v.poly[k+1];
@@ -722,7 +722,7 @@ namespace strata
 				/** Delete a polygon from the Mesh by its xPoly reference. */
 				void deletePolygon(const xPoly &p)
 				{
-					std::cout << " Mesh::deletePolygon() : Delete polygon from index "<<p<<"..."<<std::endl;
+//					std::cout << " Mesh::deletePolygon() : Delete polygon from index "<<p<<"..."<<std::endl;
 					deletePolygon(polygons[po[p]]);
 				}
 		};

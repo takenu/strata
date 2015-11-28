@@ -202,8 +202,8 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
 	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return false; }
 
-	std::cout << " Bundle::split() : Of a total of "<<vertices.size()-1<<" vertices, assigned "<<f->vertices.size()-1<<" to 'f' and assigned "
-		<< g->vertices.size() <<" to 'g', leaving "<<vertices.size()+1 - f->vertices.size() - g->vertices.size()<<" unassigned."<<std::endl;
+//	std::cout << " Bundle::split() : Of a total of "<<vertices.size()-1<<" vertices, assigned "<<f->vertices.size()-1<<" to 'f' and assigned "
+//		<< g->vertices.size() <<" to 'g', leaving "<<vertices.size()+1 - f->vertices.size() - g->vertices.size()<<" unassigned."<<std::endl;
 
 	// Assign any vertices not yet in f or g to either f or g. Since the assignment failed during splitMesh,
 	// it will be necessary to modify the mesh such that the resulting meshes f and g will be well-connected.
@@ -222,7 +222,7 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
 	splitAssignPolygonsToConstituentMeshes(f,g,s,fvert,gvert);
 
-	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
+//	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
 
 	// Copy texture scaling.
 	f->setScaleFactor(scaleTexture);
