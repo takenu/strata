@@ -113,12 +113,21 @@ void Bundle::createFlatLayer(float _size, unsigned int ndivs, float height)
 	std::cout << " Finished creating a flat layer with "<<vertices.size()<<" vertices and "<<polygons.size()<<" polygons, using "<<polyAttempts<<" attempts. "<<std::endl;
 }
 
+/** Update the adjacent strips of the Bundle so that they replace their remote indices as specified
+  * by the 'vmap' mapping. This function is called when the Bundle is split into two Bundles, where
+  * newBundle is one of the resulting Bundles.
+  * Since the current Bundle will cease to exist after the split, it needs the Strips to transfer their
+  * references to the new Bundle. The 'vmap' mapping therefore consists of pairs (oldIndex, newIndex)
+  * and the Strip simply replaces every reference to an oldIndex by a corresponding newIndex. */
 void Bundle::splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * newBundle)
 {
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
 		if(adjacentStrips[i]->updateAdjacentBundle(vmap, this, newBundle))
+		{
+//			std::cout << " Bundle::splitUpdateAdjacentStrips() : Adjacent strip "<<adjacentStrips[i]<<" ("<<i<<"/"<<adjacentStrips.size()-1<<") uses Bundle "<<newBundle<<std::endl;
 			newBundle->addAdjacentStrip(adjacentStrips[i]);
+		}
 	}
 }
 
@@ -238,11 +247,25 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	// Make strips adjacent to the old Bundle update their adjacency to include the new Bundle objects.
 	addAdjacentStrip(s); // Add the newly created strip as an adjacent strip (so that it will become linked to f and g in the following lines)
 	s->addAdjacentBundle(this); // Also add reverse link to avoid a crash when the Bundle is deleted
+/*	std::cout << " Bundle::split() : Updating strips... fvert has size "<<fvert.size()<<" for f of size "<<f->vertices.size()
+		<<" and gvert has size "<<gvert.size()<<" for g of size  "<<g->vertices.size()<<std::endl; */
 	splitUpdateAdjacentStrips(fvert, f);
 	splitUpdateAdjacentStrips(gvert, g);
 
-//	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
-//		assert(adjacentStrips[i]->isAdjacencyComplete());
+/*	std::cout << " Bundle::split() : Printing mappings for f="<<f<<" and g="<<g<<": "<<std::endl;
+	for(std::map<xVert, xVert>::iterator it = fvert.begin(); it != fvert.end(); it++)
+		std::cout << it->first << " -> " << it->second <<", "; std::cout << std::endl;
+	for(std::map<xVert, xVert>::iterator it = gvert.begin(); it != gvert.end(); it++)
+		std::cout << it->first << " -> " << it->second <<", "; std::cout << std::endl;*/
+
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		assert(adjacentStrips[i]->checkAdjacentMeshes());
+//		if(!adjacentStrips[i]->checkAdjacentMeshes())
+		{
+//			std::cout << " Bundle::split() : ERROR: Splitting failed to correctly adjust neighboring strips! "<<std::endl;
+		}
+	}
 
 //	f->addAdjacentMesh(s);
 //	g->addAdjacentMesh(s);
@@ -256,8 +279,30 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	return true;
 }
 
+/** Check the correctness of adjacency tracking of the Bundle.
+  * This checks the following:
+  * - All Strip objects in adjacentStrips have a reverse reference to this Bundle.
+  * It cannot check whether all edge vertices are in a strip, because meshes can well be at the very edge of the entire Terrain.
+  * It also doesn't check whether Strips exist outside of its adjacentStrips array that still refer to the Bundle's vertices.
+  * The latter is up to the Strip to check.
+  */
+bool Bundle::checkAdjacentMeshes(void) const
+{
+	bool adjacentMeshesAreComplete = true;
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		if(!adjacentStrips[i]->isAdjacentToBundle(this))
+		{
+			std::cout << " Bundle::checkAdjacentMeshes() : Strip does not contain a reverse reference to Bundle! "<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+	}
+	return adjacentMeshesAreComplete;
+}
+
 Bundle::~Bundle(void)
 {
+//	std::cout << " Bundle destructor: "<<this<<std::endl;
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 		assert(adjacentStrips[i]->releaseAdjacentBundle(this));
 }

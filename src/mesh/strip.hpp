@@ -173,15 +173,27 @@ namespace strata
 				  */
 				bool updateAdjacentBundle(const std::map<xVert, xVert> & vmap, Bundle * oldBundle, Bundle * newBundle)
 				{
+//					std::cout << " Strip::updateAdjacentBundle() : Update for strip "<<this<<" for newBundle "<<newBundle<<"..."<<std::endl;
+//					std::cout << " Printing structure: "<<std::endl;
+//					for(unsigned int i = 1; i < vertices.size(); i++)
+//					{
+//						std::cout << " Vertex "<<i<<" has bundle "<<vertices[i].getOwningBundle()<<", remote index "<<vertices[i].getRemoteIndex()<<" and is "<<(vmap.find(vertices[i].getRemoteIndex()) != vmap.end() ? "" : "NOT")<<" mapped."<<std::endl;
+//					}
 					bool isAdjacentMesh = false;
 					for(unsigned int i = 1; i < vertices.size(); i++)
 						if(vertices[i].getOwningBundle() == oldBundle && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
+//						if( (vertices[i].getOwningBundle() == oldBundle || vertices[i].getOwningBundle() == newBundle) && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
 						{
+//							std::cout << " Strip::updateAdjacentBundle() : Updating Strip vertex referring to Bundle "<<oldBundle<<" index "<<vertices[i].getRemoteIndex()
+//								<<" to refer to new Bundle "<<newBundle<<" index "<<vmap.at(vertices[i].getRemoteIndex())<<"... "<<std::endl;
 							vertices[i].setOwningBundle(newBundle);
 							vertices[i].setRemoteIndex(vmap.at(vertices[i].getRemoteIndex()));
 							isAdjacentMesh = true;
 						}
+						else if(vertices[i].getOwningBundle() == newBundle)
+							isAdjacentMesh = true; // If remote index and owning bundle are already adjusted, simply mark mesh as adjacent.
 					if(isAdjacentMesh) addAdjacentBundle(newBundle);
+//					else std::cout << " Strip::updateAdjacentBundle() : Strip is not adjacent to Bundle, skipping! "<<std::endl;
 					return isAdjacentMesh;
 				}
 
@@ -209,12 +221,15 @@ namespace strata
 
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
 
-				/** A function to check:
+				/** Check the correctness of the contents of the adjacentBundles array.
+				  * This function checks the following:
+				  * - Whether all Bundles in the array are the owner of at least one of the Strip's vertices,
+				  * - whether all Bundles in the array contain a reverse reference to the Strip,
 				  * - whether all vertices of this Strip refer to a Bundle that is in the adjacentBundles list,
 				  * - whether the referred Bundle actually contains a valid vertex referenced by the Strip vertex's remoteIndex,
 				  * - whether the Bundle also has a reference to this Strip.
 				  */
-				bool isAdjacencyComplete(void) const;
+				virtual bool checkAdjacentMeshes(void) const;
 		};
 	}
 }

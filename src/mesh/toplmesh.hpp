@@ -80,6 +80,10 @@ namespace strata
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
 
+				/** Require that meshes implement a check that tests whether it is properly tracking
+				  * the meshes that are adjacent to it. */
+				virtual bool checkAdjacentMeshes(void) const = 0;
+
 				/** Check whether all vertex indices refer to the correct index of 've'.
 				  * This checks the following:
 				  * - Vertices do not have index 0 (i.e. the error vertex);

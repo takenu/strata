@@ -151,12 +151,17 @@ namespace strata
 				template <typename AnotherVertexType>
 				bool addPolygonWithVertices(const AnotherVertexType &a, Bundle * _abundle, const AnotherVertexType &b, Bundle * _bbundle,
 						const AnotherVertexType &c, Bundle * _cbundle, float relativeTolerance = 0.001)
+//				bool addPolygonWithVertices(const AnotherVertexType &a, const AnotherVertexType &b,
+//						const AnotherVertexType &c, Bundle * oldBundle, float relativeTolerance = 0.001)
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
 					xVert _a = addIfNewVertex(VertexType(a,_abundle), tolerance);
 					xVert _b = addIfNewVertex(VertexType(b,_bbundle), tolerance);
 					xVert _c = addIfNewVertex(VertexType(c,_cbundle), tolerance);
+//					xVert _a = addIfNewVertex(VertexType(a,oldBundle), tolerance);
+//					xVert _b = addIfNewVertex(VertexType(b,oldBundle), tolerance);
+//					xVert _c = addIfNewVertex(VertexType(c,oldBundle), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
@@ -486,6 +491,8 @@ namespace strata
 					{
 						newVertices.push_back(w);
 						addedVertices.insert( std::make_pair(w, m->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of m's vertices
+//						std::cout << " Mesh::splitAddIfNewVertex() : Add new vertex: "<<w<<"->"<<addedVertices.at(w)<<" to mesh "<<m<<std::endl;
+//						m->vertices[ve[addedVertices.find(w)->second]].
 					}
 				}
 
@@ -651,6 +658,7 @@ namespace strata
 							Bundle * _abundle = (fvert.find(a) == fvert.end() ? g->getVertexOwner(gvert.at(a)) : f->getVertexOwner(fvert.at(a)));
 							Bundle * _bbundle = (fvert.find(b) == fvert.end() ? g->getVertexOwner(gvert.at(b)) : f->getVertexOwner(fvert.at(b)));
 							Bundle * _cbundle = (fvert.find(c) == fvert.end() ? g->getVertexOwner(gvert.at(c)) : f->getVertexOwner(fvert.at(c)));
+//							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 						}
 					}

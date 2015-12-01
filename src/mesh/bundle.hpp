@@ -121,6 +121,9 @@ namespace strata
 				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
 
+				/** Check the adjacent strips to this Bundle. */
+				virtual bool checkAdjacentMeshes(void) const;
+
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
 		};

@@ -57,6 +57,21 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	// and the newly added one is added to the adjacent mesh.
 //	duplicateAdjacentMeshes(f);
 //	duplicateAdjacentMeshes(g);
+	std::cout << " Strip::split() : Copying adjacent bundles, there are "<<adjacentBundles.size()<<" of these... "<<std::endl;
+	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+	{
+		// Copy adjacent bundles where required.
+		if(f->isAdjacentToVertices(adjacentBundles[i]))
+		{
+			f->addAdjacentBundle(adjacentBundles[i]);
+			adjacentBundles[i]->addAdjacentStrip(f);
+		}
+		if(g->isAdjacentToVertices(adjacentBundles[i]))
+		{
+			g->addAdjacentBundle(adjacentBundles[i]);
+			adjacentBundles[i]->addAdjacentStrip(g);
+		}
+	}
 
 //	f->addAdjacentMesh(g); <-- Not necessary, Strips do not use vertices from other Strips but only from Bundles
 //	g->addAdjacentMesh(f);
@@ -76,28 +91,48 @@ Strip::~Strip(void)
 		assert(adjacentBundles[i]->releaseAdjacentStrip(this));
 }
 
-bool Strip::isAdjacencyComplete(void) const
+bool Strip::checkAdjacentMeshes(void) const
 {
+	bool adjacentMeshesAreComplete = true;
+	std::map<const Bundle*, unsigned int> adjacentBundleRefs;
+	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+		adjacentBundleRefs.emplace(adjacentBundles[i], 0);
 	for(unsigned int i = 1; i < vertices.size(); i++)
 	{
 		if(!(isAdjacentToBundle(vertices[i].getOwningBundle())))
 		{
-			std::cout << " Strip::isAdjacencyComplete() :";
-			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to unknown Bundle!"<<std::endl;
-			return false;
+			std::cout << " Strip::checkAdjacentMeshes() : in Strip "<<this<<",";
+			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to unknown Bundle "<<vertices[i].getOwningBundle()
+				<<" in list of size "<<adjacentBundles.size()<<"!"<<std::endl;
+			adjacentMeshesAreComplete = false;
 		}
-		if(!(vertices[i].getOwningBundle()->isAdjacentToStrip(this)))
+		else ++(adjacentBundleRefs.at(vertices[i].getOwningBundle()));
+/*		if(!(vertices[i].getOwningBundle()->isAdjacentToStrip(this)))
 		{
-			std::cout << " Strip::isAdjacencyComplete() :";
+			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
-			return false;
-		}
+			adjacentMeshesAreComplete = false;
+		}*/
 		if(!(vertices[i].getOwningBundle()->isValidVertexIndex(vertices[i].getRemoteIndex())))
 		{
-			std::cout << " Strip::isAdjacencyComplete() :";
+			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
-			return false;
+			adjacentMeshesAreComplete = false;
 		}
 	}
-	return true;
+	for(std::map<const Bundle*, unsigned int>::iterator it = adjacentBundleRefs.begin(); it != adjacentBundleRefs.end(); it++)
+	{
+		// TODO : Reenable below statement once adjacency issues are fixed
+/*		if(it->second == 0)
+		{
+			std::cout << " Strip::checkAdjacentMeshes() : Bundle is adjacent to strip but is never referenced! "<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}*/
+		if(!(it->first->isAdjacentToStrip(this)))
+		{
+			std::cout << " Strip::checkAdjacentMeshes() : Bundle does not contain a reverse reference to a Strip! "<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+	}
+	return adjacentMeshesAreComplete;
 }
