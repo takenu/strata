@@ -95,7 +95,6 @@ namespace strata
 				  */
 				bool checkVertexIndices(void) const
 				{
-//					std::cout << " TopologicalMesh::checkVertexIndices()..."<<std::endl;
 					bool vertexIndicesAreValid = true;
 					for(unsigned int i = 1; i < vertices.size(); i++)
 					{
@@ -117,11 +116,6 @@ namespace strata
 					}
 					for(unsigned int i = 1; i < ve.size(); i++)
 					{
-/*						if(ve[i] < 1) <-- this is actually ok, if a vertex is deleted then its ve index is reset to 0
-						{
-							std::cout << " TopologicalMesh::checkVertexIndices() : ve["<<i<<"] refers to vertex "<<ve[i]<<"!"<<std::endl;
-							vertexIndicesAreValid = false;
-						}*/
 						if(ve[i] >= vertices.size())
 						{
 							std::cout << " TopologicalMesh::checkVertexIndices() : ve["<<i<<"] refers to "<<ve[i]<<" on vertices array of size "<<vertices.size()<<"!"<<std::endl;
@@ -159,7 +153,6 @@ namespace strata
 				  */
 				bool checkVertexPolyArrays(void) const
 				{
-//					std::cout << " TopologicalMesh::checkVertexPolyArrays()..."<<std::endl;
 					bool polyArraysAreValid = true;
 					for(unsigned int i = 1; i < vertices.size(); i++)
 					{
@@ -206,7 +199,6 @@ namespace strata
 				  */
 				bool checkPolyIndices(void) const
 				{
-//					std::cout << " TopologicalMesh::checkPolyIndices()..."<<std::endl;
 					bool indicesAreValid = true;
 					for(unsigned int i = 1; i < polygons.size(); i++)
 					{

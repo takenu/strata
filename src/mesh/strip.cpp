@@ -107,12 +107,6 @@ bool Strip::checkAdjacentMeshes(void) const
 			adjacentMeshesAreComplete = false;
 		}
 		else ++(adjacentBundleRefs.at(vertices[i].getOwningBundle()));
-/*		if(!(vertices[i].getOwningBundle()->isAdjacentToStrip(this)))
-		{
-			std::cout << " Strip::checkAdjacentMeshes() :";
-			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
-			adjacentMeshesAreComplete = false;
-		}*/
 		if(!(vertices[i].getOwningBundle()->isValidVertexIndex(vertices[i].getRemoteIndex())))
 		{
 			std::cout << " Strip::checkAdjacentMeshes() :";
@@ -122,12 +116,11 @@ bool Strip::checkAdjacentMeshes(void) const
 	}
 	for(std::map<const Bundle*, unsigned int>::iterator it = adjacentBundleRefs.begin(); it != adjacentBundleRefs.end(); it++)
 	{
-		// TODO : Reenable below statement once adjacency issues are fixed
-/*		if(it->second == 0)
+		if(it->second == 0)
 		{
 			std::cout << " Strip::checkAdjacentMeshes() : Bundle is adjacent to strip but is never referenced! "<<std::endl;
 			adjacentMeshesAreComplete = false;
-		}*/
+		}
 		if(!(it->first->isAdjacentToStrip(this)))
 		{
 			std::cout << " Strip::checkAdjacentMeshes() : Bundle does not contain a reverse reference to a Strip! "<<std::endl;

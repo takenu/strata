@@ -211,9 +211,6 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	splitMesh(makeNewBundle, f, g, fvert, gvert);
 	if(f==0 || g==0) { std::cout << " Bundle::split() : Bundles do not exist, splitting aborted. "<<std::endl; return false; }
 
-//	std::cout << " Bundle::split() : Of a total of "<<vertices.size()-1<<" vertices, assigned "<<f->vertices.size()-1<<" to 'f' and assigned "
-//		<< g->vertices.size() <<" to 'g', leaving "<<vertices.size()+1 - f->vertices.size() - g->vertices.size()<<" unassigned."<<std::endl;
-
 	// Assign any vertices not yet in f or g to either f or g. Since the assignment failed during splitMesh,
 	// it will be necessary to modify the mesh such that the resulting meshes f and g will be well-connected.
 	// This modification can add or merge vertices, but it is not allowed to delete vertices or change the polygon
@@ -231,8 +228,6 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
 	splitAssignPolygonsToConstituentMeshes(f,g,s,fvert,gvert);
 
-//	std::cout << " Split mesh into bundles with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys and a strip with "<<s->nPolys()<<" polys. "<<std::endl;
-
 	// Copy texture scaling.
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);
@@ -247,35 +242,9 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	// Make strips adjacent to the old Bundle update their adjacency to include the new Bundle objects.
 	addAdjacentStrip(s); // Add the newly created strip as an adjacent strip (so that it will become linked to f and g in the following lines)
 	s->addAdjacentBundle(this); // Also add reverse link to avoid a crash when the Bundle is deleted
-/*	std::cout << " Bundle::split() : Updating strips... fvert has size "<<fvert.size()<<" for f of size "<<f->vertices.size()
-		<<" and gvert has size "<<gvert.size()<<" for g of size  "<<g->vertices.size()<<std::endl; */
 	splitUpdateAdjacentStrips(fvert, f);
 	splitUpdateAdjacentStrips(gvert, g);
 
-/*	std::cout << " Bundle::split() : Printing mappings for f="<<f<<" and g="<<g<<": "<<std::endl;
-	for(std::map<xVert, xVert>::iterator it = fvert.begin(); it != fvert.end(); it++)
-		std::cout << it->first << " -> " << it->second <<", "; std::cout << std::endl;
-	for(std::map<xVert, xVert>::iterator it = gvert.begin(); it != gvert.end(); it++)
-		std::cout << it->first << " -> " << it->second <<", "; std::cout << std::endl;*/
-
-	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
-	{
-		assert(adjacentStrips[i]->checkAdjacentMeshes());
-//		if(!adjacentStrips[i]->checkAdjacentMeshes())
-		{
-//			std::cout << " Bundle::split() : ERROR: Splitting failed to correctly adjust neighboring strips! "<<std::endl;
-		}
-	}
-
-//	f->addAdjacentMesh(s);
-//	g->addAdjacentMesh(s);
-//	s->addAdjacentMesh(f);
-//	s->addAdjacentMesh(g);
-
-//	duplicateAdjacentMeshes(f);
-
-//	updateVerticesInAdjacentMeshes(fvert, getKey(), f->getKey(), f);
-//	updateVerticesInAdjacentMeshes(gvert, getKey(), g->getKey(), g);
 	return true;
 }
 
@@ -302,7 +271,6 @@ bool Bundle::checkAdjacentMeshes(void) const
 
 Bundle::~Bundle(void)
 {
-//	std::cout << " Bundle destructor: "<<this<<std::endl;
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 		assert(adjacentStrips[i]->releaseAdjacentBundle(this));
 }

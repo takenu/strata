@@ -151,17 +151,12 @@ namespace strata
 				template <typename AnotherVertexType>
 				bool addPolygonWithVertices(const AnotherVertexType &a, Bundle * _abundle, const AnotherVertexType &b, Bundle * _bbundle,
 						const AnotherVertexType &c, Bundle * _cbundle, float relativeTolerance = 0.001)
-//				bool addPolygonWithVertices(const AnotherVertexType &a, const AnotherVertexType &b,
-//						const AnotherVertexType &c, Bundle * oldBundle, float relativeTolerance = 0.001)
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
 					xVert _a = addIfNewVertex(VertexType(a,_abundle), tolerance);
 					xVert _b = addIfNewVertex(VertexType(b,_bbundle), tolerance);
 					xVert _c = addIfNewVertex(VertexType(c,_cbundle), tolerance);
-//					xVert _a = addIfNewVertex(VertexType(a,oldBundle), tolerance);
-//					xVert _b = addIfNewVertex(VertexType(b,oldBundle), tolerance);
-//					xVert _c = addIfNewVertex(VertexType(c,oldBundle), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
@@ -292,7 +287,6 @@ namespace strata
 					float pruneScore[STRATA_VERTEX_MAX_LINKS];
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 					{
-//						pruneScore[i] = computePolygonSkew(polygons[po[vertices[ve[v]].poly[i]]]); // Note that computePolygonSkew should return a number >= 1.0f
 						if(vertices[ve[v]].poly[i] == 0) pruneScore[i] = 0.0f;
 						else pruneScore[i] = computePolygonSkew(i,v); // Note that computePolygonSkew should return a number >= 1.0f
 					}
@@ -414,8 +408,6 @@ namespace strata
 						{
 							if(fvert.find(vertices[i].index) == fvert.end() && gvert.find(vertices[i].index) == gvert.end())
 							{
-//								std::cout << " Mesh::splitAssignOrphanVertices() : Trying to assign vertex "<<vertices[i].index<<" with "
-//									<< vertices[i].nPolys()<<" polys..."<<std::endl;
 								for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
 								{
 									if(vertices[i].poly[j] == 0)
@@ -426,7 +418,6 @@ namespace strata
 									if( fvert.find(findPolyNeighbor(j, vertices[i].index, true)) != fvert.end() &&
 										fvert.find(findPolyNeighbor(j, vertices[i].index, false)) != fvert.end() )
 									{
-//										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to f..."<<std::endl;
 										retryAssignment = true; // Added a new vertex so we can try another iteration to add even more vertices
 										fvert.insert( std::make_pair(vertices[i].index, f->addVertex(vertices[i])) );
 										break;
@@ -434,7 +425,6 @@ namespace strata
 									else if( gvert.find(findPolyNeighbor(j, vertices[i].index, true)) != gvert.end() &&
 										gvert.find(findPolyNeighbor(j, vertices[i].index, false)) != gvert.end() )
 									{
-//										std::cout << " Mesh::splitAssignOrphanVertices() : Assigning vertex "<<vertices[i].index<<" to g..."<<std::endl;
 										retryAssignment = true;
 										gvert.insert( std::make_pair(vertices[i].index, g->addVertex(vertices[i])) );
 										break;
@@ -491,8 +481,6 @@ namespace strata
 					{
 						newVertices.push_back(w);
 						addedVertices.insert( std::make_pair(w, m->addVertex(vertices[ve[w]]) ) ); // add vertex to the mapping of m's vertices
-//						std::cout << " Mesh::splitAddIfNewVertex() : Add new vertex: "<<w<<"->"<<addedVertices.at(w)<<" to mesh "<<m<<std::endl;
-//						m->vertices[ve[addedVertices.find(w)->second]].
 					}
 				}
 
@@ -658,7 +646,6 @@ namespace strata
 							Bundle * _abundle = (fvert.find(a) == fvert.end() ? g->getVertexOwner(gvert.at(a)) : f->getVertexOwner(fvert.at(a)));
 							Bundle * _bbundle = (fvert.find(b) == fvert.end() ? g->getVertexOwner(gvert.at(b)) : f->getVertexOwner(fvert.at(b)));
 							Bundle * _cbundle = (fvert.find(c) == fvert.end() ? g->getVertexOwner(gvert.at(c)) : f->getVertexOwner(fvert.at(c)));
-//							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
 						}
 					}
@@ -704,7 +691,6 @@ namespace strata
 						if(v.poly[j] == 0) break;
 						else if(v.poly[j] == p.index)
 						{
-//							std::cout << " Mesh::deletePolygon() : Cleanse reference to polygon from Vertex "<<v.index<<"..."<<std::endl;
 							for(unsigned int k = j; k < STRATA_VERTEX_MAX_LINKS-1; k++)
 							{
 								v.poly[k] = v.poly[k+1];
@@ -730,7 +716,6 @@ namespace strata
 				/** Delete a polygon from the Mesh by its xPoly reference. */
 				void deletePolygon(const xPoly &p)
 				{
-//					std::cout << " Mesh::deletePolygon() : Delete polygon from index "<<p<<"..."<<std::endl;
 					deletePolygon(polygons[po[p]]);
 				}
 		};
