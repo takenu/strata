@@ -146,6 +146,84 @@ namespace strata
 					return edgeVerticesAreValid;
 				}
 
+				/** Check whether the mesh has a proper topology.
+				  * This checks the following:
+				  * - Vertices belong to at least 1 polygon
+				  * - Vertices have either 0 or 2 mesh-edge edges radiating away from them
+				  * - Vertices do not have two polygons with the same (counter)clockwise neighbor
+				  */
+				bool checkTopology(void) const
+				{
+					bool topologyIsValid = true;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(vertices[i].poly[0] == 0)
+						{
+							std::cout << " TopologicalMesh::checkTopology() : Vertex "<<i<<" does not belong to any meshes! "<<std::endl;
+							topologyIsValid = false;
+						}
+						else
+						{
+							if(isEdgeVertex(vertices[i].index))
+							{
+								// Find an edge vertex neighbor, and find neighbors until we reach the other edge vertex.
+								// We should find a number of polygons exactly equal to the number of nonzero entries of the poly array.
+								// If not, the vertex either has multiple edges or the polygons that it is part of are not locally isomorphic
+								// to the half-unit disc (e.g. it has a Y-like fork or an X-like loop or so).
+								xVert v = findAdjacentEdgeVertex(vertices[i].index, true); // Find the clockwise edge neighbor
+								if(v == 0)
+								{
+									std::cout << " TopologicalMesh::checkTopology() : Vertex "<<i<<" does not have a clockwise edge neighbor! "<<std::endl;
+									topologyIsValid = false;
+								}
+								else
+								{
+									unsigned int numPolys = 0;
+									while(v != 0)
+									{
+										v = findPolyNeighborFromVertexPair(vertices[i].index, v);
+										if(v>0) ++numPolys;
+									}
+									if(numPolys != vertices[i].nPolys())
+									{
+										std::cout << " TopologicalMesh::checkTopology() : Edge vertex "<<i<<" found only "<<numPolys<<" of its "<<vertices[i].nPolys()<<" polygons! "<<std::endl;
+										topologyIsValid = false;
+									}
+								}
+							}
+							else
+							{
+								// For non-edge vertices we perform a similar check as for edge vertices, but we simply try to make a circle.
+								xVert v = findPolyNeighbor(0, vertices[i].index, true);
+								unsigned int numPolys = 1; // Start at 1 because we stop instantly when we find the last polygon
+								while(v != findPolyNeighborFromVertexPair(findPolyNeighbor(0, vertices[i].index, true), vertices[i].index)) // Stop when finding back the zeroth polygon.
+								{
+									++numPolys;
+									v = findPolyNeighborFromVertexPair(vertices[i].index, v);
+									if(v == 0)
+									{
+										std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" failed to complete its circle! "<<std::endl;
+										topologyIsValid = false;
+										break;
+									}
+									else if(numPolys > STRATA_VERTEX_MAX_LINKS)
+									{
+										std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" found too many polygons! "<<std::endl;
+										topologyIsValid = false;
+										break;
+									}
+								}
+								if(numPolys != vertices[i].nPolys())
+								{
+									std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" found "<<numPolys<<" polygons while it has "<<vertices[i].nPolys()<<" polygons! "<<std::endl;
+									topologyIsValid = false;
+								}
+							}
+						}
+					}
+					return topologyIsValid;
+				}
+
 				/** Check whether polygon indices are consistent and valid.
 				  * This checks the following:
 				  * - Polygon indices are correctly ordered (i.e. all zeroes in the array are at the end)
@@ -460,7 +538,12 @@ namespace strata
 					return findPolyNeighbor(polygons[po[p]],v,clockwise);
 				}
 
-				/** Find the polygon where 'w' is a clockwise neighbor of 'v'. */
+				/** Find the polygon where 'w' is a clockwise neighbor of 'v'.
+				  * Graphically this searches for a polygon as follows:
+				  *     *
+				  *    /p\
+				  * w *---* v
+				  */
 				inline xPoly findPolygon(const xVert &v, const xVert &w, bool abortIfNotFound = true) const
 				{
 					xPoly p = 0;
@@ -473,7 +556,12 @@ namespace strata
 					return p;
 				}
 
-				/** Find a mutual neighbor to a pair of vertices, clockwise to w and counterclockwise to w. */
+				/** Find a mutual neighbor to a pair of vertices, clockwise to w and counterclockwise to v.
+				  * Graphically:
+				  *     * <--- vertex to be returned
+				  *    / \
+				  * w *---* v
+				  */
 				inline xVert findPolyNeighborFromVertexPair(const xVert &v, const xVert &w) const
 				{
 					xPoly p = findPolygon(v, w, false);
@@ -605,7 +693,7 @@ namespace strata
 				inline bool isEdgeVertex(xVert _v) const
 				{
 					const Vertex & v = vertices[ve[_v]];
-					if(v.poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge
+//					if(v.poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge <------- NO, bad vertices could be part of two polygons in a sandwich-like manner and NOT be an edge vertex!
 					unsigned int verts[2*STRATA_VERTEX_MAX_LINKS];
 					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) verts[i] = 0;
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)

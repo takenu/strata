@@ -85,6 +85,7 @@ namespace strata
 						meshesAreConsistent &= it->second->checkVertexPolyArrays();
 						meshesAreConsistent &= it->second->checkPolyIndices();
 						meshesAreConsistent &= it->second->checkAdjacentMeshes();
+						meshesAreConsistent &= it->second->checkTopology();
 					}
 					if(!meshesAreConsistent) std::cout << " Terrain::checkMeshConsistency() : WARNING: Consistency checks on meshes FAILED; one or more meshes violate requirements! "<<std::endl;
 					return meshesAreConsistent;
