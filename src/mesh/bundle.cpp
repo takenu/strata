@@ -225,13 +225,17 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 		std::cout << " Mappings gvert = "; for(std::map<xVert, xVert>::iterator it = gvert.begin(); it != gvert.end(); it++) std::cout <<" "<<it->first<<"->"<<it->second; std::cout << std::endl;
 	}
 
-	Strip * s = makeNewStrip(); s->setParentLayer(parentLayer);
+	Strip * s = makeNewStrip();
 	splitAssignPolygonsToConstituentMeshes(f,g,s,fvert,gvert);
 
 	// Copy texture scaling.
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);
 	s->setScaleFactor(scaleTexture);
+
+	f->setParentLayer(parentLayer);
+	g->setParentLayer(parentLayer);
+	s->setParentLayer(parentLayer);
 
 	// Initialize rendered objects for the new meshes.
 	f->initMesh();
@@ -258,6 +262,11 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 bool Bundle::checkAdjacentMeshes(void) const
 {
 	bool adjacentMeshesAreComplete = true;
+	if(getParentLayer() == 0)
+	{
+		std::cout << " Bundle::checkAdjacentMeshes() : Parent layer not set! "<<std::endl;
+		adjacentMeshesAreComplete = false;
+	}
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
 		if(!adjacentStrips[i]->isAdjacentToBundle(this))

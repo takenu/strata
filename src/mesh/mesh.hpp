@@ -62,7 +62,8 @@ namespace strata
 				}
 
 				void setParentLayer(Layer * layer) { parentLayer = layer; }
-				Layer * getParentLayer(void) const { return parentLayer; }
+				Layer * getParentLayer(void) { return parentLayer; }
+				const Layer * getParentLayer(void) const { return parentLayer; }
 			protected:
 				friend class Bundle; // the Bundle also must use this class's protected functions for creating Strip objects
 

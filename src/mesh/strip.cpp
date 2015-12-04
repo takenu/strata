@@ -46,6 +46,9 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);
 
+	f->setParentLayer(parentLayer);
+	g->setParentLayer(parentLayer);
+
 	f->initMesh();
 	g->initMesh();
 	f->resetTexture(scaleTexture, 250, 100, 0);
@@ -90,6 +93,11 @@ Strip::~Strip(void)
 bool Strip::checkAdjacentMeshes(void) const
 {
 	bool adjacentMeshesAreComplete = true;
+	if(getParentLayer() == 0)
+	{
+		std::cout << " Strip::checkAdjacentMeshes() : Parent layer not set! "<<std::endl;
+		adjacentMeshesAreComplete = false;
+	}
 	std::map<const Bundle*, unsigned int> adjacentBundleRefs;
 	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
 		adjacentBundleRefs.emplace(adjacentBundles[i], 0);
