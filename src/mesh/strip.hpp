@@ -215,6 +215,7 @@ namespace strata
 				  * - Whether all Bundles in the array are the owner of at least one of the Strip's vertices,
 				  * - whether all Bundles in the array contain a reverse reference to the Strip,
 				  * - whether all vertices of this Strip refer to a Bundle that is in the adjacentBundles list,
+				  * - whether there are no polygons for which all three vertices are borrowed from the same Bundle,
 				  * - whether the referred Bundle actually contains a valid vertex referenced by the Strip vertex's remoteIndex,
 				  * - whether the Bundle also has a reference to this Strip.
 				  */

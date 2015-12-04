@@ -42,7 +42,6 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	}
 
 	splitAssignPolygonsToConstituentMeshes(f,g,g,fvert,gvert);
-//	std::cout << " Split mesh into strips with "<<f->polygons.size()<<" and "<<g->polygons.size()<<" polys. "<<std::endl;
 
 	f->setScaleFactor(scaleTexture);
 	g->setScaleFactor(scaleTexture);
@@ -55,9 +54,6 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	// Copy the references to all adjacent meshes of 'this', when required.
 	// This copying is done both ways: the adjacent mesh is added to the newly added one,
 	// and the newly added one is added to the adjacent mesh.
-//	duplicateAdjacentMeshes(f);
-//	duplicateAdjacentMeshes(g);
-	std::cout << " Strip::split() : Copying adjacent bundles, there are "<<adjacentBundles.size()<<" of these... "<<std::endl;
 	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
 	{
 		// Copy adjacent bundles where required.
@@ -111,6 +107,16 @@ bool Strip::checkAdjacentMeshes(void) const
 		{
 			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+	}
+	for(unsigned int i = 1; i < polygons.size(); i++)
+	{
+		if(	vertices[ve[polygons[i].a]].getOwningBundle() == vertices[ve[polygons[i].b]].getOwningBundle() &&
+			vertices[ve[polygons[i].a]].getOwningBundle() == vertices[ve[polygons[i].c]].getOwningBundle())
+		{
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Polygon "<<i<<" has three vertices from the same Bundle!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
 	}

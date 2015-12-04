@@ -99,8 +99,8 @@ namespace strata
 					strips((long unsigned int)(-1), "StripTC")
 				{
 					layers.push_back(new Layer());
-					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 15, 0.0f);
-					for(unsigned int i = 0; i < 5; i++)
+					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
+					for(unsigned int i = 0; i < 6; i++)
 					{
 						std::cout << " Terrain() : Splitting bundles... "<<std::endl;
 						splitLargeMeshes(bundles);
