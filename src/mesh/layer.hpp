@@ -80,6 +80,20 @@ namespace strata
 					bundles.push_back(bundle);
 					return bundle;
 				}
+		};
+
+		/** A MasterLayer is a special layer that underlies all other layers. It generates the primary deformation features of
+		  * the terrain, such as the formation of mountains and valleys. It resembles the continental shelf, the thicker
+		  * part of the Earth's crust that hosts the world's land masses.
+		  * It is not supposed to be eroded away or even form part of the surface, and everything under it is to be considered
+		  * a meaningless rocky mass. */
+		class MasterLayer : public Layer
+		{
+			private:
+			public:
+				MasterLayer(void) : Layer()
+				{
+				}
 
 				/** Add a single Bundle to the layer, and initialize it as a flat, roughly square mesh of equilateral triangles
 				  * with size 'size' and 'ndivs' subdivisions. */

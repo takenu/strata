@@ -38,6 +38,7 @@ namespace strata
 		class Terrain
 		{
 			private:
+				MasterLayer * masterLayer;
 				std::vector<Layer *> layers;
 				core::intf::RenderInterface * renderer;
 
@@ -92,14 +93,15 @@ namespace strata
 				}
 			public:
 				Terrain(core::intf::RenderInterface * _renderer) :
+					masterLayer(0),
 					renderer(_renderer),
 					bundleCounter(0),
 					stripCounter(0),
 					bundles((long unsigned int)(-1), "BundleTC"),
 					strips((long unsigned int)(-1), "StripTC")
 				{
-					layers.push_back(new Layer());
-					layers.back()->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
+					masterLayer = new MasterLayer();
+					masterLayer->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
 					for(unsigned int i = 0; i < 6; i++)
 					{
 						std::cout << " Terrain() : Splitting bundles... "<<std::endl;
