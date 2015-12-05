@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "element.hpp"
 #include "bundle.hpp"
 #include "strip.hpp"
+#include "layer.hpp"
 
 using namespace strata::mesh;
 
@@ -233,6 +234,9 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	g->setScaleFactor(scaleTexture);
 	s->setScaleFactor(scaleTexture);
 
+	parentLayer->addBundle(f);
+	parentLayer->addBundle(g);
+
 	f->setParentLayer(parentLayer);
 	g->setParentLayer(parentLayer);
 	s->setParentLayer(parentLayer);
@@ -282,4 +286,7 @@ Bundle::~Bundle(void)
 {
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 		assert(adjacentStrips[i]->releaseAdjacentBundle(this));
+	if(parentLayer)
+		parentLayer->releaseBundle(this);
+	else std::cout << " Bundle::~Bundle() : WARNING: No parentLayer found, cannot release Bundle from Layer! "<<std::endl;
 }

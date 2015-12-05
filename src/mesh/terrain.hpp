@@ -91,6 +91,19 @@ namespace strata
 					if(!meshesAreConsistent) std::cout << " Terrain::checkMeshConsistency() : WARNING: Consistency checks on meshes FAILED; one or more meshes violate requirements! "<<std::endl;
 					return meshesAreConsistent;
 				}
+
+				/** Duplicate an existing layer, resulting in a new layer at a given height above the old one.
+				  * The positioning of the vertices of the new layer is using the normals from the old layer's vertices.
+				  * The Bundle/Strip structure of the new layer will mirror the structure of the underlying layer. Note that
+				  * this similarity is not strictly necessary but merely convenient, one should not be concerned about these
+				  * properties continuing to be similar. In principle it is expected that the structure will diverge during
+				  * terrain manipulation.
+				  */
+				void duplicateLayer(Layer * baseLayer, float thickness)
+				{
+					layers.push_back(new Layer());
+					layers.back()->increaseThickness(thickness);
+				}
 			public:
 				Terrain(core::intf::RenderInterface * _renderer) :
 					masterLayer(0),
@@ -112,6 +125,11 @@ namespace strata
 						splitLargeMeshes(strips);
 						checkMeshConsistency(bundles);
 						checkMeshConsistency(strips);
+					}
+					duplicateLayer(masterLayer, 50.0f);
+					for(unsigned int i = 0; i < 3; i++)
+					{
+						duplicateLayer(layers.back(), 20.0f);
 					}
 				}
 

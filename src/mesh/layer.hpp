@@ -65,11 +65,45 @@ namespace strata
 		  */
 		class Layer
 		{
-			private:
+			protected:
 				std::vector<Bundle*> bundles; /** The bundles forming this Layer. */
-				double thickness;
+//				double thickness; <-- Thickness may vary, do not define per layer
 			public:
 				Layer(void)
+				{
+				}
+
+				/** Add a new Bundle to the Layer. The Bundle class calls this function upon creation of a new Bundle
+				  * when it is splitting. The Terrain class calls this on the first Bundle to come into existence. */
+				void addBundle(Bundle * bundle)
+				{
+					for(unsigned int i = 0; i < bundles.size(); i++)
+						if(bundles[i] == bundle)
+						{
+							std::cout << " Layer::addBundle() : WARNING: Attempt to add a Bundle as part of a Layer more than once! "<<std::endl;
+							return;
+						}
+					bundles.push_back(bundle);
+				}
+
+				/** Release a Bundle from the Layer. The Bundle class calls this in its destructor. */
+				void releaseBundle(Bundle * bundle)
+				{
+					for(unsigned int i = 0; i < bundles.size(); i++)
+						if(bundles[i] == bundle)
+						{
+							bundles[i] = bundles.back();
+							bundles.pop_back();
+							return;
+						}
+					std::cout << " Layer::releaseBundle() : WARNING: Cannot find Bundle to be released! "<<std::endl;
+				}
+
+				/** Increase the thickness of this Layer by the specified amount.
+				  * This is done by moving every vertex a distance of 'thickness'
+				  * along the direction of its normal, defined as the average of
+				  * the normals of its adjacent polygons. */
+				void increaseThickness(float thickness)
 				{
 				}
 
@@ -102,6 +136,7 @@ namespace strata
 					Bundle * bundle = createBundle(makeNewBundle);
 					bundle->createFlatLayer(size, ndivs, height);
 					bundle->initMesh(); // uses mesh::Drawable::initMesh() which calls TopologicalMesh::convertToMesh()
+					bundles.push_back(bundle);
 				}
 		};
 	}
