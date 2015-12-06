@@ -74,7 +74,8 @@ namespace strata
 				}
 
 				/** Add a new Bundle to the Layer. The Bundle class calls this function upon creation of a new Bundle
-				  * when it is splitting. The Terrain class calls this on the first Bundle to come into existence. */
+				  * when it is splitting. The Terrain class calls this on the first Bundle to come into existence, or
+				  * when the Bundle is a copy of an existing Bundle from a different layer.  */
 				void addBundle(Bundle * bundle)
 				{
 					for(unsigned int i = 0; i < bundles.size(); i++)

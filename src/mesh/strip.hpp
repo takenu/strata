@@ -132,6 +132,38 @@ namespace strata
 				{
 				}
 
+				/** Duplicate the strip, turning 's' into a copy of this Strip. This duplication is only possible
+				  * if 's' is uninitialized and does not already have vertices and polygons.
+				  * References of 's' into other Mesh objects (in particular, the Bundles from which this Strip
+				  * borrows its vertices) are copied verbatim. The result should be that 's' is as close to a clone
+				  * of this Strip as possible.
+				  * The exception is that 's' is not given a parentLayer by this function in order to avoid 'accidental' or careless
+				  * duplication. The caller of this function should ensure that 's' is sensibly assigned to a layer, either the same
+				  * layer as 'this' (in this case the 'this' object probably would need to be removed eventually), or another layer
+				  * (but in that case all the references to adjacent Bundles need to be adjusted to copies of these Bundles).
+				  */
+				void duplicateStrip(Strip * s) const;
+
+				void duplicateAdjustAdjacentBundles(std::map<Bundle*, Bundle*> &bmap)
+				{
+					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+					{
+						if(bmap.find(adjacentBundles[i]) == bmap.end())
+							std::cout << " Strip::duplicateAdjustAdjacentBundles() : WARNING: Failed to find adjacent bundle in map! "<<std::endl;
+						else adjacentBundles[i] = bmap.at(adjacentBundles[i]);
+					}
+				}
+
+				void duplicateAdjustOwningBundles(std::map<Bundle*, Bundle*> &bmap)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						if(bmap.find(vertices[i].getOwningBundle()) == bmap.end())
+							std::cout << " Strip::duplicateAdjustOwningBundles() : WARNING: Failed to adjust owning bundle of a Strip vertex! "<<std::endl;
+						else vertices[i].setOwningBundle(bmap.at(vertices[i].getOwningBundle()));
+					}
+				}
+
 				bool isAdjacentToBundle(const Bundle * bundle) const
 				{
 					for(unsigned int i = 0; i < adjacentBundles.size(); i++)

@@ -79,6 +79,25 @@ namespace strata
 				{
 				}
 
+				/** Duplicate the Bundle, making 'b' a copy of itself. The duplication will be rejected if the
+				  * Bundle 'b' already has some vertices in it.
+				  * The duplication copies all vertices and polygons, resulting in a mesh with identical shape and structure.
+				  * It also copies the adjacent strips list, but since the references will be the same as these for the
+				  * current Bundle they may need to be adjusted later on (when the adjacent Strips themselves have also been
+				  * duplicated).
+				  */
+				void duplicateBundle(Bundle * b) const;
+
+				void duplicateAdjustAdjacentStrips(std::map<Strip*, Strip*> &smap)
+				{
+					for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+					{
+						if(smap.find(adjacentStrips[i]) == smap.end())
+							std::cout << " Strip::duplicateAdjustAdjacentBundles() : WARNING: Failed to find adjacent bundle in map! "<<std::endl;
+						else adjacentStrips[i] = smap.at(adjacentStrips[i]);
+					}
+				}
+
 				/** Add a Strip as being adjacent to this Bundle. */
 				void addAdjacentStrip(Strip * strip)
 				{

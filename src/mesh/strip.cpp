@@ -77,6 +77,18 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	return true;
 }
 
+void Strip::duplicateStrip(Strip * s) const
+{
+	if(s->vertices.size() != 1 || s->polygons.size() != 1)
+	{
+		std::cout << " Strip::duplicateStrip() : ERROR: Cannot duplicate Strip, target is not ready for copying vertices and polygons!"<<std::endl;
+		return;
+	}
+	duplicateMesh(s);
+	for(unsigned int i = 0; i < adjacentBundles.size(); i++)
+		s->addAdjacentBundle(adjacentBundles[i]);
+}
+
 bool Strip::isAdjacentToVertices(const Bundle * b) const
 {
 	for(unsigned int i = 1; i < vertices.size(); i++)

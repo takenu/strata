@@ -256,6 +256,18 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	return true;
 }
 
+void Bundle::duplicateBundle(Bundle * b) const
+{
+	if(b->vertices.size() > 1 || b->polygons.size() > 1)
+	{
+		std::cout << " Bundle::duplicateBundle() : ERROR: Cannot duplicate, target Bundle already contains vertices and/or polygons! "<<std::endl;
+		return;
+	}
+	duplicateMesh(b);
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+		b->addAdjacentStrip(adjacentStrips[i]);
+}
+
 /** Check the correctness of adjacency tracking of the Bundle.
   * This checks the following:
   * - All Strip objects in adjacentStrips have a reverse reference to this Bundle.

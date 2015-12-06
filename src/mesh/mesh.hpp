@@ -81,6 +81,7 @@ namespace strata
 				using TopologicalMesh<VertexType>::findCommonEdgeVertex;
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
 				using TopologicalMesh<VertexType>::getVertexPosition;
+				using TopologicalMesh<VertexType>::scaleTexture;
 
 				using TopologicalMesh<VertexType>::printPolygons;
 				using TopologicalMesh<VertexType>::printLists;
@@ -113,6 +114,18 @@ namespace strata
 					for(unsigned int i = 1; i < vertices.size(); i++)
 						if( tiny::length2(v.pos - vertices[i].pos) < tolerance*tolerance ) return vertices[i].index;
 					return addVertex(v);
+				}
+
+				/** Add a vertex as a copy of another vertex. */
+				void duplicateVertex(const VertexType &v)
+				{
+					vertices.push_back(v);
+				}
+
+				/** Add a polygon as a copy of another polygon. */
+				void duplicatePolygon(const Polygon &p)
+				{
+					polygons.push_back(p);
 				}
 
 				/** Add a polygon using vertex indices rather than vertex references. */
@@ -329,6 +342,31 @@ namespace strata
 							++num_retries;
 						}
 					}
+				}
+
+				/** Duplicate this mesh into another mesh. This is done by copying all vertices and polygons as-is
+				  * into the target mesh.
+				  * Not copied is the parent layer (whoever is duplicating should set what layer the new Mesh belongs to).
+				  */
+				template <typename MeshType>
+				void duplicateMesh(MeshType * m) const
+				{
+					if(m->vertices.size() != 1 || m->polygons.size() != 1 || m->ve.size() != 1 || m->po.size() != 1)
+					{
+						std::cout << " Mesh::duplicateMesh() : ERROR: Mesh seems to be already initialized, cannot duplicate! "<<std::endl;
+						std::cout << "                       : Sizes are: vertices="<<vertices.size()<<", polygons="<<polygons.size()
+							<< ", ve="<<ve.size()<<", po="<<po.size()<<std::endl;
+						return;
+					}
+					for(unsigned int i = 1; i < vertices.size(); i++)
+						m->duplicateVertex(vertices[i]); // Copy vertices in order.
+					for(unsigned int i = 1; i < ve.size(); i++)
+						m->ve.push_back(ve[i]);
+					for(unsigned int i = 1; i < polygons.size(); i++)
+						m->duplicatePolygon(polygons[i]); // Copy polygons in order.
+					for(unsigned int i = 1; i < po.size(); i++)
+						m->po.push_back(po[i]);
+					m->setScaleFactor(scaleTexture);
 				}
 
 				/** Split the edge between vertices 'b' and 'c'. Assume the following layout and splitting:

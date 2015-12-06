@@ -102,6 +102,42 @@ namespace strata
 				void duplicateLayer(Layer * baseLayer, float thickness)
 				{
 					layers.push_back(new Layer());
+					std::vector<Bundle *> baseBundles;
+					std::vector<Strip *> baseStrips;
+					// First collect bundles and strips of the base layer. Do not add Bundles and Strips yet - that would mess up the std::map.
+					for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
+						if(it->second->getParentLayer() == baseLayer)
+							baseBundles.push_back(it->second);
+					for(std::map<long unsigned int, Strip*>::iterator it = strips.begin(); it != strips.end(); it++)
+						if(it->second->getParentLayer() == baseLayer)
+							baseStrips.push_back(it->second);
+					// Now duplicate all bundles and strips of the base layer.
+					std::map<Bundle*, Bundle*> bmap;
+					std::map<Strip*, Strip*> smap;
+					for(unsigned int i = 0; i < baseBundles.size(); i++)
+					{
+						Bundle * bundle = makeNewBundle();
+						bundle->setParentLayer(layers.back());
+						layers.back()->addBundle(bundle);
+						baseBundles[i]->duplicateBundle(bundle);
+						bmap.emplace(baseBundles[i],bundle);
+					}
+					for(unsigned int i = 0; i < baseStrips.size(); i++)
+					{
+						Strip * strip = makeNewStrip();
+						strip->setParentLayer(layers.back());
+						baseStrips[i]->duplicateStrip(strip);
+						smap.emplace(baseStrips[i],strip);
+					}
+					// Update all cross references: adjust Strip owningBundle, and adjust adjacentBundles/adjacentStrips
+					for(unsigned int i = 0; i < baseBundles.size(); i++)
+						bmap.at(baseBundles[i])->duplicateAdjustAdjacentStrips(smap);
+					for(unsigned int i = 0; i < baseStrips.size(); i++)
+					{
+						smap.at(baseStrips[i])->duplicateAdjustAdjacentBundles(bmap);
+						smap.at(baseStrips[i])->duplicateAdjustOwningBundles(bmap);
+					}
+					// Move all vertices of the Mesh a fixed distance along the direction of their respective normals.
 					layers.back()->increaseThickness(thickness);
 				}
 			public:
