@@ -79,6 +79,11 @@ namespace strata
 				virtual void addWorldRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
+					if(renderableKeyMap.find(renderable) != renderableKeyMap.end())
+					{
+						std::cout << " RenderManager::addWorldRenderable() : ERROR: Renderable "<<renderable<<" with key "<<renderableKeyMap.at(renderable)<<" already exists! Cannot add! "<<std::endl;
+						return;
+					}
 					renderableKeyMap.insert( std::make_pair(renderable, ++renderableKeyCounter) );
 					worldRenderer->addWorldRenderable(renderableKeyCounter, renderable, readDepthTex, writeDepthTex, blendMode);
 				}
@@ -86,12 +91,17 @@ namespace strata
 				virtual void addScreenRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
+					if(renderableKeyMap.find(renderable) != renderableKeyMap.end())
+					{
+						std::cout << " RenderManager::addScreenRenderable() : ERROR: Renderable "<<renderable<<" with key "<<renderableKeyMap.at(renderable)<<" already exists! Cannot add! "<<std::endl;
+						return;
+					}
 					renderableKeyMap.insert( std::make_pair(renderable, ++renderableKeyCounter) );
 					worldRenderer->addScreenRenderable(renderableKeyCounter, renderable, readDepthTex, writeDepthTex, blendMode);
 				}
 
-				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeWorldRenderable(renderableKeyMap.find(renderable)->second); }
-				virtual void freeScreenRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeScreenRenderable(renderableKeyMap.find(renderable)->second); }
+				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeWorldRenderable(renderableKeyMap.find(renderable)->second); renderableKeyMap.erase(renderable); }
+				virtual void freeScreenRenderable(tiny::draw::Renderable * renderable) { worldRenderer->freeScreenRenderable(renderableKeyMap.find(renderable)->second); renderableKeyMap.erase(renderable); }
 
 				// The list-first, add-to-world-renderer-later doesn't seem very necessary - we could skip the RenderableObjectSpecs altogether and
 				// redirect addWorldRenderable() to worldRenderer->addWorldRenderable(). Commented out for now, likely to be deleted later.

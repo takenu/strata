@@ -24,6 +24,11 @@ using namespace strata::mesh;
 
 void DrawableMesh::initMesh(void)
 {
+	if(renderMesh)
+	{
+		std::cout << " DrawableMesh::initMesh() : WARNING: Attempt to re-initialize mesh! "<<std::endl;
+		return;
+	}
 	renderMesh = new tiny::draw::StaticMesh( convertToMesh() );
 	renderMesh->setDiffuseTexture(*texture);
 	renderer->addWorldRenderable(renderMesh);
@@ -34,10 +39,15 @@ void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned c
 	delete texture;
 	texture = createTestTexture(_size, _r, _g, _b);
 	renderer->freeWorldRenderable(renderMesh);
+	delete renderMesh;
+	renderMesh = 0;
 	initMesh();
 }
 
 DrawableMesh::~DrawableMesh(void)
 {
-	renderer->freeWorldRenderable(renderMesh);
+	if(renderMesh)
+		renderer->freeWorldRenderable(renderMesh);
+	if(texture)
+		delete texture;
 }

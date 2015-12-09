@@ -36,6 +36,7 @@ namespace strata
 		class DrawableMesh
 		{
 			private:
+				DrawableMesh(const DrawableMesh &); /**< Nowhere defined - forbid duplication of DrawableMeshes. */
 			protected:
 				core::intf::RenderInterface * renderer;
 				tiny::draw::StaticMesh * renderMesh;
@@ -48,10 +49,16 @@ namespace strata
 				{
 				}
 
+				/** Initialize the mesh. This will give the mesh a valid renderMesh, using the function
+				  * convertToMesh(). It also sets the mesh as renderable by the WorldRenderer. */
 				void initMesh(void);
 
+				/** Re-set the texture used for drawing the mesh. This recreates the used texture as a
+				  * test texture shaded with RGB values as specified in the arguments. */
 				void resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
 
+				/** Create a StaticMesh object (defined in the tiny-game-engine library) to visualise the
+				  * DrawableMesh object. The deriving class must specify how it needs to be rendered. */
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 
 				virtual ~DrawableMesh(void);
