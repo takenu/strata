@@ -61,6 +61,12 @@ namespace strata
 				  * DrawableMesh object. The deriving class must specify how it needs to be rendered. */
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 
+				/** Get a const reference to the Drawable's texture, in order to allow making a copy of it. */
+				const tiny::draw::RGBTexture2D & getTexture(void) const { return *texture; }
+
+				/** Initialize the texture from another texture. */
+				void resetTexture(const tiny::draw::RGBTexture2D & _texture);
+
 				virtual ~DrawableMesh(void);
 		};
 	} // end namespace mesh

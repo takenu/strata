@@ -80,7 +80,7 @@ namespace strata
 				using TopologicalMesh<VertexType>::findFarthestPair;
 				using TopologicalMesh<VertexType>::findCommonEdgeVertex;
 				using TopologicalMesh<VertexType>::verticesHaveCommonNeighbor;
-				using TopologicalMesh<VertexType>::getVertexPosition;
+//				using TopologicalMesh<VertexType>::getVertexPosition;
 				using TopologicalMesh<VertexType>::scaleTexture;
 
 				using TopologicalMesh<VertexType>::printPolygons;

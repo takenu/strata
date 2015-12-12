@@ -44,6 +44,16 @@ void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned c
 	initMesh();
 }
 
+void DrawableMesh::resetTexture(const tiny::draw::RGBTexture2D & _texture)
+{
+	delete texture;
+	texture = new tiny::draw::RGBTexture2D(_texture); // Use copy construction
+	renderer->freeWorldRenderable(renderMesh);
+	delete renderMesh;
+	renderMesh = 0;
+	initMesh();
+}
+
 DrawableMesh::~DrawableMesh(void)
 {
 	if(renderMesh)

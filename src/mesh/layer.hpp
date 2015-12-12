@@ -106,6 +106,15 @@ namespace strata
 				  * the normals of its adjacent polygons. */
 				void increaseThickness(float thickness)
 				{
+					for(unsigned int i = 0; i < bundles.size(); i++)
+					{
+						Bundle * b = bundles[i];
+						std::vector<tiny::vec3> normals;
+						for(unsigned int j = 0; j < b->numVertices(); j++)
+							normals.push_back(b->getVertexNormal(j)*thickness);
+						for(unsigned int j = 0; j < b->numVertices(); j++)
+							b->moveVertexAlongVector(j, normals[j]);
+					}
 				}
 
 				Bundle * createBundle(std::function<Bundle * (void)> makeNewBundle)

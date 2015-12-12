@@ -77,6 +77,12 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	return true;
 }
 
+void Strip::recalculateVertexPositions(void)
+{
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		vertices[i].pos = vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex());
+}
+
 void Strip::duplicateStrip(Strip * s) const
 {
 	if(s->vertices.size() != 1 || s->polygons.size() != 1)

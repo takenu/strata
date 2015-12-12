@@ -34,7 +34,13 @@ namespace strata
 
 		/** The TopologicalMesh defines the Mesh's basic topology as well as functions for analysing the topology.
 		  * It does not define functions for manipulating the topology, this is deferred to the Mesh class which
-		  * derives from it. */
+		  * derives from it.
+		  *
+		  * The TopologicalMesh will be used by distant classes, which can obtain vertices and polygons from it in
+		  * order to modify its shape and use the class. This is done via Vertex and Polygon objects.
+		  * Internally, the TopologicalMesh uses xVert and xPoly references, which aims to reduce the memory usage
+		  * of Strata by avoiding meshes with inefficient, largely empty vertex and polygon arrays.
+		  */
 		template <typename VertexType>
 		class TopologicalMesh : public MeshInterface
 		{
@@ -72,10 +78,49 @@ namespace strata
 					return analyseShape(farthestPair);
 				}
 
-				tiny::vec3 getVertexPosition(xVert v) { return vertices[ve[v]].pos; }
+				/** Get the number of vertices of the TopologicalMesh. Since the first vertex in 'vertices' is not
+				  * a real vertex but the error vertex, we return 1 less than the size of 'vertices'. */
+				unsigned int numVertices(void) const { return vertices.size() - 1; }
+
+				/** Get the position of the i-th vertex. Since vertices[0] is not a vertex that is part of the mesh,
+				  * we adjust the array index by 1. The index should be smaller than numVertices(). */
+				tiny::vec3 getVertexPosition(unsigned int i) const { assert(i+1<vertices.size()); return vertices[i+1].pos; }
+
+				/** Get the position of the vertex referenced by vertex index 'v'. */
+				tiny::vec3 getVertexPositionFromIndex(xVert v) const { return vertices[ve[v]].pos; }
+
+				/** Move a vertex a given distance along its normal. The vertex's index is expected to originate from
+				  * an external class and should be smaller than numVertices(). */
+				void moveVertexAlongVector(unsigned int i, tiny::vec3 vec)
+				{
+					assert(i+1<vertices.size());
+					Vertex & v = vertices[i+1];
+//					tiny::vec3 normal = getVertexNormal(v);
+					v.pos = v.pos + vec;
+				}
 
 				/** Set the scale multiplier for the terrain's texture coordinates. */
 				void setScaleFactor(float _scale) { scaleTexture = _scale; }
+
+				/** Get the scale multiplier used for the terrain texture. */
+				float getScaleFactor(void) const { return scaleTexture; }
+
+				/** Get the normal of the TopologicalMesh at a given vertex index. */
+				tiny::vec3 getVertexNormal(unsigned int i)
+				{
+					assert(i+1<vertices.size());
+					return getVertexNormal(vertices[i+1]);
+				}
+
+				/** Get the normal at a vertex, calculated as an average of the normals of its adjacent polygons. */
+				tiny::vec3 getVertexNormal(const Vertex & v) const
+				{
+					tiny::vec3 norm(0.0f, 0.0f, 0.0f);
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+						if(v.poly[i] > 0)
+							norm = norm + computeNormal(polygons[po[v.poly[i]]]);
+					return normalize(norm);
+				}
 
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip) = 0;
@@ -684,10 +729,16 @@ namespace strata
 				}
 
 				/** Calculate the normal of a polygon. */
-				tiny::vec3 computeNormal(xPoly _p) const
+				inline tiny::vec3 computeNormal(const Polygon & p) const
 				{
-					return normalize(cross(vertices[ve[polygons[po[_p]].c]].pos - vertices[ve[polygons[po[_p]].a]].pos,
-										   vertices[ve[polygons[po[_p]].b]].pos - vertices[ve[polygons[po[_p]].a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
+					return normalize(cross(vertices[ve[p.c]].pos - vertices[ve[p.a]].pos,
+										   vertices[ve[p.b]].pos - vertices[ve[p.a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
+				}
+
+				/** Calculate the normal of a polygon by its index. */
+				inline tiny::vec3 computeNormal(xPoly _p) const
+				{
+					return computeNormal(polygons[po[_p]]);
 				}
 
 				inline bool isEdgeVertex(xVert _v) const

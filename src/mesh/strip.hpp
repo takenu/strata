@@ -132,6 +132,10 @@ namespace strata
 				{
 				}
 
+				/** Re-calculate the Strip's vertex positions, bringing them back in line with the positions of the Bundle vertices
+				  * that they were based upon. */
+				void recalculateVertexPositions(void);
+
 				/** Duplicate the strip, turning 's' into a copy of this Strip. This duplication is only possible
 				  * if 's' is uninitialized and does not already have vertices and polygons.
 				  * References of 's' into other Mesh objects (in particular, the Bundles from which this Strip
