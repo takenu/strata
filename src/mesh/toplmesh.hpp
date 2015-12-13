@@ -72,6 +72,66 @@ namespace strata
 					return findFarthestPair(farthestPair);
 				}
 
+				/** Find the central position of the TopologicalMesh. In principle, the central position is defined
+				  * as the position in 3D space for which the maximum distance to any of the mesh's vertices is 
+				  * minimized. Said otherwise, it is the center of the smallest sphere that contains all of the mesh's
+				  * vertices.
+				  * Because finding the central position could be unreasonably difficult, the actual position returned
+				  * is not actually guaranteed to be the true central position, but it is something close. The choice is
+				  * to take the midpoint of the farthest pair, which should be reasonably close. */
+				tiny::vec3 findCentralPoint(void) const
+				{
+					VertPair vp(0,0); findFarthestPair(vp);
+					return (vertices[ve[vp.a]].pos + vertices[ve[vp.b]].pos)*0.5;
+				}
+
+				/** Find the maximal distance between 'p' and the TopologicalMesh's vertices. Mathematically,
+				  * maxVertexDistance = min( x in R : forall v in vertices, dist(p-v) <= x)
+				  */
+				float maxVertexDistance(tiny::vec3 p) const
+				{
+					float x = 0.0f;
+					for(unsigned int i = 1; i < vertices.size(); i++)
+						x = std::max(x, tiny::length2(vertices[i].pos - p));
+					return sqrt(x);
+				}
+
+				/** Check if the polygon 'p' contains the point 'v'. This check makes sense only if the given point
+				  * is inside the polygon plane.
+				  * The point is inside the polygon if all three cross products between the edges and the vertex-to-point
+				  * vectors are in the same direction (i.e. when looking along edges in a clockwise manner, the vertex
+				  * is always on the right side and never on the left).
+				  * The same-direction check is carried out through a dot product on the resulting cross products.
+				  */
+				inline bool polygonContainsPoint(const Polygon & p, tiny::vec3 v)
+				{
+					tiny::vec3 a = vertices[ve[p.a]].pos;
+					tiny::vec3 b = vertices[ve[p.b]].pos;
+					tiny::vec3 c = vertices[ve[p.c]].pos;
+					tiny::vec3 cra = cross(b-a, v-a);
+					tiny::vec3 crb = cross(c-b, v-b);
+					tiny::vec3 crc = cross(a-c, v-c);
+					if(dot(cra,crb)>0 && dot(cra,crc)>0) std::cout << " TopologicalMesh::findIntersectionPoint() : Polygon ("<<a<<"->"<<b<<"->"<<c<<") contains "<<v<<"!"<<std::endl;
+					return ( dot(cra, crb) > 0 && dot(cra, crc) > 0);
+				}
+
+				/** Find the point of intersection between the mesh's surface and the straight line defined
+				  * by (p + x v), with x a real number and p,v in R^3. The result is returned by reference
+				  * if any intersection is found, and if multiple intersections exist it gives the one most
+				  * close to 'p' in absolute distance. */
+				void findIntersectionPoint(tiny::vec3 & intsec, tiny::vec3 p, tiny::vec3 v)
+				{
+					for(unsigned int i = 1; i < polygons.size(); i++)
+					{
+						tiny::vec3 isecpoint = findIntersection(p, v, vertices[ve[polygons[i].a]].pos, computeNormal(polygons[i]));
+						if(polygonContainsPoint(polygons[i], isecpoint) && dist(isecpoint, p) < dist(intsec, p))
+						{
+							std::cout << " TopologicalMesh::findIntersectionPoint() : Found closer intersection at "<<isecpoint<<"..."<<std::endl;
+							intsec = isecpoint;
+						}
+					}
+				}
+
 				/** Function is virtual: derived classes may improve upon this function by rewriting it (e.g. through not calling the expensive analyseShape() function).  */
 				virtual float findFarthestPair(VertPair &farthestPair) const
 				{

@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace strata::core::intf;
 using namespace std::placeholders;
 
-float TerrainInterface::getHeightIndirect(tiny::vec2 pos)
+float TerrainInterface::getVerticalHeightIndirect(tiny::vec3 pos)
 {
-	return getHeightFromTexture(pos);
+	return getVerticalHeight(pos);
 }
 
-std::function<float(tiny::vec2)> TerrainInterface::getHeightFunc(void)
+std::function<float(tiny::vec3)> TerrainInterface::getHeightFunc(void)
 {
-	std::function<float(tiny::vec2)> func = std::bind(&TerrainInterface::getHeightIndirect, this, _1);
+	std::function<float(tiny::vec3)> func = std::bind(&TerrainInterface::getVerticalHeightIndirect, this, _1);
 	return func;
 }

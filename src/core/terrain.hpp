@@ -45,6 +45,11 @@ namespace strata
 				{
 				}
 
+				virtual float getVerticalHeight(tiny::vec3 pos)
+				{
+					return terrain.getVerticalHeight(pos);
+				}
+
 				void update(double)
 				{
 				}

@@ -26,23 +26,6 @@ namespace strata
 {
 	namespace core
 	{
-		//A simple bilinear texture sampler, which converts world coordinates to the corresponding texture coordinates on the zoomed-in terrain.
-		template<typename TextureType>
-		tiny::vec4 sampleTextureBilinear(const TextureType &texture, const tiny::vec2 &scale, const tiny::vec2 &a_pos)
-		{
-			//Sample texture at the four points surrounding pos.
-			const tiny::vec2 pos = tiny::vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(texture.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(texture.getHeight()));
-			const tiny::ivec2 intPos = tiny::ivec2(floor(pos.x), floor(pos.y));
-			const tiny::vec4 h00 = texture(intPos.x + 0, intPos.y + 0);
-			const tiny::vec4 h01 = texture(intPos.x + 0, intPos.y + 1);
-			const tiny::vec4 h10 = texture(intPos.x + 1, intPos.y + 0);
-			const tiny::vec4 h11 = texture(intPos.x + 1, intPos.y + 1);
-			const tiny::vec2 delta = tiny::vec2(pos.x - floor(pos.x), pos.y - floor(pos.y));
-			
-			//Interpolate between these four points.
-			return delta.y*(delta.x*h11 + (1.0f - delta.x)*h01) + (1.0f - delta.y)*(delta.x*h10 + (1.0f - delta.x)*h00);
-		}
-
 		namespace intf
 		{
 			/** Manage interfacing between the TerrainManager and classes that need to use the Terrain (e.g. when they need to know its height).
@@ -52,22 +35,24 @@ namespace strata
 			class TerrainInterface
 			{
 				private:
-					float getHeightIndirect(tiny::vec2 pos);
-					float getHeightFromTexture(tiny::vec2 pos)
-					{
-						return sampleTextureBilinear(*heightTexture, scale, pos).x;
-					}
+					/** Indirect function to get the vertical height at a given position. */
+					float getVerticalHeightIndirect(tiny::vec3 pos);
+
+					/** Get the vertical height at 'pos', where the vertical height is defined as the first intersection with a terrain
+					  * surface by moving straight down. The returned value is then the vertical coordinate of the point of intersection. */
+					virtual float getVerticalHeight(tiny::vec3 pos) = 0;
+//					{
+//						return sampleTextureBilinear(*heightTexture, scale, pos).x;
+//					}
 				protected:
-					tiny::draw::FloatTexture2D * heightTexture; /**< The height texture can be in the interface (rather than the TerrainManager) such that we don't need to virtualize getHeight(). */
 					const tiny::vec2 scale;
 				public:
-					TerrainInterface(void) : heightTexture(0), scale(7.0f,7.0f) {}
+					TerrainInterface(void) : scale(7.0f,7.0f) {}
 					~TerrainInterface(void) {}
 
-					float getHeight(tiny::vec3 pos) { return getHeightFromTexture( tiny::vec2(pos.x,pos.z) ); }
-					float getHeight(tiny::vec2 pos) { return getHeightFromTexture( pos ); }
+					float getHeight(tiny::vec3 pos) { return getVerticalHeight( pos ); }
 
-					std::function<float(tiny::vec2)> getHeightFunc(void);
+					std::function<float(tiny::vec3)> getHeightFunc(void);
 			};
 		} // end namespace intf
 	} // end namespace core

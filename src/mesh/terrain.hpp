@@ -31,6 +31,9 @@ namespace strata
 		typedef tiny::algo::TypeCluster<long unsigned int, Bundle> BundleTC;
 		typedef tiny::algo::TypeCluster<long unsigned int, Strip> StripTC;
 
+		typedef std::map<long unsigned int, Bundle*>::iterator BundleIterator;
+		typedef std::map<long unsigned int, Strip*>::iterator StripIterator;
+
 		/** The Terrain is the master class for an entire terrain object. It manages a set of Bundles, which are small
 		  * mesh fragments, and Layers, which are stratigraphical components of the terrain. The Bundles are joined into
 		  * Layers using Strip objects, which define the polygons required to join distinct meshes but which do not contain
@@ -184,6 +187,35 @@ namespace strata
 						std::cout << " Terrain() : Duplicating layer... "<<std::endl;
 						duplicateLayer(layers.back(), 20.0f);
 					}
+				}
+
+				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.
+				  * This procedure could be considerably more efficient if a decent degree of pre-organization
+				  * was performed, such as using a spatial cluster structure on Bundles and Strips to find
+				  * more quickly which Bundles and Strips are of interest.
+				  */
+				float getVerticalHeight(tiny::vec3 pos)
+				{
+					tiny::vec3 intsec(0.0f, pos.y-10000.0f, 0.0f);
+					for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
+					{
+						tiny::vec3 center = it->second->findCentralPoint();
+						if(calcHorizontalSeparation(pos, center) < it->second->maxVertexDistance(center)) // Check if intersection is possible
+						{
+							// Use TopologicalMesh::findIntersectionPoint to set intsec to a closer intersection point (if any).
+							it->second->findIntersectionPoint(intsec, pos, tiny::vec3(0.0f,-1.0f,0.0f));
+						}
+					}
+					for(StripIterator it = strips.begin(); it != strips.end(); it++)
+					{
+						tiny::vec3 center = it->second->findCentralPoint();
+						if(calcHorizontalSeparation(pos, center) < it->second->maxVertexDistance(center)) // Check if intersection is possible
+						{
+							// Use TopologicalMesh::findIntersectionPoint to set intsec to a closer intersection point (if any).
+							it->second->findIntersectionPoint(intsec, pos, tiny::vec3(0.0f,-1.0f,0.0f));
+						}
+					}
+					return intsec.y;
 				}
 
 				void update(void)

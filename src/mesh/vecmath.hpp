@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <cassert>
+#include <limits>
 
 #include <tiny/math/vec.h>
 
@@ -53,6 +54,45 @@ namespace strata
 			tiny::vec3 y(0.0f,	1.0f,	0.0f);
 			float angle = 1.353;
 			assert( length2(roty(v,angle) - rot(v,y,angle)) < 0.00001f ); // roty is special case of rot
+		}
+
+		/** Calculate the horizontal separation between two points. The convention, as usual, is that
+		  * the y coordinate is the vertical coordinate - consequently this coordinate is not involved
+		  * in this distance calculation. */
+		inline float calcHorizontalSeparation(const tiny::vec3 &a, const tiny::vec3 &b)
+		{
+			return sqrt( (a.x-b.x)*(a.x-b.x) + (a.z-b.z)*(a.z-b.z) );
+		}
+
+		/** Calculate the distance between two points in space. */
+		inline float dist(const tiny::vec3 &a, const tiny::vec3 &b)
+		{
+			return sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z) );
+		}
+
+		/** Find the intersection between a line and a plane. In this function we use the following convention:
+		  * - The line is defined as (p + x v), in other words the line formed by all points found by adding a
+		  *   multiple of the vector v to the position p.
+		  * - The plane is defined by the normal n and some random point z that lies on the plane.
+		  *
+		  * The vectors 'v' and 'n' do not need to be normalized.
+		  *
+		  * Note that if the line is nearly parallel to the plane the point of intersection could be ridiculously
+		  * far away. In order to avoid division by zero, we then opt to return the zero vector as intersection point
+		  * instead of some arbitrary point far away.
+		  *
+		  * The formula used is:
+		  * s_I = p + ( n.(z-p) / n.v ) * v
+		  * where '.' denotes the dot product.
+		  * Origin: https://en.wikipedia.org/wiki/Line-plane_intersection
+		  */
+		inline tiny::vec3 findIntersection(tiny::vec3 p, tiny::vec3 v, tiny::vec3 z, tiny::vec3 n)
+		{
+			float dot1 = dot(n, z-p);
+			float dot2 = dot(n, v);
+			// Very small numerators mean near-parallel lines - in this case numerical precision is poor. Then return the zero vector. */
+			if(dot2/dot1 < std::numeric_limits<float>::epsilon()) return tiny::vec3(0.0f, 0.0f, 0.0f);
+			else return (p + v*(dot1/dot2));
 		}
 	}
 }
