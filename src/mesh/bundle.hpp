@@ -72,6 +72,10 @@ namespace strata
 				  * is really in this Bundle are not performed. */
 				virtual Bundle * getVertexOwner(const xVert &) { return this; }
 
+				/** Get the vertex index of a vertex in its owning Bundle. Since 'this' owns all of the verticese
+				  * indexed by it, the vertex index itself is returned. */
+				virtual xVert getRemoteVertexIndex(const xVert & v) { return v; }
+
 				Bundle(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Bundle> &tc, core::intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Bundle>(meshId, this, tc),
 					Mesh<Vertex>(_renderer),

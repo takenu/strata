@@ -38,7 +38,9 @@ namespace strata
 				Bundle * owner; /**< The Bundle that owns this Vertex. */
 				xVert remoteIndex; /**< The index of this Vertex in its owning Bundle. */
 			public:
-				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. */
+				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
+				  * This form allows construction from remote index + remote bundle + position. This can be used
+				  * when splitting meshes through the TopologicalMesh class. */
 				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) : Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex)
 				{
 				}
@@ -108,10 +110,18 @@ namespace strata
 					}
 				}
 
+				/** Find the owning Bundle of the vertex indexed by 'v'. Originally declared as pure virtual in the Mesh class. */
 				virtual Bundle * getVertexOwner(const xVert &v)
 				{
 					assert(v < ve.size());
 					return vertices[ve[v]].getOwningBundle();
+				}
+
+				/** Find the remote index of a vertex indexed by 'v'. Originally declared as a pure virtual function in the Mesh class. */
+				virtual xVert getRemoteVertexIndex(const xVert &v)
+				{
+					assert(v < ve.size());
+					return vertices[ve[v]].getRemoteIndex();
 				}
 
 				/** Find out whether a set of vertices is adjacent to this mesh. The vertices are 'adjacent' if at least one
@@ -253,6 +263,7 @@ namespace strata
 				  * - whether all vertices of this Strip refer to a Bundle that is in the adjacentBundles list,
 				  * - whether there are no polygons for which all three vertices are borrowed from the same Bundle,
 				  * - whether the referred Bundle actually contains a valid vertex referenced by the Strip vertex's remoteIndex,
+				  * - whether the referred vertex has the same location as the Strip's vertex,
 				  * - whether the Bundle also has a reference to this Strip.
 				  */
 				virtual bool checkAdjacentMeshes(void) const;

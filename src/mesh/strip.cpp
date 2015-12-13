@@ -135,6 +135,13 @@ bool Strip::checkAdjacentMeshes(void) const
 			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
+		else if( tiny::length(vertices[i].pos - vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex())) > 0.01)
+		{
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Vertex "<<i<<" has position "<<vertices[i].pos<<" but remote vertex "<<vertices[i].getRemoteIndex()<<" has position "
+				<< vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex())<<"!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
 	}
 	for(unsigned int i = 1; i < polygons.size(); i++)
 	{

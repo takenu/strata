@@ -33,6 +33,16 @@ namespace strata
 	{
 		class Layer; // for parentLayer, a pointer to the Layer to which this Mesh belongs
 
+		/** A class to contain the parameters for constructing remote vertices for Strip objects. */
+		class RemoteVertex
+		{
+			public:
+				Bundle * owner;
+				xVert index;
+				tiny::vec3 pos;
+				RemoteVertex(Bundle * b, xVert v, tiny::vec3 p) : owner(b), index(v), pos(p) {}
+		};
+
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex. It 
 		  * needs a constructor that takes the form VertexType(float, float, float).
@@ -97,6 +107,10 @@ namespace strata
 				  * Strip, returns the owning Bundle of the vertex v instead. */
 				virtual Bundle * getVertexOwner(const xVert &v) = 0;
 
+				/** Get the remote index of a vertex. If called on a Bundle, returns its argument. If called on a
+				  * Strip, returns the remote index of the vertex in the Bundle returned by getVertexOwner. */
+				virtual xVert getRemoteVertexIndex(const xVert &v) = 0;
+
 				/** Delete a vertex. This function is in principle unsafe, may result in invalid meshes, and does not delete its adjacent polygons. */
 				void delVertex(xVert j)
 				{
@@ -129,7 +143,7 @@ namespace strata
 				}
 
 				/** Add a polygon using vertex indices rather than vertex references. */
-				bool addPolygonFromVertexIndices(const xVert & _a, const xVert & _b, const xVert & _c)
+				bool addPolygonFromVertexIndices(xVert _a, xVert _b, xVert _c)
 				{
 					return addPolygon(vertices[ve[_a]], vertices[ve[_b]], vertices[ve[_c]]); // Add polygon using vertices from this mesh.
 				}
@@ -162,15 +176,13 @@ namespace strata
 				}
 
 				/** Add a polygon and, if they do not exist yet, add the vertices as well. */
-				template <typename AnotherVertexType>
-				bool addPolygonWithVertices(const AnotherVertexType &a, Bundle * _abundle, const AnotherVertexType &b, Bundle * _bbundle,
-						const AnotherVertexType &c, Bundle * _cbundle, float relativeTolerance = 0.001)
+				bool addPolygonWithVertices(RemoteVertex a, RemoteVertex b, RemoteVertex c, float relativeTolerance = 0.001)
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
-					xVert _a = addIfNewVertex(VertexType(a,_abundle), tolerance);
-					xVert _b = addIfNewVertex(VertexType(b,_bbundle), tolerance);
-					xVert _c = addIfNewVertex(VertexType(c,_cbundle), tolerance);
+					xVert _a = addIfNewVertex(VertexType(a.pos, a.owner, a.index), tolerance);
+					xVert _b = addIfNewVertex(VertexType(b.pos, b.owner, b.index), tolerance);
+					xVert _c = addIfNewVertex(VertexType(c.pos, c.owner, c.index), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
@@ -679,13 +691,17 @@ namespace strata
 							assert(fvert.find(a) != fvert.end() || gvert.find(a) != gvert.end()); // Make sure a/b/c are at least somewhere
 							assert(fvert.find(b) != fvert.end() || gvert.find(b) != gvert.end());
 							assert(fvert.find(c) != fvert.end() || gvert.find(c) != gvert.end());
-							VertexType & _a = (fvert.find(a) == fvert.end() ? g->vertices[g->ve[gvert.at(a)]] : f->vertices[f->ve[fvert.at(a)]]);
-							VertexType & _b = (fvert.find(b) == fvert.end() ? g->vertices[g->ve[gvert.at(b)]] : f->vertices[f->ve[fvert.at(b)]]);
-							VertexType & _c = (fvert.find(c) == fvert.end() ? g->vertices[g->ve[gvert.at(c)]] : f->vertices[f->ve[fvert.at(c)]]);
 							Bundle * _abundle = (fvert.find(a) == fvert.end() ? g->getVertexOwner(gvert.at(a)) : f->getVertexOwner(fvert.at(a)));
 							Bundle * _bbundle = (fvert.find(b) == fvert.end() ? g->getVertexOwner(gvert.at(b)) : f->getVertexOwner(fvert.at(b)));
 							Bundle * _cbundle = (fvert.find(c) == fvert.end() ? g->getVertexOwner(gvert.at(c)) : f->getVertexOwner(fvert.at(c)));
-							s->addPolygonWithVertices(_a, _abundle, _b, _bbundle, _c, _cbundle); // Add to Stitch, and specify which vertices from which meshes it is using
+							xVert _a = (fvert.find(a) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(a)) : f->getRemoteVertexIndex(fvert.at(a)));
+							xVert _b = (fvert.find(b) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(b)) : f->getRemoteVertexIndex(fvert.at(b)));
+							xVert _c = (fvert.find(c) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(c)) : f->getRemoteVertexIndex(fvert.at(c)));
+							tiny::vec3 ap = vertices[ve[a]].pos;
+							tiny::vec3 bp = vertices[ve[b]].pos;
+							tiny::vec3 cp = vertices[ve[c]].pos;
+							// Add to Stitch, and specify which vertices from which meshes it is using
+							s->addPolygonWithVertices(RemoteVertex(_abundle, _a, ap), RemoteVertex(_bbundle, _b, bp), RemoteVertex(_cbundle, _c, cp));
 						}
 					}
 				}
