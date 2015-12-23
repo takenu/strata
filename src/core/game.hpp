@@ -60,6 +60,7 @@ namespace strata
 				{
 					registerLuaFunctions();
 					composeWorld();
+					uiManager.setText();
 					mainLoop();
 				}
 
