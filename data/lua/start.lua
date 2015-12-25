@@ -39,6 +39,8 @@ end
 
 -- The startup of Lua as called from the main executable.
 function start()
+	-- Load sky before UI, otherwise UI goes behind sky
 	loadscr("sky/load.lua"); load_sky()
+	loadscr("ui/load.lua"); load_ui()
 end
 

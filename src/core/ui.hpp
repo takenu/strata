@@ -41,27 +41,14 @@ namespace strata
 				{
 				}
 
-				void setText(void)
-				{
-					fontTexture = new tiny::draw::IconTexture2D(512,512);
-					fontTexture->packIcons(tiny::img::io::readFont(DATA_DIRECTORY + "font/OpenBaskerville-0.0.75.ttf",48));
-					textBox = new tiny::draw::TextBox(fontTexture, 0.2, 2);
-					renderer->addScreenRenderable(textBox->getRenderable(), false, false, tiny::draw::BlendMix);
-					textBox->setBoxDimensions(-1.0f,-0.8f,0.0f,-1.0f);
-					std::string str("Chathran Strata");
-					textBox->addTextFragment(str, tiny::draw::Colour(180,255,180));
-					tiny::draw::Renderable * oldTextBox = 0;
-					tiny::draw::Renderable * newTextBox = textBox->reserve(oldTextBox);
-					if(oldTextBox) renderer->freeScreenRenderable(oldTextBox);
-					if(newTextBox)
-						renderer->addScreenRenderable(newTextBox, false, false, tiny::draw::BlendMix);
-					else std::cout << " UIManager() : No new renderable! "<<std::endl;
-					textBox->setText();
-				}
-
 				void update(double)
 				{
 				}
+
+				/** Register Lua functions used for composing the UI. */
+				void registerLuaFunctions(sel::State & luaState);
+
+				void loadUI(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 		};
 	}
 }

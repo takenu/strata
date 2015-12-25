@@ -60,7 +60,6 @@ namespace strata
 				{
 					registerLuaFunctions();
 					composeWorld();
-					uiManager.setText();
 					mainLoop();
 				}
 
@@ -70,6 +69,7 @@ namespace strata
 				void registerLuaFunctions(void)
 				{
 					skyManager.registerLuaFunctions(luaState);
+					uiManager.registerLuaFunctions(luaState);
 				}
 
 				~Game(void)
