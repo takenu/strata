@@ -30,32 +30,71 @@ using namespace strata::core;
 void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,
-			"loadUI", &UIManager::loadUI);
+			"loadFont", &UIManager::loadFont,
+			"loadMonitorWindow", &UIManager::loadMonitorWindow
+			);
 }
 
-void UIManager::loadUI(std::string fontTex, float fontSize, float fontAspectRatio,
+void UIManager::loadMonitorWindow(float left, float top, float right, float bottom,
+		unsigned int r, unsigned int g, unsigned int b, std::string title, bool showfps)
+{
+	if(left < -1.0f || left > 1.0f || top < -1.0f || top > 1.0f
+			|| right < -1.0f || right > 1.0f || bottom < -1.0f || bottom > 1.0f)
+	{
+		std::cerr << " UIManager::loadMonitorWindow() : Window box "<<left<<","<<top<<","
+			<<right<<","<<bottom<<" is invalid! "<<std::endl;
+		return;
+	}
+//	std::cout << " UIManager::loadMonitorWindow() : Monitor "<<left<<","<<top<<","
+//			<<right<<","<<bottom<<" to be created with title "<<title
+//			<<" and colour "<<r<<","<<g<<","<<b<<"... "<<std::endl;
+
+	monitor = new ui::Monitor(fontTexture, defaultFontSize, defaultAspectRatio,
+			tiny::draw::Colour(static_cast<unsigned char>(r),
+				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title, showfps);
+	monitor->setBoxDimensions(left, top, right, bottom);
+	renderer->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
+}
+
+void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRatio,
 		unsigned int fontPixels, unsigned int fontResolution)
 {
 	if(fontTex == "" || fontSize < 0.01f || fontSize > 1.0f || fontAspectRatio < 0.2f
 			|| fontAspectRatio > 10.0f || fontPixels < 12 || fontPixels > 1024
 			|| fontResolution < 128 || fontResolution > 16384)
 	{
-		std::cerr << " UIManager::loadUI() : ERROR: Lua call with invalid arguments: ";
+		std::cerr << " UIManager::loadFont() : ERROR: Lua call with invalid arguments: ";
 		std::cerr << fontTex << ", " << fontSize << ", " << fontAspectRatio << ", ";
 		std::cerr << fontPixels << ", " << fontResolution << std::endl;
 	}
 	fontTexture = new tiny::draw::IconTexture2D(fontResolution,fontResolution);
 	fontTexture->packIcons(tiny::img::io::readFont(DATA_DIRECTORY + "font/" + fontTex,fontPixels));
-	textBox = new tiny::draw::TextBox(fontTexture, fontSize, fontAspectRatio);
-	renderer->addScreenRenderable(textBox->getRenderable(), false, false, tiny::draw::BlendMix);
-	textBox->setBoxDimensions(-1.0f,1.0f,0.0f,0.8f);
-	std::string str("Chathran Strata");
-	textBox->addTextFragment(str, tiny::draw::Colour(180,255,180));
+	if(defaultFontSize < 0.02f)
+	{
+		// If no defaults yet, use the first loaded Font as default font.
+		defaultFontSize = fontSize;
+		defaultAspectRatio = fontAspectRatio;
+	}
+}
+
+void UIManager::reserve(ui::Window * window)
+{
 	tiny::draw::Renderable * oldTextBox = 0;
-	tiny::draw::Renderable * newTextBox = textBox->reserve(oldTextBox);
+	tiny::draw::Renderable * newTextBox = window->reserve(oldTextBox);
 	if(oldTextBox) renderer->freeScreenRenderable(oldTextBox);
 	if(newTextBox)
+	{
 		renderer->addScreenRenderable(newTextBox, false, false, tiny::draw::BlendMix);
-	else std::cout << " UIManager() : No new renderable! "<<std::endl;
-	textBox->setText();
+	}
+	else if(oldTextBox) std::cout << " UIManager::reserve() : ERROR: No new renderable! "<<std::endl;
+}
+
+void UIManager::update(double dt)
+{
+	if(monitor)
+	{
+		monitor->update(dt);
+		reserve(monitor);
+		monitor->setText();
+	}
 }

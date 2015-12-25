@@ -7,7 +7,7 @@ end
 SkyBox = {
 	cubemeshsize = 1.0e6,
 	boxtexsize = 16,
-	gradtex = ""
+	gradtex = "",
 }
 
 function SkyBox:new(o)

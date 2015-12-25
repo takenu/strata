@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/textbox.h>
 #include <tiny/img/io/image.h>
 
+#include "../ui/monitor.hpp"
+
 #include "interface/appl.hpp"
 #include "interface/render.hpp"
 
@@ -35,20 +37,27 @@ namespace strata
 				intf::RenderInterface * renderer;
 
 				tiny::draw::IconTexture2D * fontTexture;
-				tiny::draw::TextBox * textBox;
+				std::vector<ui::Window*> windows;
+				ui::Monitor * monitor;
+				float defaultFontSize;
+				float defaultAspectRatio;
+
+				/** Reserve enough space for the Window to draw all of its text. */
+				void reserve(ui::Window * window);
 			public:
-				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) : applInterface(_appl), renderer(_renderer), fontTexture(0), textBox(0)
+				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) : applInterface(_appl),
+					renderer(_renderer), fontTexture(0), monitor(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
 
-				void update(double)
-				{
-				}
+				void update(double);
 
 				/** Register Lua functions used for composing the UI. */
 				void registerLuaFunctions(sel::State & luaState);
 
-				void loadUI(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
+				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
+
+				void loadMonitorWindow(float left, float top, float right, float bottom, unsigned int red, unsigned int green, unsigned int blue, std::string text, bool showfps);
 		};
 	}
 }
