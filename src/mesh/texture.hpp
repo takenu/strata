@@ -24,7 +24,7 @@ namespace strata
 {
 	namespace mesh
 	{
-		inline tiny::draw::RGBTexture2D * createTestTexture(const unsigned int &size = 512, const unsigned char &r = 255, const unsigned char &g = 255, const unsigned char &b = 255)
+		inline tiny::draw::RGBTexture2D * createTestTexture(const unsigned int &size = 64, const unsigned char &r = 255, const unsigned char &g = 255, const unsigned char &b = 255)
 		{
 			tiny::img::Image image(size, size);
 			unsigned char * data = &image.data[0];

@@ -52,6 +52,7 @@ namespace strata
 
 				void update(double)
 				{
+					terrain.update();
 				}
 		};
 	}

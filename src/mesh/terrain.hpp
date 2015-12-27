@@ -45,6 +45,8 @@ namespace strata
 				std::vector<Layer *> layers;
 				core::intf::RenderInterface * renderer;
 
+//				tiny::draw::RGBTexture2D * texture;
+
 				long unsigned int bundleCounter;
 				long unsigned int stripCounter;
 				BundleTC bundles;
@@ -93,6 +95,17 @@ namespace strata
 					}
 					if(!meshesAreConsistent) std::cout << " Terrain::checkMeshConsistency() : WARNING: Consistency checks on meshes FAILED; one or more meshes violate requirements! "<<std::endl;
 					return meshesAreConsistent;
+				}
+
+				/** Calculate the number of bytes of memory used. */
+				long unsigned int usedMemory(void)
+				{
+					long unsigned int nbytes = 0;
+					for(std::map<long unsigned int, Bundle*>::const_iterator it = bundles.begin(); it != bundles.end(); it++)
+						nbytes += it->second->usedMemory();
+					for(std::map<long unsigned int, Strip*>::const_iterator it = strips.begin(); it != strips.end(); it++)
+						nbytes += it->second->usedMemory();
+					return nbytes;
 				}
 
 				/** Duplicate an existing layer, resulting in a new layer at a given height above the old one.
@@ -144,13 +157,11 @@ namespace strata
 					for(std::map<Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
 					{
 						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->initMesh();
 						it->second->resetTexture(it->first->getTexture());
 					}
 					for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 					{
 						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->initMesh();
 						it->second->resetTexture(it->first->getTexture());
 					}
 					// Move all vertices of the Mesh a fixed distance along the direction of their respective normals.
@@ -168,7 +179,7 @@ namespace strata
 					strips((long unsigned int)(-1), "StripTC")
 				{
 					masterLayer = new MasterLayer();
-					masterLayer->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 100, 0.0f);
+					masterLayer->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 300, 0.0f);
 					for(unsigned int i = 0; i < 6; i++)
 					{
 						std::cout << " Terrain() : Splitting bundles... "<<std::endl;
@@ -182,10 +193,10 @@ namespace strata
 					}
 					std::cout << " Terrain() : Duplicating layer... "<<std::endl;
 					duplicateLayer(masterLayer, 50.0f);
-					for(unsigned int i = 0; i < 3; i++)
+					for(unsigned int i = 0; i < 20; i++)
 					{
 						std::cout << " Terrain() : Duplicating layer... "<<std::endl;
-						duplicateLayer(layers.back(), 20.0f);
+						duplicateLayer(layers.back(), 5.0f);
 					}
 				}
 
@@ -220,6 +231,7 @@ namespace strata
 
 				void update(void)
 				{
+					std::cout << " Terrain::update() : Using "<<usedMemory()<<" bytes of memory... "<<std::endl;
 				}
 
 				~Terrain(void)

@@ -27,6 +27,7 @@ void DrawableMesh::initMesh(void)
 	if(renderMesh)
 	{
 		std::cout << " DrawableMesh::initMesh() : WARNING: Attempt to re-initialize mesh! "<<std::endl;
+		assert(!renderMesh);
 		return;
 	}
 	renderMesh = new tiny::draw::StaticMesh( convertToMesh() );
@@ -36,21 +37,27 @@ void DrawableMesh::initMesh(void)
 
 void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
 {
-	delete texture;
+	if(texture) delete texture;
 	texture = createTestTexture(_size, _r, _g, _b);
-	renderer->freeWorldRenderable(renderMesh);
-	delete renderMesh;
-	renderMesh = 0;
+	if(renderMesh)
+	{
+		renderer->freeWorldRenderable(renderMesh);
+		delete renderMesh;
+		renderMesh = 0;
+	}
 	initMesh();
 }
 
 void DrawableMesh::resetTexture(const tiny::draw::RGBTexture2D & _texture)
 {
-	delete texture;
+	if(texture) delete texture;
 	texture = new tiny::draw::RGBTexture2D(_texture); // Use copy construction
-	renderer->freeWorldRenderable(renderMesh);
-	delete renderMesh;
-	renderMesh = 0;
+	if(renderMesh)
+	{
+		renderer->freeWorldRenderable(renderMesh);
+		delete renderMesh;
+		renderMesh = 0;
+	}
 	initMesh();
 }
 

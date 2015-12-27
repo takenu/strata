@@ -65,6 +65,17 @@ namespace strata
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			public:
+				unsigned int usedMemory(void) const
+				{
+					return vertices.size()*sizeof(Vertex) + polygons.size()*sizeof(Polygon)
+						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly);
+				}
+
+				unsigned int numberOfVertices(void) const
+				{
+					return vertices.size();
+				}
+
 				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
 
 				/** Get the owning bundle of a Vertex. Since Bundles are always owner of vertices

@@ -51,8 +51,8 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 
 	f->initMesh();
 	g->initMesh();
-	f->resetTexture(scaleTexture, 250, 100, 0);
-	g->resetTexture(scaleTexture, 250, 200, 100);
+	f->resetTexture(sizeTexture, 250, 100, 0);
+	g->resetTexture(sizeTexture, 250, 200, 100);
 
 	// Copy the references to all adjacent meshes of 'this', when required.
 	// This copying is done both ways: the adjacent mesh is added to the newly added one,

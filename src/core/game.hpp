@@ -100,6 +100,7 @@ namespace strata
 						updateCamera(dt);
 						renderManager.update(dt);
 						uiManager.update(dt);
+						terrainManager.update(dt);
 						skyManager.update(dt);
 						applManager.paint();
 					}

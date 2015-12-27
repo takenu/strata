@@ -40,12 +40,14 @@ namespace strata
 			protected:
 				core::intf::RenderInterface * renderer;
 				tiny::draw::StaticMesh * renderMesh;
+				unsigned int sizeTexture;
 				tiny::draw::RGBTexture2D * texture;
 			public:
 				DrawableMesh(core::intf::RenderInterface * _renderer) :
 					renderer(_renderer),
 					renderMesh(0),
-					texture(createTestTexture(512,255,0,0))
+					sizeTexture(64),
+					texture(createTestTexture(sizeTexture,255,0,0))
 				{
 				}
 

@@ -142,6 +142,17 @@ namespace strata
 				{
 				}
 
+				unsigned int usedMemory(void) const
+				{
+					return vertices.size()*sizeof(StripVertex) + polygons.size()*sizeof(Polygon)
+						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly);
+				}
+
+				unsigned int numberOfVertices(void) const
+				{
+					return vertices.size();
+				}
+
 				/** Re-calculate the Strip's vertex positions, bringing them back in line with the positions of the Bundle vertices
 				  * that they were based upon. */
 				void recalculateVertexPositions(void);

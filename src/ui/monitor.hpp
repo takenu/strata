@@ -49,7 +49,6 @@ namespace strata
 					clear();
 					if(title.length() > 0)
 					{
-						std::cout << " Add title "<<title<<" with colour "<<getColour().toVector()<<"..."<<std::endl;
 						addTextFragment(title, getColour());
 						addNewline();
 					}
