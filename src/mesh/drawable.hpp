@@ -40,14 +40,12 @@ namespace strata
 			protected:
 				core::intf::RenderInterface * renderer;
 				tiny::draw::StaticMesh * renderMesh;
-				unsigned int sizeTexture;
 				tiny::draw::RGBTexture2D * texture;
 			public:
 				DrawableMesh(core::intf::RenderInterface * _renderer) :
 					renderer(_renderer),
 					renderMesh(0),
-					sizeTexture(64),
-					texture(createTestTexture(sizeTexture,255,0,0))
+					texture(0)
 				{
 				}
 
@@ -55,19 +53,15 @@ namespace strata
 				  * convertToMesh(). It also sets the mesh as renderable by the WorldRenderer. */
 				void initMesh(void);
 
-				/** Re-set the texture used for drawing the mesh. This recreates the used texture as a
-				  * test texture shaded with RGB values as specified in the arguments. */
-				void resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b);
-
 				/** Create a StaticMesh object (defined in the tiny-game-engine library) to visualise the
 				  * DrawableMesh object. The deriving class must specify how it needs to be rendered. */
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const = 0;
 
 				/** Get a const reference to the Drawable's texture, in order to allow making a copy of it. */
-				const tiny::draw::RGBTexture2D & getTexture(void) const { return *texture; }
+				tiny::draw::RGBTexture2D * getTexture(void) { return texture; }
 
 				/** Initialize the texture from another texture. */
-				void resetTexture(const tiny::draw::RGBTexture2D & _texture);
+				void resetTexture(tiny::draw::RGBTexture2D * _texture);
 
 				virtual ~DrawableMesh(void);
 		};

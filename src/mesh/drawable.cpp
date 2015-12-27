@@ -27,7 +27,11 @@ void DrawableMesh::initMesh(void)
 	if(renderMesh)
 	{
 		std::cout << " DrawableMesh::initMesh() : WARNING: Attempt to re-initialize mesh! "<<std::endl;
-		assert(!renderMesh);
+		return;
+	}
+	else if(!texture)
+	{
+		std::cout << " DrawableMesh::initMesh() : ERROR: Cannot initialize Mesh without Texture! "<<std::endl;
 		return;
 	}
 	renderMesh = new tiny::draw::StaticMesh( convertToMesh() );
@@ -35,36 +39,18 @@ void DrawableMesh::initMesh(void)
 	renderer->addWorldRenderable(renderMesh);
 }
 
-void DrawableMesh::resetTexture(unsigned int _size, unsigned char _r, unsigned char _g, unsigned char _b)
+void DrawableMesh::resetTexture(tiny::draw::RGBTexture2D * _texture)
 {
-	if(texture) delete texture;
-	texture = createTestTexture(_size, _r, _g, _b);
+	texture = _texture;
 	if(renderMesh)
 	{
-		renderer->freeWorldRenderable(renderMesh);
-		delete renderMesh;
-		renderMesh = 0;
+		renderMesh->setDiffuseTexture(*texture);
 	}
-	initMesh();
-}
-
-void DrawableMesh::resetTexture(const tiny::draw::RGBTexture2D & _texture)
-{
-	if(texture) delete texture;
-	texture = new tiny::draw::RGBTexture2D(_texture); // Use copy construction
-	if(renderMesh)
-	{
-		renderer->freeWorldRenderable(renderMesh);
-		delete renderMesh;
-		renderMesh = 0;
-	}
-	initMesh();
+	else initMesh();
 }
 
 DrawableMesh::~DrawableMesh(void)
 {
 	if(renderMesh)
 		renderer->freeWorldRenderable(renderMesh);
-	if(texture)
-		delete texture;
 }

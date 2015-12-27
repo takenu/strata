@@ -49,10 +49,8 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	f->setParentLayer(parentLayer);
 	g->setParentLayer(parentLayer);
 
-	f->initMesh();
-	g->initMesh();
-	f->resetTexture(sizeTexture, 250, 100, 0);
-	g->resetTexture(sizeTexture, 250, 200, 100);
+	f->resetTexture(texture);
+	g->resetTexture(texture);
 
 	// Copy the references to all adjacent meshes of 'this', when required.
 	// This copying is done both ways: the adjacent mesh is added to the newly added one,
@@ -72,8 +70,6 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 		}
 	}
 
-//	f->addAdjacentMesh(g); <-- Not necessary, Strips do not use vertices from other Strips but only from Bundles
-//	g->addAdjacentMesh(f);
 	return true;
 }
 

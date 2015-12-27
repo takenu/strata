@@ -68,6 +68,7 @@ namespace strata
 			protected:
 				std::vector<Bundle*> bundles; /** The bundles forming this Layer. */
 //				double thickness; <-- Thickness may vary, do not define per layer
+				tiny::draw::RGBTexture2D * texture; /** Texture of the whole layer. */
 			public:
 				Layer(void)
 				{
@@ -124,6 +125,16 @@ namespace strata
 					bundles.push_back(bundle);
 					return bundle;
 				}
+
+				void setTexture(tiny::draw::RGBTexture2D * _texture)
+				{
+					texture = _texture;
+				}
+
+				tiny::draw::RGBTexture2D * getTexture(void)
+				{
+					return texture;
+				}
 		};
 
 		/** A MasterLayer is a special layer that underlies all other layers. It generates the primary deformation features of
@@ -145,6 +156,8 @@ namespace strata
 				{
 					Bundle * bundle = createBundle(makeNewBundle);
 					bundle->createFlatLayer(size, ndivs, height);
+					texture = createTestTexture(64, 255, 0, 0);
+					bundle->resetTexture(texture);
 					bundle->initMesh(); // uses mesh::Drawable::initMesh() which calls TopologicalMesh::convertToMesh()
 					bundles.push_back(bundle);
 				}
