@@ -68,7 +68,7 @@ namespace strata
 				unsigned int usedMemory(void) const
 				{
 					return vertices.size()*sizeof(Vertex) + polygons.size()*sizeof(Polygon)
-						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly);
+						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
 
 				unsigned int numberOfVertices(void) const

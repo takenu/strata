@@ -158,7 +158,6 @@ namespace strata
 					bundle->createFlatLayer(size, ndivs, height);
 					texture = createTestTexture(64, 255, 0, 0);
 					bundle->resetTexture(texture);
-					bundle->initMesh(); // uses mesh::Drawable::initMesh() which calls TopologicalMesh::convertToMesh()
 					bundles.push_back(bundle);
 				}
 		};
