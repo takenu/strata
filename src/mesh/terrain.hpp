@@ -108,6 +108,17 @@ namespace strata
 					return nbytes;
 				}
 
+				/** Calculate the number of bytes of memory used. */
+				long unsigned int usedCapacity(void)
+				{
+					long unsigned int nbytes = 0;
+					for(std::map<long unsigned int, Bundle*>::const_iterator it = bundles.begin(); it != bundles.end(); it++)
+						nbytes += it->second->usedCapacity();
+					for(std::map<long unsigned int, Strip*>::const_iterator it = strips.begin(); it != strips.end(); it++)
+						nbytes += it->second->usedCapacity();
+					return nbytes;
+				}
+
 				/** Duplicate an existing layer, resulting in a new layer at a given height above the old one.
 				  * The positioning of the vertices of the new layer is using the normals from the old layer's vertices.
 				  * The Bundle/Strip structure of the new layer will mirror the structure of the underlying layer. Note that
@@ -232,7 +243,7 @@ namespace strata
 
 				void update(void)
 				{
-					std::cout << " Terrain::update() : Using "<<usedMemory()<<" bytes of memory... "<<std::endl;
+					std::cout << " Terrain::update() : Using "<<usedMemory()<<" bytes of memory, with "<<usedCapacity()<<" allocated... "<<std::endl;
 				}
 
 				~Terrain(void)

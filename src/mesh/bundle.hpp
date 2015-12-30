@@ -71,6 +71,12 @@ namespace strata
 						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
 
+				unsigned int usedCapacity(void) const
+				{
+					return vertices.capacity()*sizeof(Vertex) + polygons.capacity()*sizeof(Polygon)
+						+ ve.capacity()*sizeof(xVert) + po.capacity()*sizeof(xPoly) + renderMesh->bufferSize();
+				}
+
 				unsigned int numberOfVertices(void) const
 				{
 					return vertices.size();
