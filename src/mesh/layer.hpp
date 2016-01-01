@@ -48,7 +48,7 @@ namespace strata
 			private:
 				Strip strip;
 			public:
-				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, core::intf::RenderInterface * _renderer) :
+				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer) :
 					strip(id, tc, _renderer)
 				{
 				}

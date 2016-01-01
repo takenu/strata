@@ -6,8 +6,11 @@ function ui_ui(path)
 	ui.loadFont(v:collectArgs(path))
 	local w = UIMonitorWindow:new{
 		title = "Chathran Strata",
-		fps = true,
+		fps = "true",
+		memusage = "true",
 	}
 	ui.loadMonitorWindow(w:collectArgs(path))
+	ui.loadMonitorWindowAttribute("fps", w.fps)
+	ui.loadMonitorWindowAttribute("memusage", w.memusage)
 end
 

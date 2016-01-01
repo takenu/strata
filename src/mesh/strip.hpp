@@ -136,7 +136,7 @@ namespace strata
 				}
 			protected:
 			public:
-				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, core::intf::RenderInterface * _renderer) :
+				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
 					Mesh<StripVertex>(_renderer)
 				{

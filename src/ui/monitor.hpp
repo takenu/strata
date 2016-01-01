@@ -30,12 +30,14 @@ namespace strata
 			private:
 				std::string title;
 				bool showFramesPerSecond;
+				bool showMemoryUsage;
 			public:
 				Monitor(tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
-						std::string _title = "", bool _showfps = false) :
+						std::string _title = "") :
 					Window(_fontTexture, _fontSize, _aspectRatio, _colour),
-					title(_title), showFramesPerSecond(_showfps)
+					title(_title), showFramesPerSecond(false),
+					showMemoryUsage(false)
 				{
 				}
 
@@ -60,6 +62,12 @@ namespace strata
 						addNewline();
 					}
 				}
+
+				/** Show/hide frames per second. */
+				void displayFPS(bool b) { showFramesPerSecond = b; }
+
+				/** Show/hide memory usage. */
+				void displayMemoryUsage(bool b) { showMemoryUsage = b; }
 		};
 	} // end namespace ui
 } // end namespace strata

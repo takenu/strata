@@ -571,7 +571,7 @@ namespace strata
 					return computePolygonSkew(polygons[po[p]]);
 				}
 
-				TopologicalMesh(core::intf::RenderInterface * _renderer) :
+				TopologicalMesh(intf::RenderInterface * _renderer) :
 					MeshInterface(_renderer),
 					scaleTexture(1.0f),
 					hasDesignatedEdgeVertices(false)

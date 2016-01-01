@@ -1,4 +1,4 @@
--- Load all vegetation.
+-- Load UI elements.
 function load_ui()
 	loadobj("ui/ui.lua")
 end
@@ -46,6 +46,6 @@ end
 
 function UIMonitorWindow:collectArgs(path)
 	local prefix = findprefix(path)
-	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.title, self.fps
+	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.title
 end
 

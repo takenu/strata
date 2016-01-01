@@ -15,28 +15,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
 
-#include <tiny/os/sdlapplication.h>
+#include "terrain.hpp"
 
-namespace strata
+using namespace strata::intf;
+using namespace std::placeholders;
+
+float TerrainInterface::getVerticalHeightIndirect(tiny::vec3 pos)
 {
-	namespace core
-	{
-		namespace intf
-		{
-			class ApplInterface
-			{
-				private:
-				public:
-					ApplInterface(void) {}
-					~ApplInterface(void) {}
+	return getVerticalHeight(pos);
+}
 
-					virtual bool isRunning(void) const = 0;
-					virtual int getScreenWidth(void) const = 0;
-					virtual int getScreenHeight(void) const = 0;
-					virtual tiny::os::MouseState getMouseState(const bool &) const = 0;
-			};
-		}
-	}
+std::function<float(tiny::vec3)> TerrainInterface::getHeightFunc(void)
+{
+	std::function<float(tiny::vec3)> func = std::bind(&TerrainInterface::getVerticalHeightIndirect, this, _1);
+	return func;
 }

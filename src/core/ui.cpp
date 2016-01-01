@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <selene.h>
 
+#include "../tools/convertstring.hpp"
+
 #include "ui.hpp"
 
 using namespace strata::core;
@@ -31,12 +33,13 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,
 			"loadFont", &UIManager::loadFont,
-			"loadMonitorWindow", &UIManager::loadMonitorWindow
+			"loadMonitorWindow", &UIManager::loadMonitorWindow,
+			"loadMonitorWindowAttribute", &UIManager::loadMonitorWindowAttribute
 			);
 }
 
 void UIManager::loadMonitorWindow(float left, float top, float right, float bottom,
-		unsigned int r, unsigned int g, unsigned int b, std::string title, bool showfps)
+		unsigned int r, unsigned int g, unsigned int b, std::string title)
 {
 	if(left < -1.0f || left > 1.0f || top < -1.0f || top > 1.0f
 			|| right < -1.0f || right > 1.0f || bottom < -1.0f || bottom > 1.0f)
@@ -51,9 +54,15 @@ void UIManager::loadMonitorWindow(float left, float top, float right, float bott
 
 	monitor = new ui::Monitor(fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(r),
-				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title, showfps);
+				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title);
 	monitor->setBoxDimensions(left, top, right, bottom);
 	renderer->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
+}
+
+void UIManager::loadMonitorWindowAttribute(std::string attribute, std::string value)
+{
+	if(attribute == "fps") monitor->displayFPS( tool::toBoolean(value) );
+	else if(attribute == "memusage") monitor->displayMemoryUsage( tool::toBoolean(value) );
 }
 
 void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRatio,

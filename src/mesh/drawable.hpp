@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
 
-#include "../core/interface/render.hpp"
+#include "../interface/render.hpp"
 
 #include "texture.hpp"
 
@@ -38,11 +38,11 @@ namespace strata
 			private:
 				DrawableMesh(const DrawableMesh &); /**< Nowhere defined - forbid duplication of DrawableMeshes. */
 			protected:
-				core::intf::RenderInterface * renderer;
+				intf::RenderInterface * renderer;
 				tiny::draw::StaticMesh * renderMesh;
 				tiny::draw::RGBTexture2D * texture;
 			public:
-				DrawableMesh(core::intf::RenderInterface * _renderer) :
+				DrawableMesh(intf::RenderInterface * _renderer) :
 					renderer(_renderer),
 					renderMesh(0),
 					texture(0)

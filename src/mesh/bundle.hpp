@@ -93,7 +93,7 @@ namespace strata
 				  * indexed by it, the vertex index itself is returned. */
 				virtual xVert getRemoteVertexIndex(const xVert & v) { return v; }
 
-				Bundle(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Bundle> &tc, core::intf::RenderInterface * _renderer) :
+				Bundle(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Bundle> &tc, intf::RenderInterface * _renderer) :
 					tiny::algo::TypeClusterObject<long unsigned int, Bundle>(meshId, this, tc),
 					Mesh<Vertex>(_renderer),
 					polyAttempts(0)

@@ -34,7 +34,7 @@ namespace strata
 		class MeshInterface : public DrawableMesh
 		{
 			protected:
-				MeshInterface(core::intf::RenderInterface * _renderer) : DrawableMesh(_renderer) {}
+				MeshInterface(intf::RenderInterface * _renderer) : DrawableMesh(_renderer) {}
 
 				virtual ~MeshInterface(void)
 				{

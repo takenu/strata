@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/algo/typecluster.h>
 #include <tiny/draw/staticmesh.h>
 
-#include "../core/interface/render.hpp"
+#include "../interface/render.hpp"
 
 #include "layer.hpp"
 
@@ -43,7 +43,7 @@ namespace strata
 			private:
 				MasterLayer * masterLayer;
 				std::vector<Layer *> layers;
-				core::intf::RenderInterface * renderer;
+				intf::RenderInterface * renderer;
 
 //				tiny::draw::RGBTexture2D * texture;
 
@@ -182,7 +182,7 @@ namespace strata
 						it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 				}
 			public:
-				Terrain(core::intf::RenderInterface * _renderer) :
+				Terrain(intf::RenderInterface * _renderer) :
 					masterLayer(0),
 					renderer(_renderer),
 					bundleCounter(0),

@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/worldrenderer.h>
 #include <tiny/draw/renderer.h>
 
-#include "interface/appl.hpp"
-#include "interface/render.hpp"
+#include "../interface/appl.hpp"
+#include "../interface/render.hpp"
 
 namespace strata
 {

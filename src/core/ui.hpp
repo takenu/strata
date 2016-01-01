@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../ui/monitor.hpp"
 
-#include "interface/appl.hpp"
-#include "interface/render.hpp"
+#include "../interface/appl.hpp"
+#include "../interface/render.hpp"
 
 namespace strata
 {
@@ -57,7 +57,10 @@ namespace strata
 
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
-				void loadMonitorWindow(float left, float top, float right, float bottom, unsigned int red, unsigned int green, unsigned int blue, std::string text, bool showfps);
+				void loadMonitorWindow(float left, float top, float right, float bottom,
+						unsigned int red, unsigned int green, unsigned int blue, std::string text);
+
+				void loadMonitorWindowAttribute(std::string attribute, std::string value);
 		};
 	}
 }

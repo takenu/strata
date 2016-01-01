@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmesh.h>
 #include <tiny/math/vec.h>
 
-#include "interface/render.hpp"
+#include "../interface/render.hpp"
 
 namespace sel { class State; }
 

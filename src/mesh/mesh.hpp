@@ -98,7 +98,7 @@ namespace strata
 
 				Layer * parentLayer;
 
-				Mesh(core::intf::RenderInterface * _renderer) :
+				Mesh(intf::RenderInterface * _renderer) :
 					TopologicalMesh<VertexType>(_renderer)
 				{
 				}
