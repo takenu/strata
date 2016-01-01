@@ -44,7 +44,7 @@ function UIFont:collectArgs(path)
 	return self.fonttex == "" and "" or prefix .. self.fonttex, self.fontsize, self.fontaspectratio,self.fontpixels, self.fontresolution
 end
 
-function UIMonitorWindow:collectArgs(path)
+function UIWindow:collectArgs(path)
 	local prefix = findprefix(path)
 	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.title
 end
