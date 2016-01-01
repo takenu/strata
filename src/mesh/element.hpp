@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 
-#define STRATA_VERTEX_MAX_LINKS 11 /**< The maximal number of links allowed for any vertex. */
+#define STRATA_VERTEX_MAX_LINKS 10 /**< The maximal number of links allowed for any vertex. */
 #define STRATA_VERTEX_LINK_THRESHOLD 8 /** The threshold after which attempts should be made to reduce the number of links of a vertex. */
 
 namespace strata
@@ -36,16 +36,17 @@ namespace strata
 			tiny::vec3 pos;
 			xVert index; /**< The index of this vertex in the 've' array of the Mesh. Uses '0' as an error value (valid vertices should not have index==0). */
 			xVert nextEdgeVertex; /**< The next edge vertex, if this vertex itself is on the edge of a mesh. Otherwise 0. */
+			float thickness; /**< The thickness of the layer, between 0 and 1, as a fraction of the original thickness of the layer. */
 			xPoly poly[STRATA_VERTEX_MAX_LINKS]; /**< Enforce max number of links (to avoid having to (de)allocate memory when creating a Vertex). */
 
-			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0)
+			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0), thickness(1.0f)
 			{
 				clearPolys();
 			}
 
 			Vertex(float x, float y, float z) : Vertex(tiny::vec3(x,y,z)) {}
 
-			Vertex & operator= (const Vertex &v) { pos = v.pos; index = v.index; for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = v.poly[i]; return *this; }
+			Vertex & operator= (const Vertex &v) { pos = v.pos; index = v.index; thickness = v.thickness; for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++) poly[i] = v.poly[i]; return *this; }
 
 			/** Remove all polygon memberships from the Vertex (required e.g. when creating a duplicate of a Vertex) */
 			void clearPolys(void)

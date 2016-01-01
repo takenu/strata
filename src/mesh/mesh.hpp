@@ -411,6 +411,7 @@ namespace strata
 					}
 					tiny::vec3 pos = (vertices[ve[b]].pos + vertices[ve[c]].pos)*0.5; // Take the midpoint
 					xVert v = addVertex(pos);
+					vertices[ve[v]].thickness = (vertices[ve[b]].thickness + vertices[ve[c]].thickness)*0.5;
 					if(a>0)
 					{
 //						std::cout << " Mesh::splitEdge() : Adding polygons for 'a' using new vertex v="<<v<<"..."<<std::endl;
