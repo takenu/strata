@@ -71,8 +71,9 @@ set(USED_LIBS
 
 file(GLOB STRATA_SOURCES RELATIVE ${STRATA_SOURCE_DIR}
 	src/core/*.cpp
-	src/core/interface/*.cpp
+	src/interface/*.cpp
 	src/mesh/*.cpp
+	src/ui/*.cpp
 )
 
 add_executable(strata src/strata.cpp ${STRATA_SOURCES})

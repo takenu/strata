@@ -30,11 +30,11 @@ namespace strata
 	namespace core
 	{
 		/** Take care of user input and user interface. */
-		class UIManager
+		class UIManager : public intf::UIInterface
 		{
 			private:
 				intf::ApplInterface * applInterface;
-				intf::RenderInterface * renderer;
+				intf::RenderInterface * renderInterface;
 
 				tiny::draw::IconTexture2D * fontTexture;
 				std::vector<ui::Window*> windows;
@@ -45,8 +45,10 @@ namespace strata
 				/** Reserve enough space for the Window to draw all of its text. */
 				void reserve(ui::Window * window);
 			public:
-				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) : applInterface(_appl),
-					renderer(_renderer), fontTexture(0), monitor(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
+				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) :
+					intf::UIInterface(),
+					applInterface(_appl), renderInterface(_renderer),
+					fontTexture(0), monitor(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
 

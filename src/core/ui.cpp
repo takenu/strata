@@ -52,11 +52,12 @@ void UIManager::loadMonitorWindow(float left, float top, float right, float bott
 //			<<right<<","<<bottom<<" to be created with title "<<title
 //			<<" and colour "<<r<<","<<g<<","<<b<<"... "<<std::endl;
 
-	monitor = new ui::Monitor(fontTexture, defaultFontSize, defaultAspectRatio,
+	monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this),
+			fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(r),
 				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title);
 	monitor->setBoxDimensions(left, top, right, bottom);
-	renderer->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
+	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
 void UIManager::loadMonitorWindowAttribute(std::string attribute, std::string value)
@@ -90,10 +91,10 @@ void UIManager::reserve(ui::Window * window)
 {
 	tiny::draw::Renderable * oldTextBox = 0;
 	tiny::draw::Renderable * newTextBox = window->reserve(oldTextBox);
-	if(oldTextBox) renderer->freeScreenRenderable(oldTextBox);
+	if(oldTextBox) renderInterface->freeScreenRenderable(oldTextBox);
 	if(newTextBox)
 	{
-		renderer->addScreenRenderable(newTextBox, false, false, tiny::draw::BlendMix);
+		renderInterface->addScreenRenderable(newTextBox, false, false, tiny::draw::BlendMix);
 	}
 	else if(oldTextBox) std::cout << " UIManager::reserve() : ERROR: No new renderable! "<<std::endl;
 }

@@ -34,6 +34,31 @@ namespace strata
 			return val;
 		}
 
+		/** A function for converting another basic type to a string. */
+		template <typename T>
+		std::string convertToString(T val)
+		{
+			std::stringstream ss;
+			ss << val;
+			return ss.str();
+		}
+
+		/** A function for converting another basic type to a string, using
+		  * a delimiter for large numbers. */
+		template <typename T>
+		std::string convertToStringDelimited(T val)
+		{
+			std::string str = convertToString<T>(val);
+			if(str.length()>3)
+			{
+				while(str.find_first_of(".,")>3)
+				{
+					str.insert(std::min(str.length(),str.find_first_of(".,"))-3,1,',');
+				}
+			}
+			return str;
+		}
+
 		template <typename T>
 		T adjustToBounds(const std::string &s, T min, T max, bool printAdjustment = false)
 		{

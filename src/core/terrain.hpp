@@ -34,14 +34,16 @@ namespace strata
 		class TerrainManager : public intf::TerrainInterface
 		{
 			private:
-				intf::RenderInterface * renderer;
+				intf::RenderInterface * renderInterface;
+				intf::UIInterface * uiInterface;
 
 				mesh::Terrain terrain;
 			public:
-				TerrainManager(intf::RenderInterface * _renderer) :
+				TerrainManager(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::TerrainInterface(),
-					renderer(_renderer),
-					terrain(renderer)
+					renderInterface(_renderer),
+					uiInterface(_uiInterface),
+					terrain(renderInterface, uiInterface)
 				{
 				}
 

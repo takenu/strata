@@ -33,10 +33,14 @@ namespace strata
 		{
 			private:
 				tiny::draw::Colour colour;
+			protected:
+				intf::UIInterface * uiInterface;
 			public:
-				Window(tiny::draw::IconTexture2D * _fontTexture, float _fontSize, float _aspectRatio,
+				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
+						float _fontSize, float _aspectRatio,
 						tiny::draw::Colour _colour = tiny::draw::Colour(255,255,255)) :
-					tiny::draw::TextBox(_fontTexture, _fontSize, _aspectRatio), colour(_colour)
+					tiny::draw::TextBox(_fontTexture, _fontSize, _aspectRatio),
+					colour(_colour), uiInterface(_ui)
 				{
 				}
 

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sstream>
 
+#include "../interface/ui.hpp"
+
 #include "ui/window.hpp"
 
 namespace strata
@@ -32,10 +34,10 @@ namespace strata
 				bool showFramesPerSecond;
 				bool showMemoryUsage;
 			public:
-				Monitor(tiny::draw::IconTexture2D * _fontTexture,
+				Monitor(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
 						std::string _title = "") :
-					Window(_fontTexture, _fontSize, _aspectRatio, _colour),
+					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour),
 					title(_title), showFramesPerSecond(false),
 					showMemoryUsage(false)
 				{
@@ -60,6 +62,15 @@ namespace strata
 						ss << "Running at "<<1.0/dt<<" fps.";
 						addTextFragment(ss.str(), getColour());
 						addNewline();
+					}
+					if(showMemoryUsage)
+					{
+						intf::UIInformation meminfo = uiInterface->getUIInfo("Terrain");
+						for(unsigned int i = 0; i < meminfo.pairs.size(); i++)
+						{
+							addTextFragment("Terrain: "+meminfo.pairs[i].first+" is "+meminfo.pairs[i].second, getColour());
+							addNewline();
+						}
 					}
 				}
 

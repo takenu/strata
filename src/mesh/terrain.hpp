@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmesh.h>
 
 #include "../interface/render.hpp"
+#include "../interface/ui.hpp"
+
+#include "../tools/convertstring.hpp"
 
 #include "layer.hpp"
 
@@ -38,12 +41,13 @@ namespace strata
 		  * mesh fragments, and Layers, which are stratigraphical components of the terrain. The Bundles are joined into
 		  * Layers using Strip objects, which define the polygons required to join distinct meshes but which do not contain
 		  * vertices of their own. Then, the Layers are glued on top of each other using Stitches. */
-		class Terrain
+		class Terrain : public intf::UISource
 		{
 			private:
 				MasterLayer * masterLayer;
 				std::vector<Layer *> layers;
 				intf::RenderInterface * renderer;
+				intf::UIInterface * uiInterface;
 
 //				tiny::draw::RGBTexture2D * texture;
 
@@ -182,9 +186,11 @@ namespace strata
 						it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 				}
 			public:
-				Terrain(intf::RenderInterface * _renderer) :
+				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
+					intf::UISource("Terrain",_uiInterface),
 					masterLayer(0),
 					renderer(_renderer),
+					uiInterface(_uiInterface),
 					bundleCounter(0),
 					stripCounter(0),
 					bundles((long unsigned int)(-1), "BundleTC"),
@@ -248,6 +254,13 @@ namespace strata
 
 				~Terrain(void)
 				{
+				}
+
+				virtual intf::UIInformation getUIInfo(void)
+				{
+					intf::UIInformation info;
+					info.addPair("Memory usage",tool::convertToStringDelimited<long unsigned int>(usedCapacity())+" bytes");
+					return info;
 				}
 		};
 	}

@@ -40,8 +40,6 @@ namespace strata
 		class Game
 		{
 			private:
-//				tiny::os::Application *application; /**< The engine's application class, for user input, OpenGL, OpenAL, SDL, etcetera. */
-
 				ApplManager applManager; /**< Manage application specifics (key presses, low level rendering, sound, etcetera). */
 				RenderManager renderManager; /**< Manage graphics rendering. */
 				UIManager uiManager; /**< Manage user input and user interface. */
@@ -50,11 +48,27 @@ namespace strata
 
 				sel::State luaState; /**< A Lua state. */
 			public:
+				/** Construct the Game's primary components.
+				  * The order of construction is of paramount importance. The first
+				  * is the applManager, which creates the tiny-game-engine's
+				  * application object for OpenGL, SDL etcetera. The applManager
+				  * is then used to create the Renderer, which draws things. Both the
+				  * applManager and the renderManager are then used to create the
+				  * uiManager. The uiManager is used to give a UI form to all objects,
+				  * and everything created after it can use the uiManager to generate
+				  * a representation of itself in UI form.
+				  *
+				  * Concerning the order of destruction: note that C++ is guaranteed
+				  * to call the destructors in reverse order (see e.g. here:
+				  * http://stackoverflow.com/questions/2254263 ). Therefore, it is
+				  * perfectly safe for every member variable to use all members declared
+				  * before it, and it is dangerous to use later-declared members.
+				  */
 				Game(void) :
 					applManager(),
 					renderManager(static_cast<intf::ApplInterface*>(&applManager)),
 					uiManager(static_cast<intf::ApplInterface*>(&applManager),static_cast<intf::RenderInterface*>(&renderManager)),
-					terrainManager(static_cast<intf::RenderInterface*>(&renderManager)),
+					terrainManager(static_cast<intf::RenderInterface*>(&renderManager),static_cast<intf::UIInterface*>(&uiManager)),
 					skyManager(static_cast<intf::RenderInterface*>(&renderManager)),
 					luaState(true)
 				{
@@ -63,9 +77,12 @@ namespace strata
 					mainLoop();
 				}
 
-				/** Register functions that Lua can call. Note that due to Chathran's O-O nature the functions to be registered are not the usual static functions
-				  * but instead member functions of instantiated classes. This means that during the lifetime of Lua these instantiations must not be deleted.
-				  * Therefore it's probably best to only register member functions of the Manager instances of the Game class. */
+				/** Register functions that Lua can call. Note that due to Chathran's O-O
+				  * nature the functions to be registered are not the usual static functions
+				  * but instead member functions of instantiated classes. This means that
+				  * during the lifetime of Lua these instantiations must not be deleted.
+				  * Therefore it's probably best to only register member functions of the
+				  * Manager instances of the Game class. */
 				void registerLuaFunctions(void)
 				{
 					skyManager.registerLuaFunctions(luaState);
