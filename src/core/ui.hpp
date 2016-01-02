@@ -52,6 +52,8 @@ namespace strata
 				{
 				}
 
+				virtual void keyDown(const int & k);
+
 				void update(double);
 
 				/** Register Lua functions used for composing the UI. */

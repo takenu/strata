@@ -77,6 +77,8 @@ namespace strata
 			public:
 				/** Get UI info from the UISource with identifier '_id'. */
 				UIInformation getUIInfo(std::string _id);
+
+				virtual void keyDown(const int & k) = 0;
 		};
 	}
 }

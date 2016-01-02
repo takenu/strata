@@ -29,6 +29,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::core;
 
+/** Interpret key press events. */
+void UIManager::keyDown(const int & keyIndex)
+{
+	const SDLKey k = static_cast<SDLKey>(keyIndex);
+
+	if(k == SDLK_ESCAPE)
+	{
+		std::cout << " Strata : Quitting... "<<std::endl;
+		applInterface->stop();
+	}
+}
+
 void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,

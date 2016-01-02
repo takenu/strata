@@ -72,6 +72,7 @@ namespace strata
 					skyManager(static_cast<intf::RenderInterface*>(&renderManager)),
 					luaState(true)
 				{
+					applManager.registerUIInterface(static_cast<intf::UIInterface*>(&uiManager));
 					registerLuaFunctions();
 					composeWorld();
 					mainLoop();

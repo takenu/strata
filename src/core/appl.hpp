@@ -23,35 +23,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <config.h>
 
 #include "../interface/appl.hpp"
+#include "../interface/ui.hpp"
 
 namespace strata
 {
 	namespace core
 	{
-		class ApplManager : public intf::ApplInterface
+		class ApplManager : public intf::ApplInterface, public tiny::os::SDLApplication
 		{
 			private:
-				tiny::os::Application * application; /**< The engine's application class, for user input, OpenGL, OpenAL, SDL, etcetera. */
+				intf::UIInterface * uiInterface;
 			public:
 				ApplManager(void) :
 					intf::ApplInterface(),
-					application(new tiny::os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT))
+					tiny::os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT)
 				{
 				}
 
 				~ApplManager(void)
 				{
-					delete application;
 				}
 
-				virtual bool isRunning(void) const { return application->isRunning(); }
-				virtual int getScreenWidth(void) const { return application->getScreenWidth(); }
-				virtual int getScreenHeight(void) const { return application->getScreenHeight(); }
-				virtual tiny::os::MouseState getMouseState(const bool &b) const { return application->getMouseState(b); }
+				/** Register the UI, for sending events. Note that this cannot be done in the
+				  * constructor, because the UI cannot exist yet when the Application is initialized. */
+				void registerUIInterface(intf::UIInterface * _ui) { uiInterface = _ui; }
 
-				double pollEvents(void) { return application->pollEvents(); }
-				void updateSimpleCamera(double dt, tiny::vec3 & cameraPosition, tiny::vec4 & cameraOrientation) { application->updateSimpleCamera(dt, cameraPosition,cameraOrientation); }
-				void paint(void) { application->paint(); }
+				virtual int getScreenWidth(void) const { return tiny::os::SDLApplication::getScreenWidth(); }
+				virtual int getScreenHeight(void) const { return tiny::os::SDLApplication::getScreenHeight(); }
+
+				virtual void stop(void) { stopRunning(); }
+
+				/** Inherit function from tiny::os::SDLApplication to send key up/down events to UI. */
+				virtual void keyDownCallback(const int &k)
+				{
+					uiInterface->keyDown(k);
+				}
 		};
 	}
 }
