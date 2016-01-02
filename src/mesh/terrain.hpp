@@ -45,6 +45,7 @@ namespace strata
 		{
 			private:
 				MasterLayer * masterLayer;
+				float maxMeshSize;
 				std::vector<Layer *> layers;
 				intf::RenderInterface * renderer;
 				intf::UIInterface * uiInterface;
@@ -68,7 +69,7 @@ namespace strata
 				/** Split very large meshes (either Bundles or Strips) of this Terrain into smaller fragments. The criterium for splitting
 				  * is exceedance of the maximal vertex-to-vertex distance of the mesh of a threshold size '_maxSize'. */
 				template <typename MeshType>
-				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize = 400.0f)
+				void splitLargeMeshes(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, float _maxSize)
 				{
 					std::vector<MeshType*> largeMeshes;
 					for(typename std::map<long unsigned int, MeshType*>::iterator it = tc.begin(); it != tc.end(); it++)
@@ -189,6 +190,7 @@ namespace strata
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
 					masterLayer(0),
+					maxMeshSize(400.0f),
 					renderer(_renderer),
 					uiInterface(_uiInterface),
 					bundleCounter(0),
@@ -196,7 +198,7 @@ namespace strata
 					bundles((long unsigned int)(-1), "BundleTC"),
 					strips((long unsigned int)(-1), "StripTC")
 				{
-					masterLayer = new MasterLayer();
+/*					masterLayer = new MasterLayer();
 					masterLayer->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 300, 0.0f);
 					for(unsigned int i = 0; i < 6; i++)
 					{
@@ -215,7 +217,44 @@ namespace strata
 					{
 						std::cout << " Terrain() : Duplicating layer... "<<std::endl;
 						duplicateLayer(layers.back(), 5.0f);
+					}*/
+				}
+
+				void makeFlatLayer(float terrainSize, float _maxMeshSize,
+						unsigned int meshSubdivisions, float height)
+				{
+					if(masterLayer)
+					{
+						std::cout << " Terrain::makeFlatLayer() : Terrain is not empty!";
+						std::cout << " Skipping. "<<std::endl;
+						return;
 					}
+					else
+					{
+						maxMeshSize = _maxMeshSize;
+						masterLayer = new MasterLayer();
+						masterLayer->createFlatLayer(
+								std::bind(&Terrain::makeNewBundle, this),
+								std::bind(&Terrain::makeNewStrip, this),
+								terrainSize, meshSubdivisions, height);
+						for(unsigned int i = 0; i < 10; i++)
+						{
+							std::cout << " Terrain::makeFlatLayer() : Splitting bundles... "<<std::endl;
+							splitLargeMeshes(bundles, maxMeshSize);
+							checkMeshConsistency(bundles);
+							checkMeshConsistency(strips);
+							std::cout << " Terrain::makeFlatLayer() : Splitting strips... "<<std::endl;
+							splitLargeMeshes(strips, maxMeshSize);
+							checkMeshConsistency(bundles);
+							checkMeshConsistency(strips);
+						}
+					}
+				}
+
+				void addLayer(float thickness)
+				{
+					std::cout << " Terrain::addLayer() : Duplicating layer... "<<std::endl;
+					duplicateLayer((layers.size() == 0 ? masterLayer : layers.back()), thickness);
 				}
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.

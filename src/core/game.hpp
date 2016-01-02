@@ -88,6 +88,7 @@ namespace strata
 				{
 					skyManager.registerLuaFunctions(luaState);
 					uiManager.registerLuaFunctions(luaState);
+					terrainManager.registerLuaFunctions(luaState);
 				}
 
 				~Game(void)

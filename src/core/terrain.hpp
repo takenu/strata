@@ -37,24 +37,31 @@ namespace strata
 				intf::RenderInterface * renderInterface;
 				intf::UIInterface * uiInterface;
 
-				mesh::Terrain terrain;
+				mesh::Terrain * terrain;
 			public:
 				TerrainManager(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::TerrainInterface(),
 					renderInterface(_renderer),
 					uiInterface(_uiInterface),
-					terrain(renderInterface, uiInterface)
+					terrain(0)
 				{
 				}
 
 				virtual float getVerticalHeight(tiny::vec3 pos)
 				{
-					return terrain.getVerticalHeight(pos);
+					if(!terrain) return 0.0f;
+					else return terrain->getVerticalHeight(pos);
 				}
+
+				/** Register Lua functions used for creating the Terrain. */
+				void registerLuaFunctions(sel::State & luaState);
+
+				void makeFlatLayer(float terrainSize, float maxMeshSize, unsigned int meshSubdivisions, float height);
+				void addLayer(float thickness);
 
 				void update(double)
 				{
-					terrain.update();
+					terrain->update();
 				}
 		};
 	}

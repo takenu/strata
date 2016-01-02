@@ -42,5 +42,6 @@ function start()
 	-- Load sky before UI, otherwise UI goes behind sky
 	loadscr("sky/load.lua"); load_sky()
 	loadscr("ui/load.lua"); load_ui()
+	loadscr("terrain/load.lua"); load_terrain()
 end
 

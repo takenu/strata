@@ -51,9 +51,9 @@ namespace strata
 			std::string str = convertToString<T>(val);
 			if(str.length()>3)
 			{
-				while(str.find_first_of(".,")>3)
+				while(str.find_first_of("., ")>3)
 				{
-					str.insert(std::min(str.length(),str.find_first_of(".,"))-3,1,',');
+					str.insert(std::min(str.length(),str.find_first_of("., "))-3,1,' ');
 				}
 			}
 			return str;
