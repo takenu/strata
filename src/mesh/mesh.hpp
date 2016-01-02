@@ -64,6 +64,8 @@ namespace strata
 				  * linked into a mesh (without holes or bottlenecks) by polygons.*/
 				virtual xVert addVertex(const VertexType &v)
 				{
+					if(ve.size() == ve.capacity()) ve.reserve(ve.size()*1.05);
+					if(vertices.size() == vertices.capacity()) vertices.reserve(vertices.size()*1.05);
 					ve.push_back( vertices.size() );
 					vertices.push_back(v);
 					vertices.back().clearPolys(); // The vertex should not use the polygons from the original copy (if any)
@@ -133,12 +135,14 @@ namespace strata
 				/** Add a vertex as a copy of another vertex. */
 				void duplicateVertex(const VertexType &v)
 				{
+					if(vertices.size() == vertices.capacity()) vertices.reserve(vertices.size()*1.05);
 					vertices.push_back(v);
 				}
 
 				/** Add a polygon as a copy of another polygon. */
 				void duplicatePolygon(const Polygon &p)
 				{
+					if(polygons.size() == polygons.capacity()) polygons.reserve(polygons.size()*1.05);
 					polygons.push_back(p);
 				}
 
@@ -166,6 +170,8 @@ namespace strata
 					}
 					if(a.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || b.poly[STRATA_VERTEX_MAX_LINKS-1] > 0 || c.poly[STRATA_VERTEX_MAX_LINKS-1] > 0)
 					{ std::cerr << " Mesh::addPolygon() : ERROR: Polygon has too many links, cannot add polygon! "<<std::endl; return false; }
+					if(polygons.size() == polygons.capacity()) polygons.reserve(polygons.size()*1.05);
+					if(po.size() == po.capacity()) po.reserve(po.size()*1.05);
 					po.push_back( polygons.size() );
 					polygons.push_back( Polygon(a.index, b.index, c.index) );
 					polygons.back().index = po.size()-1;
@@ -370,6 +376,10 @@ namespace strata
 							<< ", ve="<<ve.size()<<", po="<<po.size()<<std::endl;
 						return;
 					}
+					m->vertices.reserve(vertices.size()*1.05);
+					m->ve.reserve(ve.size()*1.05);
+					m->polygons.reserve(polygons.size()*1.05);
+					m->po.reserve(po.size()*1.05);
 					for(unsigned int i = 1; i < vertices.size(); i++)
 						m->duplicateVertex(vertices[i]); // Copy vertices in order.
 					for(unsigned int i = 1; i < ve.size(); i++)

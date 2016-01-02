@@ -249,7 +249,6 @@ namespace strata
 
 				void update(void)
 				{
-					std::cout << " Terrain::update() : Using "<<usedMemory()<<" bytes of memory, with "<<usedCapacity()<<" allocated... "<<std::endl;
 				}
 
 				~Terrain(void)
