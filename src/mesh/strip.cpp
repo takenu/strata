@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "strip.hpp"
 #include "bundle.hpp"
+#include "layer.hpp"
 
 using namespace strata::mesh;
 
@@ -49,8 +50,8 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	f->setParentLayer(parentLayer);
 	g->setParentLayer(parentLayer);
 
-	f->resetTexture(texture);
-	g->resetTexture(texture);
+	f->resetTexture(parentLayer->getStripTexture());
+	g->resetTexture(parentLayer->getStripTexture());
 
 	// Copy the references to all adjacent meshes of 'this', when required.
 	// This copying is done both ways: the adjacent mesh is added to the newly added one,

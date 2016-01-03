@@ -43,16 +43,15 @@ namespace strata
 		  * it is important to emphasize that Stitches are special Strips in that only they can connect one layer to another layer,
 		  * and that they never used to connect several parts of a Layer.
 		  */
-		class Stitch
+/*		class Stitch : public Strip
 		{
 			private:
-				Strip strip;
 			public:
 				Stitch(long unsigned int id, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer) :
-					strip(id, tc, _renderer)
+					Strip(id, tc, _renderer)
 				{
 				}
-		};
+		};*/
 
 		/** A Layer is a single, more or less smooth mesh that represents the top of a single soil layer.
 		  * It is visible thanks to it owning a renderMesh object. It uses a Bundle to define its mesh
@@ -68,10 +67,19 @@ namespace strata
 			protected:
 				std::vector<Bundle*> bundles; /** The bundles forming this Layer. */
 //				double thickness; <-- Thickness may vary, do not define per layer
-				tiny::draw::RGBTexture2D * texture; /** Texture of the whole layer. */
+				tiny::draw::RGBTexture2D * bundleTexture; /** Texture of the whole layer, used for Bundles. */
+				tiny::draw::RGBTexture2D * stripTexture; /** Texture of the whole layer, used for Strips. */
+				tiny::draw::RGBTexture2D * stitchTexture; /** Texture of the whole layer, used for Strips that are at the edge of the Layer. */
 			public:
 				Layer(void)
 				{
+				}
+
+				virtual ~Layer(void)
+				{
+					if(bundleTexture) delete bundleTexture;
+					if(stripTexture) delete stripTexture;
+					if(stitchTexture) delete stitchTexture;
 				}
 
 				/** Add a new Bundle to the Layer. The Bundle class calls this function upon creation of a new Bundle
@@ -126,14 +134,34 @@ namespace strata
 					return bundle;
 				}
 
-				void setTexture(tiny::draw::RGBTexture2D * _texture)
+				void setBundleTexture(tiny::draw::RGBTexture2D * _texture)
 				{
-					texture = _texture;
+					bundleTexture = _texture;
 				}
 
-				tiny::draw::RGBTexture2D * getTexture(void)
+				void setStripTexture(tiny::draw::RGBTexture2D * _texture)
 				{
-					return texture;
+					stripTexture = _texture;
+				}
+
+				void setStitchTexture(tiny::draw::RGBTexture2D * _texture)
+				{
+					stitchTexture = _texture;
+				}
+
+				tiny::draw::RGBTexture2D * getBundleTexture(void)
+				{
+					return bundleTexture;
+				}
+
+				tiny::draw::RGBTexture2D * getStripTexture(void)
+				{
+					return stripTexture;
+				}
+
+				tiny::draw::RGBTexture2D * getStitchTexture(void)
+				{
+					return stitchTexture;
 				}
 		};
 
@@ -156,8 +184,10 @@ namespace strata
 				{
 					Bundle * bundle = createBundle(makeNewBundle);
 					bundle->createFlatLayer(size, ndivs, height);
-					texture = createTestTexture(64, 255, 200, 100);
-					bundle->resetTexture(texture);
+					bundleTexture = createTestTexture(64, 255, 200, 100);
+					stripTexture = createTestTexture(64, 200, 150, 100);
+					stitchTexture = createTestTexture(64, 100, 100, 200);
+					bundle->resetTexture(bundleTexture);
 					bundles.push_back(bundle);
 				}
 		};

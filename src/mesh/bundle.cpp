@@ -242,9 +242,9 @@ bool Bundle::split(std::function<Bundle * (void)> makeNewBundle, std::function<S
 	s->setParentLayer(parentLayer);
 
 	// Initialize rendered objects for the new meshes.
-	f->resetTexture(texture);
-	g->resetTexture(texture);
-	s->resetTexture(texture);
+	f->resetTexture(parentLayer->getBundleTexture());
+	g->resetTexture(parentLayer->getBundleTexture());
+	s->resetTexture(parentLayer->getStripTexture());
 
 	// Make strips adjacent to the old Bundle update their adjacency to include the new Bundle objects.
 	addAdjacentStrip(s); // Add the newly created strip as an adjacent strip (so that it will become linked to f and g in the following lines)

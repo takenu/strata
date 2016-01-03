@@ -170,16 +170,21 @@ namespace strata
 						smap.at(baseStrips[i])->duplicateAdjustOwningBundles(bmap);
 					}
 					// Copy all other attributes, and initialize meshes.
-					layers.back()->setTexture(new tiny::draw::RGBTexture2D(*(masterLayer->getTexture())));
+					layers.back()->setBundleTexture(new tiny::draw::RGBTexture2D(
+								*(masterLayer->getBundleTexture())));
+					layers.back()->setStripTexture(new tiny::draw::RGBTexture2D(
+								*(masterLayer->getStripTexture())));
+					layers.back()->setStitchTexture(new tiny::draw::RGBTexture2D(
+								*(masterLayer->getStitchTexture())));
 					for(std::map<Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
 					{
 						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->resetTexture(layers.back()->getTexture());
+						it->second->resetTexture(layers.back()->getBundleTexture());
 					}
 					for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 					{
 						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->resetTexture(layers.back()->getTexture());
+						it->second->resetTexture(layers.back()->getStripTexture());
 					}
 					// Move all vertices of the Mesh a fixed distance along the direction of their respective normals.
 					layers.back()->increaseThickness(thickness);
