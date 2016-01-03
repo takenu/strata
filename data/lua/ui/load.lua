@@ -5,7 +5,7 @@ end
 
 UIFont = {
 	fonttex = "",
-	fontsize = 0.1,
+	fontsize = 0.08,
 	fontaspectratio = 2,
 	fontpixels = 160,
 	fontresolution = 2048,

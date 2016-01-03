@@ -156,7 +156,7 @@ namespace strata
 				{
 					Bundle * bundle = createBundle(makeNewBundle);
 					bundle->createFlatLayer(size, ndivs, height);
-					texture = createTestTexture(64, 255, 0, 0);
+					texture = createTestTexture(64, 255, 200, 100);
 					bundle->resetTexture(texture);
 					bundles.push_back(bundle);
 				}

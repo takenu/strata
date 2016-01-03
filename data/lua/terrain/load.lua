@@ -4,9 +4,9 @@ function load_terrain()
 end
 
 TerrainBaseLayerSpecs = {
-	size = 3000.0,
-	maxmeshsize = 700.0,
-	divisions = 300,
+	size = 300.0,
+	maxmeshsize = 70.0,
+	divisions = 200,
 	height = 0.0,
 }
 
