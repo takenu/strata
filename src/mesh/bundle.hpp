@@ -169,6 +169,16 @@ namespace strata
 
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
+
+				/** Find a Vertex at the Layer's edge. If none of the Bundle's vertices
+				  * are at this edge, false is returned. Otherwise, true is returned, and
+				  * the 'index' variable is set to the edge vertex's index. */
+				bool findVertexAtLayerEdge(xVert &index) const;
+
+				/** Check whether this Vertex is at the Layer's edge. Note that
+				  * a vertex is at a Layer's edge if and only if there are unique
+				  * edges among its adjacent polygons. */
+				bool isAtLayerEdge(xVert v) const;
 		};
 	}
 }

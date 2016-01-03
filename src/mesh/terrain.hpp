@@ -139,7 +139,13 @@ namespace strata
 					return nbytes;
 				}
 
+				/** Duplicate the specified layer, and transpose the copy upwards
+				  * by a distance 'thickness'. */
 				void duplicateLayer(Layer * baseLayer, float thickness);
+
+				/** Stitch a Layer to the underlying layers. Possible only on
+				  * Layers that are not yet stitched onto the rest of the Terrain. */
+				void stitchLayer(Layer * layer);
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
@@ -214,15 +220,17 @@ namespace strata
 				  * be to ensure that no underlying vertex has the original vertex as
 				  * an underlying vertex.
 				  */
-//				void getUnderlyingVertex(Bundle * & bundle, xVert & index, const Layer * baseLayer, tiny::vec3 v)
-				void getUnderlyingVertex(Bundle * & , xVert & , const Layer * , tiny::vec3 )
-				{
-				}
+				void getUnderlyingVertex(Bundle * & bundle, xVert & index,
+						const Layer * baseLayer, tiny::vec3 v);
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.
-				  * This procedure could be considerably more efficient if a decent degree of pre-organization
-				  * was performed, such as using a spatial cluster structure on Bundles and Strips to find
-				  * more quickly which Bundles and Strips are of interest.
+				  * This procedure could be considerably more efficient if a decent'
+				  * degree of pre-organization is performed, such as using a spatial
+				  * cluster structure on Bundles and Strips to find more quickly
+				  * which Bundles and Strips are of interest.
+				  * The fixed parameters TopologicalMesh::centralPoint and
+				  * TopologicalMesh::maxDistanceFromCenter do this, but since their
+				  * up-to-dateness isn't guaranteed this function is retained.
 				  */
 				float getVerticalHeight(tiny::vec3 pos)
 				{

@@ -99,6 +99,50 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
 	return false;
 }
 
+/** Find 'a' in the following situation (clockwise=true)
+  * w---a
+  *  \ /
+  *   v
+  * where 'v' and 'w' are remote indices rather than normal indices.
+  * If not found, return 0.
+  */
+xVert Strip::findRemoteVertexPolyNeighbor(xVert v, xVert w,
+		const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const
+{
+	xVert remoteNeighborIndex = 0;
+	xVert vLocal = 0;
+	xVert wLocal = 0;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		if(vertices[i].getRemoteIndex() == v && vertices[i].getOwningBundle() == vBundle)
+		{
+			vLocal = vertices[i].index;
+			break;
+		}
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		if(vertices[i].getRemoteIndex() == w && vertices[i].getOwningBundle() == wBundle)
+		{
+			wLocal = vertices[i].index;
+			break;
+		}
+	if(vLocal == 0 || wLocal == 0)
+	{
+		// This can happen naturally since this function is called a lot on Strips that don't
+		// have the desired vertices. So don't print.
+//		std::cout << " Strip::findRemoteVertexPolyNeighbor() : Either 'v' or 'w' is not"
+//			<< " represented in the Strip mesh, cannot search for neighbors! "<<std::endl;
+	}
+	else
+	{
+		xVert localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
+		if(localNeighbor > 0)
+			remoteNeighborIndex = vertices[ve[localNeighbor]].getRemoteIndex();
+		// This also may happen, if the neighbor is not in this Strip but in another Strip that
+		// also contains the vertex 'v'.
+//		else std::cout << " Strip::findRemoteVertexPolyNeighbor() : Not found! "<<std::endl;
+	}
+	return remoteNeighborIndex;
+}
+
 Strip::~Strip(void)
 {
 	for(unsigned int i = 0; i < adjacentBundles.size(); i++)

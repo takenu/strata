@@ -769,6 +769,69 @@ namespace strata
 					return findCommonEdgeVertex(polygons[po[p]],polygons[po[q]]);
 				}
 
+				/** Find another edge vertex, starting from the current vertex.
+				  * If the parameter 'clockwise' is true the mesh edge will be traversed
+				  * in a clockwise fashion (looking from the direction of the normals,
+				  * or typically, from above the terrain). */
+				xVert findAdjacentEdgeVertex(xVert v, bool clockwise) const
+				{
+					if(v<=0) {printPolygons(); printLists(); }
+					assert(v>0);
+					xVert result = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex to vertex "<<v<<"! "<<std::endl; break; }
+						else if( isEdgeVertex( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise) ) )
+						{
+							result = findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise);
+							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
+							{
+								if(i == j) continue;
+								if(vertices[ve[v]].poly[j] == 0) break;
+								if( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[j]]], v, !clockwise) == result ) result = 0; // if vertex is in another polygon as well, it may be on the edge but not *along* the edge.
+							}
+							if(result != 0) break;
+						}
+					}
+					return result;
+				}
+
+				inline bool isEdgeVertex(xVert _v) const
+				{
+					const Vertex & v = vertices[ve[_v]];
+//					if(v.poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge <------- NO, bad vertices could be part of two polygons in a sandwich-like manner and NOT be an edge vertex!
+					unsigned int verts[2*STRATA_VERTEX_MAX_LINKS];
+					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) verts[i] = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(v.poly[i]==0) break;
+						else
+						{
+							assert(v.poly[i] < po.size());
+							assert(po[v.poly[i]] < polygons.size());
+							verts[2*i  ] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, true); // find both neighbours of the present vertex
+							verts[2*i+1] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, false);
+						}
+					}
+//					std::cout << std::endl << " Vertices: "; for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) std::cout << verts[i] << ", "; std::cout << std::endl;
+					bool hasUniqueVertex = false;
+					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(verts[i] == 0) continue; // This is a vertex for which we already found a partner
+						hasUniqueVertex = true;
+						for(unsigned int j = i+1; j < 2*STRATA_VERTEX_MAX_LINKS; j++)
+						{
+							if(verts[j] == verts[i])
+							{
+								verts[j] = 0;
+								hasUniqueVertex = false;
+							}
+						}
+						if(hasUniqueVertex) break; // Not found, then this is an edge vertex
+					}
+					return hasUniqueVertex;
+				}
+
 				/** Check whether there exists a vertex that is connected by a direct edge to both
 				  * _a and _b. This is done by checking for all polygons of _a that all vertices in the
 				  * polygon are not part of any of _b's polygons.
@@ -831,67 +894,6 @@ namespace strata
 				inline tiny::vec3 computeNormal(xPoly _p) const
 				{
 					return computeNormal(polygons[po[_p]]);
-				}
-
-				inline bool isEdgeVertex(xVert _v) const
-				{
-					const Vertex & v = vertices[ve[_v]];
-//					if(v.poly[2] == 0) return true; // Vertices that connect to fewer than three polygons must be at the edge <------- NO, bad vertices could be part of two polygons in a sandwich-like manner and NOT be an edge vertex!
-					unsigned int verts[2*STRATA_VERTEX_MAX_LINKS];
-					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) verts[i] = 0;
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-					{
-						if(v.poly[i]==0) break;
-						else
-						{
-							assert(v.poly[i] < po.size());
-							assert(po[v.poly[i]] < polygons.size());
-							verts[2*i  ] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, true); // find both neighbours of the present vertex
-							verts[2*i+1] = findPolyNeighbor(polygons[po[v.poly[i]]], _v, false);
-						}
-					}
-//					std::cout << std::endl << " Vertices: "; for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++) std::cout << verts[i] << ", "; std::cout << std::endl;
-					bool hasUniqueVertex = false;
-					for(unsigned int i = 0; i < 2*STRATA_VERTEX_MAX_LINKS; i++)
-					{
-						if(verts[i] == 0) continue; // This is a vertex for which we already found a partner
-						hasUniqueVertex = true;
-						for(unsigned int j = i+1; j < 2*STRATA_VERTEX_MAX_LINKS; j++)
-						{
-							if(verts[j] == verts[i])
-							{
-								verts[j] = 0;
-								hasUniqueVertex = false;
-							}
-						}
-						if(hasUniqueVertex) break; // Not found, then this is an edge vertex
-					}
-					return hasUniqueVertex;
-				}
-
-				/** Find another edge vertex, starting from the current vertex. If the parameter 'clockwise' is true the mesh edge will be traversed
-				  * in a clockwise fashion (looking from the direction of the normals, or typically, from above the terrain). */
-				xVert findAdjacentEdgeVertex(xVert v, bool clockwise) const
-				{
-					if(v<=0) {printPolygons(); printLists(); }
-					assert(v>0);
-					xVert result = 0;
-					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
-					{
-						if(vertices[ve[v]].poly[i] == 0) { std::cout << " findAdjacentEdgeVertex() : Failed to find next edge vertex to vertex "<<v<<"! "<<std::endl; break; }
-						else if( isEdgeVertex( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise) ) )
-						{
-							result = findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]], v, clockwise);
-							for(unsigned int j = 0; j < STRATA_VERTEX_MAX_LINKS; j++)
-							{
-								if(i == j) continue;
-								if(vertices[ve[v]].poly[j] == 0) break;
-								if( findPolyNeighbor(polygons[po[vertices[ve[v]].poly[j]]], v, !clockwise) == result ) result = 0; // if vertex is in another polygon as well, it may be on the edge but not *along* the edge.
-							}
-							if(result != 0) break;
-						}
-					}
-					return result;
 				}
 
 				/** A function guaranteed to return an edge vertex. */

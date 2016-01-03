@@ -296,6 +296,17 @@ namespace strata
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
 
+				/** Get the remote vertex that is the (counter)clockwise neighbor
+				  * of the vertex with remote index 'w' with respect to 'v'. In other words,
+				  * find the 'a' of the following situation (if clockwise=true):
+				  *
+				  * w---a
+				  *  \ /
+				  *   v
+				  */
+				xVert findRemoteVertexPolyNeighbor(xVert v, xVert w,
+						const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const;
+
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */
 				virtual float findFarthestPair(VertPair &farthestPair)

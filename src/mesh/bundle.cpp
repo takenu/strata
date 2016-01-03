@@ -301,3 +301,39 @@ Bundle::~Bundle(void)
 		parentLayer->releaseBundle(this);
 	else std::cout << " Bundle::~Bundle() : WARNING: No parentLayer found, cannot release Bundle from Layer! "<<std::endl;
 }
+
+bool Bundle::findVertexAtLayerEdge(xVert &index) const
+{
+	return false;
+}
+
+/** Check whether the vertex with index 'v' is at the Layer's edge.
+  * The check has two steps: first we check if the vertex is an edge vertex under the
+  * usual definition of the TopologicalMesh. If not, it cannot be on the Layer's edge
+  * either. If it is, we do a second check, namely that we can complete a circle around
+  * the current Vertex by finding neighbours until we reach the start again.
+  * If this procedure breaks, it means such a circle doesn't exist and we are indeed at
+  * the Layer's edge.
+  * The strategy for this second step is analogous to the non-edge-vertex procedure in
+  * TopologicalMesh::checkTopology().
+  */
+bool Bundle::isAtLayerEdge(xVert v) const
+{
+	if(!isEdgeVertex(v)) return false;
+	else
+	{
+		xVert startIndex = findAdjacentEdgeVertex(v, false);
+		xVert endIndex = findAdjacentEdgeVertex(v, true);
+		// Now try to find polygons via which we can move clockwise around 'v'
+		// from startIndex to endIndex.
+		xVert nextIndex = startIndex;
+		while(nextIndex != endIndex)
+		{
+			for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+			{
+			}
+			if(nextIndex == 0) break;
+		}
+		return (nextIndex == endIndex);
+	}
+}

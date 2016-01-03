@@ -55,7 +55,7 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 		if(it->second->getParentLayer() == baseLayer)
 			baseBundles.push_back(it->second);
 	for(std::map<long unsigned int, Strip*>::iterator it = strips.begin(); it != strips.end(); it++)
-		if(it->second->getParentLayer() == baseLayer)
+		if(it->second->getParentLayer() == baseLayer && !(it->second->isStitchMesh())) // skip Stitches - they are re-made separately.
 			baseStrips.push_back(it->second);
 	// Now duplicate all bundles and strips of the base layer.
 	std::map<Bundle*, Bundle*> bmap;
@@ -105,7 +105,36 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 	for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 		it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 	// Collect layer edge vertices and connect them to the underlying layer
-	for(std::map<Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
-		it->second->fixParameters();
-	std::vector<StripPolygon> stitchPolygons;
+	stitchLayer(layers.back());
+}
+
+/** Stitch a floating Layer to the layers underneath it. Stitching is performed
+  * such that the stitch width is as narrow as possible.
+  * Note that stitching only works on floating Layers that are not yet connected
+  * to the Layers under them. After stitching, the Layer should always be
+  * well-defined and have no more holes or openings at its edges.
+  */
+void Terrain::stitchLayer(Layer * layer)
+{
+	xVert startVertex = 0;
+	Bundle * startBundle = 0;
+	// Find an initial vertex to start stitching.
+	for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
+		if(it->second->getParentLayer() == layer)
+			if(it->second->findVertexAtLayerEdge(startVertex))
+			{
+				startBundle = it->second;
+				std::cout << " stitchLayer() : Found vertex at layer edge at "
+					<<startBundle->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
+				break;
+			}
+	// Make a Stitch Strip object.
+	Strip * stitch = makeNewStitch();
+	stitch->resetTexture(layer->getStitchTexture());
+	stitch->setParentLayer(layer);
+	stitch->setScaleFactor(startBundle->getScaleFactor());
+}
+
+void Terrain::getUnderlyingVertex(Bundle * & bundle, xVert & index, const Layer * baseLayer, tiny::vec3 v)
+{
 }
