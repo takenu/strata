@@ -57,14 +57,29 @@ namespace strata
 				BundleTC bundles;
 				StripTC strips;
 
-				/** A function for adding a new Bundle to the Terrain. Most functions for modifying the Terrain are not
-				  * implemented by the Terrain but inside by the object on which the modification is performed. Therefore,
-				  * modifying functions are given access to this function by taking it as an argument, typically using std::bind. */
+				/** A function for adding a new Bundle to the Terrain. Most functions
+				  * for modifying the Terrain are not implemented by the Terrain but
+				  * inside by the object on which the modification is performed. Therefore,
+				  * modifying functions are given access to this function by taking it
+				  * as an argument, typically using std::bind. */
 				Bundle * makeNewBundle(void);
-				/** A function for adding a new Strip to the Terrain. Most functions for modifying the Terrain are not
-				  * implemented by the Terrain but inside by the object on which the modification is performed. Therefore,
-				  * modifying functions are given access to this function by taking it as an argument, typically using std::bind. */
+
+				/** A function for adding a new Strip to the Terrain. Most functions
+				  * for modifying the Terrain are not implemented by the Terrain but
+				  * inside by the object on which the modification is performed. Therefore,
+				  * modifying functions are given access to this function by taking it
+				  * as an argument, typically using std::bind. */
 				Strip * makeNewStrip(void);
+
+				/** A function for adding a new Stitch-Strip to the Terrain. Stitch
+				  * Strips are special Strip objects that define the edge of a
+				  * Layer, connecting it to the Layer that lies under it. Since the
+				  * Stitch Strip is a somewhat different object than a usual Strip,
+				  * it is made impossible to switch on and off the Stitch-ness by a
+				  * const bool 'isStitch' flag in the Strip. This requires the Stitch
+				  * Strip to also have a creator function of its own kind, used for
+				  * example when a Stitch mesh is split. */
+				Strip * makeNewStitch(void);
 
 				/** Split very large meshes (either Bundles or Strips) of this Terrain into smaller fragments. The criterium for splitting
 				  * is exceedance of the maximal vertex-to-vertex distance of the mesh of a threshold size '_maxSize'. */
@@ -124,73 +139,7 @@ namespace strata
 					return nbytes;
 				}
 
-				/** Duplicate an existing layer, resulting in a new layer at a given height above the old one.
-				  * The positioning of the vertices of the new layer is using the normals from the old layer's vertices.
-				  * The Bundle/Strip structure of the new layer will mirror the structure of the underlying layer. Note that
-				  * this similarity is not strictly necessary but merely convenient, one should not be concerned about these
-				  * properties continuing to be similar. In principle it is expected that the structure will diverge during
-				  * terrain manipulation.
-				  */
-				void duplicateLayer(Layer * baseLayer, float thickness)
-				{
-					layers.push_back(new Layer());
-					std::vector<Bundle *> baseBundles;
-					std::vector<Strip *> baseStrips;
-					// First collect bundles and strips of the base layer. Do not add Bundles and Strips yet - that would mess up the std::map.
-					for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
-						if(it->second->getParentLayer() == baseLayer)
-							baseBundles.push_back(it->second);
-					for(std::map<long unsigned int, Strip*>::iterator it = strips.begin(); it != strips.end(); it++)
-						if(it->second->getParentLayer() == baseLayer)
-							baseStrips.push_back(it->second);
-					// Now duplicate all bundles and strips of the base layer.
-					std::map<Bundle*, Bundle*> bmap;
-					std::map<Strip*, Strip*> smap;
-					for(unsigned int i = 0; i < baseBundles.size(); i++)
-					{
-						Bundle * bundle = makeNewBundle();
-						bundle->setParentLayer(layers.back());
-						layers.back()->addBundle(bundle);
-						baseBundles[i]->duplicateBundle(bundle);
-						bmap.emplace(baseBundles[i],bundle);
-					}
-					for(unsigned int i = 0; i < baseStrips.size(); i++)
-					{
-						Strip * strip = makeNewStrip();
-						strip->setParentLayer(layers.back());
-						baseStrips[i]->duplicateStrip(strip);
-						smap.emplace(baseStrips[i],strip);
-					}
-					// Update all cross references: adjust Strip owningBundle, and adjust adjacentBundles/adjacentStrips
-					for(unsigned int i = 0; i < baseBundles.size(); i++)
-						bmap.at(baseBundles[i])->duplicateAdjustAdjacentStrips(smap);
-					for(unsigned int i = 0; i < baseStrips.size(); i++)
-					{
-						smap.at(baseStrips[i])->duplicateAdjustAdjacentBundles(bmap);
-						smap.at(baseStrips[i])->duplicateAdjustOwningBundles(bmap);
-					}
-					// Copy all other attributes, and initialize meshes.
-					layers.back()->setBundleTexture(new tiny::draw::RGBTexture2D(
-								*(masterLayer->getBundleTexture())));
-					layers.back()->setStripTexture(new tiny::draw::RGBTexture2D(
-								*(masterLayer->getStripTexture())));
-					layers.back()->setStitchTexture(new tiny::draw::RGBTexture2D(
-								*(masterLayer->getStitchTexture())));
-					for(std::map<Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
-					{
-						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->resetTexture(layers.back()->getBundleTexture());
-					}
-					for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
-					{
-						it->second->setScaleFactor(it->first->getScaleFactor());
-						it->second->resetTexture(layers.back()->getStripTexture());
-					}
-					// Move all vertices of the Mesh a fixed distance along the direction of their respective normals.
-					layers.back()->increaseThickness(thickness);
-					for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
-						it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
-				}
+				void duplicateLayer(Layer * baseLayer, float thickness);
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
@@ -203,26 +152,6 @@ namespace strata
 					bundles((long unsigned int)(-1), "BundleTC"),
 					strips((long unsigned int)(-1), "StripTC")
 				{
-/*					masterLayer = new MasterLayer();
-					masterLayer->createFlatLayer(std::bind(&Terrain::makeNewBundle, this), std::bind(&Terrain::makeNewStrip, this), 1000.0f, 300, 0.0f);
-					for(unsigned int i = 0; i < 6; i++)
-					{
-						std::cout << " Terrain() : Splitting bundles... "<<std::endl;
-						splitLargeMeshes(bundles);
-						checkMeshConsistency(bundles);
-						checkMeshConsistency(strips);
-						std::cout << " Terrain() : Splitting strips... "<<std::endl;
-						splitLargeMeshes(strips);
-						checkMeshConsistency(bundles);
-						checkMeshConsistency(strips);
-					}
-					std::cout << " Terrain() : Duplicating layer... "<<std::endl;
-					duplicateLayer(masterLayer, 50.0f);
-					for(unsigned int i = 0; i < 20; i++)
-					{
-						std::cout << " Terrain() : Duplicating layer... "<<std::endl;
-						duplicateLayer(layers.back(), 5.0f);
-					}*/
 				}
 
 				void makeFlatLayer(float terrainSize, float _maxMeshSize,
@@ -260,6 +189,34 @@ namespace strata
 				{
 					std::cout << " Terrain::addLayer() : Duplicating layer... "<<std::endl;
 					duplicateLayer((layers.size() == 0 ? masterLayer : layers.back()), thickness);
+				}
+
+				/** Find the underlying Vertex (defined uniquely via its owning Bundle, 'bundle',
+				  * plus the index of the Vertex in that bundle, 'index') for the Vertex at
+				  * position 'v' in the Layer 'baseLayer'.
+				  * This function should look across all layers for the most nearby vertex 'w'
+				  * with the following requirements:
+				  * - 'w' is not a part of baseLayer;
+				  * - 'w' has an averaged normal whose inner product with the direction vector
+				  *   (v-w) is positive (such that the vertex 'v' can be said to be 'above'
+				  *   the underlying Vertex).
+				  *
+				  * Even with these requirements, there are situations in which the resulting
+				  * Vertex would not truly belong to the underlying Layer, so this function
+				  * should ideally be used on Layers that are flat enough (i.e. where the
+				  * curvature is not strong enough to cause vertices of overlying layers
+				  * to have a tangent plane that intersects underlying layers very nearby).
+				  *
+				  * These problem situations would arise when strong curvature is described
+				  * by insufficient mesh divisions (causing the normal to fluctuate wildly
+				  * between vertices and their neighbours). It seems to be difficult to
+				  * devise rigorous checks on this, but the most logical choice appears to
+				  * be to ensure that no underlying vertex has the original vertex as
+				  * an underlying vertex.
+				  */
+//				void getUnderlyingVertex(Bundle * & bundle, xVert & index, const Layer * baseLayer, tiny::vec3 v)
+				void getUnderlyingVertex(Bundle * & , xVert & , const Layer * , tiny::vec3 )
+				{
 				}
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.

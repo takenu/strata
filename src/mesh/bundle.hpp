@@ -164,6 +164,9 @@ namespace strata
 				/** Check the adjacent strips to this Bundle. */
 				virtual bool checkAdjacentMeshes(void) const;
 
+				/** Bundles are never stitching meshes, and they do not create them when splitting. */
+				virtual bool isStitchMesh(void) const { return false; }
+
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
 		};

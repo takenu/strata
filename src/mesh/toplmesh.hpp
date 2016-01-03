@@ -72,13 +72,33 @@ namespace strata
 					return findFarthestPair(farthestPair);
 				}
 
+				inline tiny::vec3 getCentralPoint(void) const { return centralPoint; }
+				inline float getMaxVertexDistance(void) const { return maxDistanceFromCenter; }
+
+				/** Calculate basic TopologicalMesh parameters for use in more efficient searching:
+				  * - the central point
+				  * - the max vertex distance
+				  * These parameters are then stored in the TopologicalMesh. As the position
+				  * of vertices changes, they may lose correctness, and it is up to
+				  * the Terrain class to ensure that recalculation is performed when necessary.
+				  */
+				void fixParameters(void)
+				{
+					centralPoint = findCentralPoint();
+					maxDistanceFromCenter = maxVertexDistance(centralPoint);
+				}
+
 				/** Find the central position of the TopologicalMesh. In principle, the central position is defined
 				  * as the position in 3D space for which the maximum distance to any of the mesh's vertices is 
 				  * minimized. Said otherwise, it is the center of the smallest sphere that contains all of the mesh's
 				  * vertices.
 				  * Because finding the central position could be unreasonably difficult, the actual position returned
 				  * is not actually guaranteed to be the true central position, but it is something close. The choice is
-				  * to take the midpoint of the farthest pair, which should be reasonably close. */
+				  * to take the midpoint of the farthest pair, which should be reasonably close.
+				  *
+				  * For repetitive searches, first use fixParameters to fix the central point,
+				  * then use getCentralPoint to retrieve the fixed value.
+				  */
 				tiny::vec3 findCentralPoint(void) const
 				{
 					VertPair vp(0,0); findFarthestPair(vp);
@@ -87,6 +107,9 @@ namespace strata
 
 				/** Find the maximal distance between 'p' and the TopologicalMesh's vertices. Mathematically,
 				  * maxVertexDistance = min( x in R : forall v in vertices, dist(p-v) <= x)
+				  *
+				  * For repetitive searches, first use fixParameters to fix this distance,
+				  * then use getMaxVertexDistance to retrieve the fixed value.
 				  */
 				float maxVertexDistance(tiny::vec3 p) const
 				{
@@ -188,6 +211,10 @@ namespace strata
 				/** Require that meshes implement a check that tests whether it is properly tracking
 				  * the meshes that are adjacent to it. */
 				virtual bool checkAdjacentMeshes(void) const = 0;
+
+				/** Determine whether the mesh is a Stitching mesh (i.e. connecting
+				  * distinct Layers) or not. Overruled in the Strip class. */
+				virtual bool isStitchMesh(void) const = 0;
 
 				/** Check whether all vertex indices refer to the correct index of 've'.
 				  * This checks the following:
@@ -448,6 +475,9 @@ namespace strata
 
 				float scaleTexture; /**< Scale factor - coordinates should range from -scaleTexture/2 to scaleTexture/2 (used for texture coords) */
 
+				tiny::vec3 centralPoint; /**< The central point of the Mesh, used for efficient searching. */
+				float maxDistanceFromCenter; /**< Maximum distance of vertices from centralPoint. */
+
 				/** Declare a function for adding vertices, which must be overloaded in the end-using class. */
 				virtual xVert addVertex(const VertexType &v) = 0;
 
@@ -574,6 +604,8 @@ namespace strata
 				TopologicalMesh(intf::RenderInterface * _renderer) :
 					MeshInterface(_renderer),
 					scaleTexture(1.0f),
+					centralPoint(0.0f,0.0f,0.0f),
+					maxDistanceFromCenter(0.0f),
 					hasDesignatedEdgeVertices(false)
 				{
 					polygons.push_back( Polygon(0,0,0) );

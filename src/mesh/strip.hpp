@@ -45,7 +45,7 @@ namespace strata
 				{
 				}
 
-				/** Allow construction from existing vertex plus mfid. Used when copying a Vertex from a Bundle into a Strip.
+				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex from a Bundle into a Strip.
 				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
 				StripVertex(const Vertex &v, Bundle * _owner) : StripVertex(v.pos,  _owner, v.index) {}
 
@@ -68,6 +68,30 @@ namespace strata
 				void setOwningBundle(Bundle * _owner) { owner = _owner; }
 		};
 
+		/** A standalone polygon defined by three StripVertices. Multiple of these
+		  * polygons can be combined into a Strip. */
+		class StripPolygon
+		{
+			private:
+			public:
+				StripVertex a;
+				StripVertex b;
+				StripVertex c;
+
+				/** Construct a StripPolygon from three Vertices and their owning Bundles. */
+				StripPolygon(Bundle * aowner, const Vertex &_a, Bundle * bowner,
+						const Vertex &_b, Bundle * cowner, const Vertex &_c) :
+					a(_a, aowner), b(_b, bowner), c(_c, cowner)
+				{
+				}
+
+				/** Construct a StripPolygon from three StripVertices. */
+				StripPolygon(const StripVertex &_a, const StripVertex &_b, const StripVertex &_c) :
+					a(_a), b(_b), c(_c)
+				{
+				}
+		};
+
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
 		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
 		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<StripVertex>
@@ -75,6 +99,13 @@ namespace strata
 			private:
 				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
 				friend class Mesh<StripVertex>; // to let the Mesh access our protected getkey()
+
+				/** A bool to determine whether the Strip is a Stitch (connecting distinct Layers)
+				  * or a normal Strip (connecting Bundles of the same Layer).
+				  * Normal Strips must have all three StripVertices for every Polygon within the same layer.
+				  * Stitches may not have any Polygons for which all three StripVertices are in the same layer.
+				  */
+				const bool isStitch;
 
 				std::vector<Bundle*> adjacentBundles; /**< A list of all Bundles that contain vertices used by polygons of this Strip. */
 
@@ -136,9 +167,10 @@ namespace strata
 				}
 			protected:
 			public:
-				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer) :
+				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer, bool _isStitch) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
-					Mesh<StripVertex>(_renderer)
+					Mesh<StripVertex>(_renderer),
+					isStitch(_isStitch)
 				{
 				}
 
@@ -269,6 +301,11 @@ namespace strata
 				virtual float findFarthestPair(VertPair &farthestPair)
 				{
 					return analyseShapeDirect(farthestPair);
+				}
+
+				virtual bool isStitchMesh(void) const
+				{
+					return isStitch;
 				}
 
 				virtual bool split(std::function<Bundle * (void)> makeNewBundle, std::function<Strip * (void)> makeNewStrip);
