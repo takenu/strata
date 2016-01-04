@@ -105,7 +105,7 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 	for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 		it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 	// Collect layer edge vertices and connect them to the underlying layer
-	stitchLayer(layers.back());
+//	stitchLayer(layers.back());
 }
 
 /** Stitch a floating Layer to the layers underneath it. Stitching is performed
