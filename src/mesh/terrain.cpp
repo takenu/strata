@@ -105,7 +105,7 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 	for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 		it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 	// Collect layer edge vertices and connect them to the underlying layer
-//	stitchLayer(layers.back());
+	stitchLayer(layers.back());
 }
 
 /** Stitch a floating Layer to the layers underneath it. Stitching is performed
@@ -116,6 +116,7 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
   */
 void Terrain::stitchLayer(Layer * layer)
 {
+//	std::cout << " Stitch layer "<<layer<<"..."<<std::endl;
 	xVert startVertex = 0;
 	Bundle * startBundle = 0;
 	// Find an initial vertex to start stitching.
@@ -132,7 +133,7 @@ void Terrain::stitchLayer(Layer * layer)
 	Strip * stitch = makeNewStitch();
 	stitch->resetTexture(layer->getStitchTexture());
 	stitch->setParentLayer(layer);
-	stitch->setScaleFactor(startBundle->getScaleFactor());
+//	stitch->setScaleFactor(startBundle->getScaleFactor());
 }
 
 void Terrain::getUnderlyingVertex(Bundle * & bundle, xVert & index, const Layer * baseLayer, tiny::vec3 v)
