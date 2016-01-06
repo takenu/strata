@@ -125,9 +125,8 @@ void Terrain::stitchLayer(Layer * layer)
 			if(it->second->findVertexAtLayerEdge(startVertex))
 			{
 				startBundle = it->second;
-				std::cout << " stitchLayer() : Found vertex at layer edge at "
-					<<startBundle->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
-				break;
+				if(layers.size()==1) std::cout << " stitchLayer() : Found vertex at layer edge at "<<startBundle->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
+//				break;
 			}
 	// Make a Stitch Strip object.
 	Strip * stitch = makeNewStitch();

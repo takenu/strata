@@ -106,7 +106,7 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   * where 'v' and 'w' are remote indices rather than normal indices.
   * If not found, return 0.
   */
-xVert Strip::findRemoteVertexPolyNeighbor(xVert v, xVert w,
+xVert Strip::findRemoteVertexPolyNeighbor(const Bundle * &neighborBundle, xVert v, xVert w,
 		const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const
 {
 	xVert remoteNeighborIndex = 0;
@@ -135,7 +135,12 @@ xVert Strip::findRemoteVertexPolyNeighbor(xVert v, xVert w,
 	{
 		xVert localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
 		if(localNeighbor > 0)
+		{
+//			std::cout << " Strip::fRVPN() : Found poly "<<vertices[ve[vLocal]].pos<<", "
+//				<< vertices[ve[wLocal]].pos<<", "<<vertices[ve[localNeighbor]].pos<<std::endl;
 			remoteNeighborIndex = vertices[ve[localNeighbor]].getRemoteIndex();
+			neighborBundle = vertices[ve[localNeighbor]].getOwningBundle();
+		}
 		// This also may happen, if the neighbor is not in this Strip but in another Strip that
 		// also contains the vertex 'v'.
 //		else std::cout << " Strip::findRemoteVertexPolyNeighbor() : Not found! "<<std::endl;

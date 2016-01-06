@@ -304,6 +304,17 @@ Bundle::~Bundle(void)
 
 bool Bundle::findVertexAtLayerEdge(xVert &index) const
 {
+//	return false;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+	{
+		if(isAtLayerEdge(vertices[i].index))
+		{
+//			std::cout << " Bundle::findVertexAtLayerEdge() : Found edge at "<<vertices[i].pos<<"!"<<std::endl;
+			index = vertices[i].index;
+			return true;
+		}
+//		else std::cout << " Bundle::findVertexAtLayerEdge() : Vertex "<<i<<" at "<<vertices[i].pos<<" is not at edge! "<<std::endl;
+	}
 	return false;
 }
 
@@ -324,16 +335,33 @@ bool Bundle::isAtLayerEdge(xVert v) const
 	{
 		xVert startIndex = findAdjacentEdgeVertex(v, false);
 		xVert endIndex = findAdjacentEdgeVertex(v, true);
+//		std::cout << " Neighbor vertices are at "<<vertices[ve[startIndex]].pos<<" and "<<vertices[ve[endIndex]].pos<<std::endl;
 		// Now try to find polygons via which we can move clockwise around 'v'
 		// from startIndex to endIndex.
-		xVert nextIndex = startIndex;
-		while(nextIndex != endIndex)
+		xVert neighborIndex = startIndex;
+		const Bundle * neighborBundle = this;
+		xVert nextIndex = 0;
+		const Bundle * nextBundle = 0;
+		while(neighborIndex != endIndex || neighborBundle != this)
 		{
+			// Try to find neighborIndex from all nearby Strips.
 			for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 			{
+				// Try finding (nextIndex, nextBundle) using the pairs (v, this)
+				// and (neighborIndex, neighborBundle) to uniquely fix the target.
+				nextIndex = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
+						nextBundle, v, neighborIndex, this, neighborBundle, true);
+				if(nextIndex > 0)
+				{
+//					std::cout << " Bundle::isAtLayerEdge() : Found next vertex in Strip! "<<std::endl;
+					neighborIndex = nextIndex;
+					neighborBundle = nextBundle;
+					break; // Break loop over strips, continue 'while'
+				}
+//				else if(i+1==adjacentStrips.size()) std::cout << " Bundle::isAtLayerEdge() : No next vertex! "<<std::endl;
 			}
-			if(nextIndex == 0) break;
+			if(nextIndex == 0) break; // Failed to find next vertex - this is the edge
 		}
-		return (nextIndex == endIndex);
+		return (neighborIndex != endIndex);
 	}
 }

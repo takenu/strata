@@ -304,7 +304,7 @@ namespace strata
 				  *  \ /
 				  *   v
 				  */
-				xVert findRemoteVertexPolyNeighbor(xVert v, xVert w,
+				xVert findRemoteVertexPolyNeighbor(const Bundle * &neighborBundle, xVert v, xVert w,
 						const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const;
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
