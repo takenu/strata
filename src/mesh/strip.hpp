@@ -88,6 +88,9 @@ namespace strata
 				void setOffset(float f) { offset = f; }
 				float getOffset(void) const { return offset; }
 
+				void setSecondaryPos(tiny::vec3 p) { secondaryPos = p; }
+				tiny::vec3 getSecondaryPos(void) const { return secondaryPos; }
+
 				bool isStitchVertex(void) const { return (secondaryOwner != 0); }
 
 				tiny::vec3 getPosition(void) const
@@ -254,7 +257,16 @@ namespace strata
 					{
 						if(bmap.find(vertices[i].getOwningBundle()) == bmap.end())
 							std::cout << " Strip::duplicateAdjustOwningBundles() : WARNING: Failed to adjust owning bundle of a Strip vertex! "<<std::endl;
-						else vertices[i].setOwningBundle(bmap.at(vertices[i].getOwningBundle()));
+						else
+						{
+							vertices[i].setOwningBundle(bmap.at(vertices[i].getOwningBundle()));
+							if(vertices[i].isStitchVertex())
+							{
+								if(bmap.find(vertices[i].getSecondaryBundle()) == bmap.end())
+									std::cout << " Strip::duplicateAdjustOwningBundles() : WARNING: Failed to adjust secondary bundle of a Strip vertex! "<<std::endl;
+								else vertices[i].setSecondaryBundle(bmap.at(vertices[i].getSecondaryBundle()));
+							}
+						}
 					}
 				}
 
@@ -300,14 +312,23 @@ namespace strata
 				{
 					bool isAdjacentMesh = false;
 					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
 						if(vertices[i].getOwningBundle() == oldBundle && vmap.find(vertices[i].getRemoteIndex()) != vmap.end())
 						{
 							vertices[i].setOwningBundle(newBundle);
 							vertices[i].setRemoteIndex(vmap.at(vertices[i].getRemoteIndex()));
 							isAdjacentMesh = true;
 						}
+						else if(vertices[i].isStitchVertex() && vertices[i].getSecondaryBundle() == oldBundle
+								&& vmap.find(vertices[i].getSecondaryIndex()) != vmap.end())
+						{
+							vertices[i].setSecondaryBundle(newBundle);
+							vertices[i].setSecondaryIndex(vmap.at(vertices[i].getSecondaryIndex()));
+							isAdjacentMesh = true;
+						}
 						else if(vertices[i].getOwningBundle() == newBundle)
 							isAdjacentMesh = true; // If remote index and owning bundle are already adjusted, simply mark mesh as adjacent.
+					}
 					if(isAdjacentMesh) addAdjacentBundle(newBundle);
 					return isAdjacentMesh;
 				}

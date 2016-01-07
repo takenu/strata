@@ -96,7 +96,11 @@ tiny::mesh::StaticMesh Strip::convertToMesh(void) const
 void Strip::recalculateVertexPositions(void)
 {
 	for(unsigned int i = 1; i < vertices.size(); i++)
+	{
 		vertices[i].pos = vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex());
+		if(vertices[i].isStitchVertex())
+			vertices[i].setSecondaryPos(vertices[i].getSecondaryBundle()->getVertexPositionFromIndex(vertices[i].getSecondaryIndex()));
+	}
 }
 
 void Strip::duplicateStrip(Strip * s) const
@@ -114,7 +118,8 @@ void Strip::duplicateStrip(Strip * s) const
 bool Strip::isAdjacentToVertices(const Bundle * b) const
 {
 	for(unsigned int i = 1; i < vertices.size(); i++)
-		if(vertices[i].getOwningBundle() == b) return true;
+		if(vertices[i].getOwningBundle() == b
+				|| vertices[i].getSecondaryBundle() == b) return true;
 	return false;
 }
 
@@ -124,6 +129,8 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   *   v
   * where 'v' and 'w' are remote indices rather than normal indices.
   * If not found, return 0.
+  * This function doesn't make sense for Stitch Strips so there is no attempt
+  * to include secondary Bundles.
   */
 xVert Strip::findRemoteVertexPolyNeighbor(const Bundle * &neighborBundle, xVert v, xVert w,
 		const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const
@@ -173,6 +180,7 @@ Strip::~Strip(void)
 		assert(adjacentBundles[i]->releaseAdjacentStrip(this));
 }
 
+// TODO: Add secondary Bundle to below function for checking Stitch meshes as well.
 bool Strip::checkAdjacentMeshes(void) const
 {
 	bool adjacentMeshesAreComplete = true;
