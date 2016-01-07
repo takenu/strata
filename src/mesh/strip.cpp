@@ -74,6 +74,25 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 	return true;
 }
 
+tiny::mesh::StaticMesh Strip::convertToMesh(void) const
+{
+	tiny::mesh::StaticMesh mesh;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		mesh.vertices.push_back( tiny::mesh::StaticMeshVertex(
+				tiny::vec2(vertices[i].pos.z/scaleTexture + 0.5, vertices[i].pos.x/scaleTexture + 0.5), // texture coordinate
+				tiny::vec3(1.0f,0.0f,0.0f), // tangent (appears to do nothing)
+				(vertices[i].poly[0] > 0 ? computeNormal(vertices[i].poly[0]) : tiny::vec3(0.0f,1.0f,0.0f)),
+				vertices[i].getPosition() ) ); // position
+	for(unsigned int i = 1; i < polygons.size(); i++)
+	{
+		mesh.indices.push_back( ve[polygons[i].c] - 1 ); // -1 because vertices[0] is the error value and the mesh doesn't have that so it's shifted by 1
+		mesh.indices.push_back( ve[polygons[i].b] - 1 ); // Note that we add polygons in reverse order because OpenGL likes them counterclockwise while we store them clockwise
+		mesh.indices.push_back( ve[polygons[i].a] - 1 );
+	}
+
+	return mesh;
+}
+
 void Strip::recalculateVertexPositions(void)
 {
 	for(unsigned int i = 1; i < vertices.size(); i++)

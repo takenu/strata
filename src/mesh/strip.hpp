@@ -31,12 +31,22 @@ namespace strata
 	{
 		class Bundle;
 
-		/** A borrowed vertex from some Bundle. */
+		/** A borrowed vertex from some Bundle. It is used for Strip meshes, and it
+		  * contains a reference to the Bundle that owns the original Vertex as well
+		  * as the index of this Vertex in the owning Bundle.
+		  * For Strip meshes that are also Stitches, a secondary remote Vertex is
+		  * defined and the actual location of the StripVertex is understood to be
+		  * somewhere along the line connecting the primary and the secondary Vertex.
+		  */
 		class StripVertex : public Vertex
 		{
 			private:
 				Bundle * owner; /**< The Bundle that owns this Vertex. */
 				xVert remoteIndex; /**< The index of this Vertex in its owning Bundle. */
+				Bundle * secondaryOwner; /**< The Bundle that owns the secondary Vertex. */
+				xVert secondaryIndex; /**< The index of the secondary Vertex in its Bundle. */
+				tiny::vec3 secondaryPos; /**< The position of the secondary Vertex. */
+				float offset; /**< The offset (between 0 and 1) of the vertex from the primary towards the secondary Vertex.*/
 			public:
 				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
 				  * This form allows construction from remote index + remote bundle + position. This can be used
@@ -56,7 +66,8 @@ namespace strata
 				  * This duplicates the remoteIndex and mfid, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
 				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.owner, v.remoteIndex) {}
 
-				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex)
+				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
+					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
 				}
 
@@ -66,6 +77,24 @@ namespace strata
 				Bundle * getOwningBundle(void) { return owner; }
 				const Bundle * getOwningBundle(void) const { return owner; }
 				void setOwningBundle(Bundle * _owner) { owner = _owner; }
+
+				const xVert & getSecondaryIndex(void) const { return secondaryIndex; }
+				void setSecondaryIndex(const xVert &v) { secondaryIndex = v; }
+
+				void setSecondaryBundle(Bundle * _owner) { secondaryOwner = _owner; }
+				Bundle * getSecondaryBundle(void) { return secondaryOwner; }
+				const Bundle * getSecondaryBundle(void) const { return secondaryOwner; }
+
+				void setOffset(float f) { offset = f; }
+				float getOffset(void) const { return offset; }
+
+				bool isStitchVertex(void) const { return (secondaryOwner != 0); }
+
+				tiny::vec3 getPosition(void) const
+				{
+					if(isStitchVertex()) return (pos*(1.0f-offset)+secondaryPos*offset);
+					else return pos;
+				}
 		};
 
 		/** A standalone polygon defined by three StripVertices. Multiple of these
@@ -190,6 +219,8 @@ namespace strata
 				{
 					return vertices.size();
 				}
+
+				virtual tiny::mesh::StaticMesh convertToMesh(void) const;
 
 				/** Re-calculate the Strip's vertex positions, bringing them back in line with the positions of the Bundle vertices
 				  * that they were based upon. */

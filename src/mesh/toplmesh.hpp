@@ -46,7 +46,8 @@ namespace strata
 		{
 			friend class Mesh<VertexType>;
 			public:
-				/** Implement pure virtual function convertToMesh, originally from the DrawableMesh. */
+				/** Implement pure virtual function convertToMesh, originally from the
+				  * DrawableMesh. This is implemented separately in the Strip. */
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const
 				{
 					tiny::mesh::StaticMesh mesh;
@@ -860,6 +861,19 @@ namespace strata
 					}
 					return false;
 				}
+
+				/** Calculate the normal of a polygon. */
+				inline tiny::vec3 computeNormal(const Polygon & p) const
+				{
+					return normalize(cross(vertices[ve[p.c]].pos - vertices[ve[p.a]].pos,
+										   vertices[ve[p.b]].pos - vertices[ve[p.a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
+				}
+
+				/** Calculate the normal of a polygon by its index. */
+				inline tiny::vec3 computeNormal(xPoly _p) const
+				{
+					return computeNormal(polygons[po[_p]]);
+				}
 			private:
 				/** A flag for signaling whether or not the Mesh has a consistent and valid set of edge vertices. If true, Vertex::nextEdgeVertex is
 				  * reliable and can be used to follow the edge. If false, the former is not guaranteed to be correct and, in general, should not be
@@ -881,19 +895,6 @@ namespace strata
 					}
 					if(checkEdgeVertices())
 						hasDesignatedEdgeVertices = true;
-				}
-
-				/** Calculate the normal of a polygon. */
-				inline tiny::vec3 computeNormal(const Polygon & p) const
-				{
-					return normalize(cross(vertices[ve[p.c]].pos - vertices[ve[p.a]].pos,
-										   vertices[ve[p.b]].pos - vertices[ve[p.a]].pos));  // normal (use first poly's normal if available, otherwise use vertical)
-				}
-
-				/** Calculate the normal of a polygon by its index. */
-				inline tiny::vec3 computeNormal(xPoly _p) const
-				{
-					return computeNormal(polygons[po[_p]]);
 				}
 
 				/** A function guaranteed to return an edge vertex. */
