@@ -201,11 +201,29 @@ bool Strip::checkAdjacentMeshes(void) const
 				<<" in list of size "<<adjacentBundles.size()<<"!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
-		else ++(adjacentBundleRefs.at(vertices[i].getOwningBundle()));
+		else if(vertices[i].isStitchVertex() && !(isAdjacentToBundle(vertices[i].getSecondaryBundle())))
+		{
+			std::cout << " Strip::checkAdjacentMeshes() : in Strip "<<this<<",";
+			std::cout << " Stitch Vertex "<<i<<" with remote index "<<vertices[i].getSecondaryIndex()<<" refers to unknown Bundle "<<vertices[i].getSecondaryBundle()
+				<<" in list of size "<<adjacentBundles.size()<<"!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+		else
+		{
+			++(adjacentBundleRefs.at(vertices[i].getOwningBundle()));
+			if(vertices[i].isStitchVertex())
+					++(adjacentBundleRefs.at(vertices[i].getSecondaryBundle()));
+		}
 		if(!(vertices[i].getOwningBundle()->isValidVertexIndex(vertices[i].getRemoteIndex())))
 		{
 			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Vertex "<<i<<" with remote index "<<vertices[i].getRemoteIndex()<<" refers to Bundle without reverse link!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+		else if(vertices[i].isStitchVertex() && !(vertices[i].getSecondaryBundle()->isValidVertexIndex(vertices[i].getSecondaryIndex())))
+		{
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Stitch Vertex "<<i<<" with remote index "<<vertices[i].getSecondaryIndex()<<" refers to Bundle without reverse link!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
 		else if( tiny::length(vertices[i].pos - vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex())) > 0.01)
@@ -213,6 +231,23 @@ bool Strip::checkAdjacentMeshes(void) const
 			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Vertex "<<i<<" has position "<<vertices[i].pos<<" but remote vertex "<<vertices[i].getRemoteIndex()<<" has position "
 				<< vertices[i].getOwningBundle()->getVertexPositionFromIndex(vertices[i].getRemoteIndex())<<"!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+		else if(vertices[i].isStitchVertex() && tiny::length(vertices[i].getSecondaryPos() - vertices[i].getSecondaryBundle()->getVertexPositionFromIndex(vertices[i].getSecondaryIndex())) > 0.01)
+		{
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Stitch Vertex "<<i<<" has position "<<vertices[i].getSecondaryPos()<<" but remote vertex "<<vertices[i].getSecondaryIndex()<<" has position "
+				<< vertices[i].getSecondaryBundle()->getVertexPositionFromIndex(vertices[i].getSecondaryIndex())<<"!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+		else if(vertices[i].isStitchVertex() && (vertices[i].getOwningBundle()->getParentLayer() == getParentLayer()
+					|| vertices[i].getSecondaryBundle()->getParentLayer() == getParentLayer()) )
+		{
+			// NOTE: This check may eventually fail 'legally' when a layer faults and parts of it are deposited on top of itself.
+			// However, since this kind of topology initially is not to be expected, the check should pass. Later on
+			// this can be removed, when it becomes possible for the Terrain to shift fragments of Layers on top of itself.
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Stitch Vertex "<<i<<" is stitching the Layer onto itself! "<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
 	}
@@ -223,6 +258,13 @@ bool Strip::checkAdjacentMeshes(void) const
 		{
 			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Polygon "<<i<<" has three vertices from the same Bundle!"<<std::endl;
+			adjacentMeshesAreComplete = false;
+		}
+		else if( isStitch && !(vertices[ve[polygons[i].a]].isStitchVertex() || vertices[ve[polygons[i].b]].isStitchVertex()
+					|| vertices[ve[polygons[i].c]].isStitchVertex()))
+		{
+			std::cout << " Strip::checkAdjacentMeshes() :";
+			std::cout << " Polygon "<<i<<" is in a Stitch Strip but has no Stitch vertices!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
 	}
