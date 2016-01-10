@@ -241,7 +241,7 @@ namespace strata
 				  */
 				void duplicateStrip(Strip * s) const;
 
-				void duplicateAdjustAdjacentBundles(std::map<Bundle*, Bundle*> &bmap)
+				void duplicateAdjustAdjacentBundles(std::map<const Bundle*, Bundle*> &bmap)
 				{
 					for(unsigned int i = 0; i < adjacentBundles.size(); i++)
 					{
@@ -251,7 +251,7 @@ namespace strata
 					}
 				}
 
-				void duplicateAdjustOwningBundles(std::map<Bundle*, Bundle*> &bmap)
+				void duplicateAdjustOwningBundles(std::map<const Bundle*, Bundle*> &bmap)
 				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
 					{

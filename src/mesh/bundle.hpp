@@ -109,7 +109,7 @@ namespace strata
 				  */
 				void duplicateBundle(Bundle * b) const;
 
-				void duplicateAdjustAdjacentStrips(std::map<Strip*, Strip*> &smap)
+				void duplicateAdjustAdjacentStrips(std::map<const Strip*, Strip*> &smap)
 				{
 					for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 					{

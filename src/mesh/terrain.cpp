@@ -45,21 +45,27 @@ Strip * Terrain::makeNewStitch(void)
   * properties continuing to be similar. In principle it is expected that the structure will diverge during
   * terrain manipulation.
   */
-void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
+void Terrain::duplicateLayer(const Layer * baseLayer, float thickness)
 {
 	layers.push_back(new Layer());
-	std::vector<Bundle *> baseBundles;
-	std::vector<Strip *> baseStrips;
+	layers.back()->setBundleTexture(new tiny::draw::RGBTexture2D(
+				*(masterLayer->getBundleTexture())));
+	layers.back()->setStripTexture(new tiny::draw::RGBTexture2D(
+				*(masterLayer->getStripTexture())));
+	layers.back()->setStitchTexture(new tiny::draw::RGBTexture2D(
+				*(masterLayer->getStitchTexture())));
+	std::vector<const Bundle *> baseBundles;
+	std::vector<const Strip *> baseStrips;
 	// First collect bundles and strips of the base layer. Do not add Bundles and Strips yet - that would mess up the std::map.
-	for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
+	for(std::map<long unsigned int, Bundle*>::const_iterator it = bundles.begin(); it != bundles.end(); it++)
 		if(it->second->getParentLayer() == baseLayer)
 			baseBundles.push_back(it->second);
-	for(std::map<long unsigned int, Strip*>::iterator it = strips.begin(); it != strips.end(); it++)
+	for(std::map<long unsigned int, Strip*>::const_iterator it = strips.begin(); it != strips.end(); it++)
 		if(it->second->getParentLayer() == baseLayer && !(it->second->isStitchMesh())) // skip Stitches - they are re-made separately.
 			baseStrips.push_back(it->second);
 	// Now duplicate all bundles and strips of the base layer.
-	std::map<Bundle*, Bundle*> bmap;
-	std::map<Strip*, Strip*> smap;
+	std::map<const Bundle*, Bundle*> bmap;
+	std::map<const Strip*, Strip*> smap;
 	for(unsigned int i = 0; i < baseBundles.size(); i++)
 	{
 		Bundle * bundle = makeNewBundle();
@@ -75,6 +81,8 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 		baseStrips[i]->duplicateStrip(strip);
 		smap.emplace(baseStrips[i],strip);
 	}
+	// Move all vertices of the new Mesh a fixed distance along the direction of their respective normals.
+	layers.back()->increaseThickness(thickness);
 	// Update all cross references: adjust Strip owningBundle, and adjust adjacentBundles/adjacentStrips
 	for(unsigned int i = 0; i < baseBundles.size(); i++)
 		bmap.at(baseBundles[i])->duplicateAdjustAdjacentStrips(smap);
@@ -83,27 +91,19 @@ void Terrain::duplicateLayer(Layer * baseLayer, float thickness)
 		smap.at(baseStrips[i])->duplicateAdjustAdjacentBundles(bmap);
 		smap.at(baseStrips[i])->duplicateAdjustOwningBundles(bmap);
 	}
+	for(std::map<const Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
+		it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 	// Copy all other attributes, and initialize meshes.
-	layers.back()->setBundleTexture(new tiny::draw::RGBTexture2D(
-				*(masterLayer->getBundleTexture())));
-	layers.back()->setStripTexture(new tiny::draw::RGBTexture2D(
-				*(masterLayer->getStripTexture())));
-	layers.back()->setStitchTexture(new tiny::draw::RGBTexture2D(
-				*(masterLayer->getStitchTexture())));
-	for(std::map<Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
+	for(std::map<const Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
 	{
 		it->second->setScaleFactor(it->first->getScaleFactor());
 		it->second->resetTexture(layers.back()->getBundleTexture());
 	}
-	for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
+	for(std::map<const Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
 	{
 		it->second->setScaleFactor(it->first->getScaleFactor());
 		it->second->resetTexture(layers.back()->getStripTexture());
 	}
-	// Move all vertices of the Mesh a fixed distance along the direction of their respective normals.
-	layers.back()->increaseThickness(thickness);
-	for(std::map<Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
-		it->second->recalculateVertexPositions(); // Strip positions are not updated by the Layer and need to be re-set
 	// Collect layer edge vertices and connect them to the underlying layer
 	stitchLayer(layers.back());
 }

@@ -63,6 +63,9 @@ namespace strata
 				/** Initialize the texture from another texture. */
 				void resetTexture(tiny::draw::RGBTexture2D * _texture);
 
+				/** Reset the Mesh, e.g. when vertex positions change. */
+				void resetMesh(void);
+
 				virtual ~DrawableMesh(void);
 		};
 	} // end namespace mesh

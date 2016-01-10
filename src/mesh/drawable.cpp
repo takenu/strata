@@ -49,6 +49,22 @@ void DrawableMesh::resetTexture(tiny::draw::RGBTexture2D * _texture)
 	else initMesh();
 }
 
+void DrawableMesh::resetMesh(void)
+{
+	if(!renderMesh)
+		std::cout << " Drawable::initMesh() : No mesh yet, use initMesh() instead! "<<std::endl;
+	else if(!texture)
+		std::cout << " Drawable::initMesh() : No texture yet, cannot reset! "<<std::endl;
+	else
+	{
+		// TODO: Instead of deleting and re-adding the mesh, we should be able to update its buffers.
+		renderer->freeWorldRenderable(renderMesh);
+		delete renderMesh;
+		renderMesh = 0;
+		initMesh();
+	}
+}
+
 DrawableMesh::~DrawableMesh(void)
 {
 	if(renderMesh)

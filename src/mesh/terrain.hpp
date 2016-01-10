@@ -141,7 +141,7 @@ namespace strata
 
 				/** Duplicate the specified layer, and transpose the copy upwards
 				  * by a distance 'thickness'. */
-				void duplicateLayer(Layer * baseLayer, float thickness);
+				void duplicateLayer(const Layer * baseLayer, float thickness);
 
 				/** Stitch a Layer to the underlying layers. Possible only on
 				  * Layers that are not yet stitched onto the rest of the Terrain. */
