@@ -79,7 +79,7 @@ namespace strata
 				  * const bool 'isStitch' flag in the Strip. This requires the Stitch
 				  * Strip to also have a creator function of its own kind, used for
 				  * example when a Stitch mesh is split. */
-				Strip * makeNewStitch(void);
+				Strip * makeNewStitch(bool isTransverseStitch);
 
 				/** Split very large meshes (either Bundles or Strips) of this Terrain into smaller fragments. The criterium for splitting
 				  * is exceedance of the maximal vertex-to-vertex distance of the mesh of a threshold size '_maxSize'. */
@@ -145,7 +145,7 @@ namespace strata
 
 				/** Stitch a Layer to the underlying layers. Possible only on
 				  * Layers that are not yet stitched onto the rest of the Terrain. */
-				void stitchLayer(Layer * layer);
+				void stitchLayer(Layer * layer, bool stitchTransverse);
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
@@ -191,6 +191,9 @@ namespace strata
 					}
 				}
 
+				/** Add a Layer by copying the last Layer of the 'layers' array. This works
+				  * well for creating an initial terrain, but it does not make sense for
+				  * evolved terrains as only a duplicate of an existing Layer is produced. */
 				void addLayer(float thickness)
 				{
 					std::cout << " Terrain::addLayer() : Duplicating layer... "<<std::endl;

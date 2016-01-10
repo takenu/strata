@@ -60,7 +60,9 @@ namespace strata
 				/** Get a const reference to the Drawable's texture, in order to allow making a copy of it. */
 				tiny::draw::RGBTexture2D * getTexture(void) { return texture; }
 
-				/** Initialize the texture from another texture. */
+				/** Initialize the texture from another texture. If there is no Mesh yet, this
+				  * function will also initialize it through initMesh() and convertToMesh().
+				  */
 				void resetTexture(tiny::draw::RGBTexture2D * _texture);
 
 				/** Reset the Mesh, e.g. when vertex positions change. */

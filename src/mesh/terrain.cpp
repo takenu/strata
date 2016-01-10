@@ -30,12 +30,12 @@ Bundle * Terrain::makeNewBundle(void)
 
 Strip * Terrain::makeNewStrip(void)
 {
-	return new Strip(++stripCounter, strips, renderer, false);
+	return new Strip(++stripCounter, strips, renderer, false, false);
 }
 
-Strip * Terrain::makeNewStitch(void)
+Strip * Terrain::makeNewStitch(bool isTransverseStitch)
 {
-	return new Strip(++stripCounter, strips, renderer, true);
+	return new Strip(++stripCounter, strips, renderer, true, isTransverseStitch);
 }
 
 /** Duplicate an existing layer, resulting in a new layer at a given height above the old one.
@@ -104,8 +104,11 @@ void Terrain::duplicateLayer(const Layer * baseLayer, float thickness)
 		it->second->setScaleFactor(it->first->getScaleFactor());
 		it->second->resetTexture(layers.back()->getStripTexture());
 	}
-	// Collect layer edge vertices and connect them to the underlying layer
-	stitchLayer(layers.back());
+	// Collect layer edge vertices and connect them to the underlying layer. Since
+	// layer duplication is normally done on flat terrains, extending Layers along
+	// their surface is not an option and we force all Stitches to be transversal
+	// (i.e. cutting through the Layer).
+	stitchLayer(layers.back(), true);
 }
 
 /** Stitch a floating Layer to the layers underneath it. Stitching is performed
@@ -114,24 +117,38 @@ void Terrain::duplicateLayer(const Layer * baseLayer, float thickness)
   * to the Layers under them. After stitching, the Layer should always be
   * well-defined and have no more holes or openings at its edges.
   */
-void Terrain::stitchLayer(Layer * layer)
+void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 {
 //	std::cout << " Stitch layer "<<layer<<"..."<<std::endl;
 	xVert startVertex = 0;
-	Bundle * startBundle = 0;
+//	Bundle * startBundle = 0;
+	std::vector<StripVertex> edgeVertices;
 	// Find an initial vertex to start stitching.
+	// For every Bundle such a vertex is found. We will stitch until all of
+	// these vertices are stitched. Using a vertex per Bundle (rather than
+	// per Layer) ensures that stitching works even on Layers that consist of
+	// multiple non-mutually-connected meshes.
 	for(std::map<long unsigned int, Bundle*>::iterator it = bundles.begin(); it != bundles.end(); it++)
 		if(it->second->getParentLayer() == layer)
 			if(it->second->findVertexAtLayerEdge(startVertex))
 			{
-				startBundle = it->second;
-				if(layers.size()==1) std::cout << " stitchLayer() : Found vertex at layer edge at "<<startBundle->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
+//				startBundle = it->second;
+				if(layers.size()==1) std::cout << " stitchLayer() : Found vertex at layer edge at "<<it->second->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
+				edgeVertices.push_back( it->second->getVertexPositionFromIndex(startVertex) );
+				edgeVertices.back().setOwningBundle(it->second);
+				edgeVertices.back().setRemoteIndex(startVertex);
 //				break;
 			}
 	// Make a Stitch Strip object.
-	Strip * stitch = makeNewStitch();
+/*	Strip * stitch = 0;
+	while(edgeVertices.size() > 0)
+	{
+		StripVertex startVertex = edgeVertices.size();
+		stitch = makeNewStitch();
+	}
+	// Set Stitch texture and parent.
 	stitch->resetTexture(layer->getStitchTexture());
-	stitch->setParentLayer(layer);
+	stitch->setParentLayer(layer);*/
 //	stitch->setScaleFactor(startBundle->getScaleFactor());
 }
 

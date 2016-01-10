@@ -134,10 +134,33 @@ namespace strata
 
 				/** A bool to determine whether the Strip is a Stitch (connecting distinct Layers)
 				  * or a normal Strip (connecting Bundles of the same Layer).
-				  * Normal Strips must have all three StripVertices for every Polygon within the same layer.
-				  * Stitches may not have any Polygons for which all three StripVertices are in the same layer.
+				  * Normal Strips must have all three StripVertices for every Polygon
+				  * within the same layer.
+				  * Stitches may on rare occasions have Polygons for which all three
+				  * StripVertices are in the same layer, e.g. after thrust faulting.
 				  */
 				const bool isStitch;
+
+				/** A bool to signal, for Stitch Strips, whether the stitching mode is
+				  * transverse (i.e. perpendicular to the Terrain tangent surface) or
+				  * tangential (i.e. tangent to the Terrain).
+				  * The distinction is in how it connects to the underlying Layer - via
+				  * a texture displaying the layered structure of the Layer, or via a
+				  * texture similar to the own Layer's surface texture. In the former,
+				  * transverse case, the own Layer's vertices determine the thickness
+				  * that is displayed (as a fraction of the Layer's initial thickness),
+				  * in the latter, tangent case, the texture of the adjacent Bundle has
+				  * to be extended.
+				  * Layers can have both types of Stitches simultaneously, e.g. when a
+				  * Layer is deposited in a valley bed and then partially eroded way.
+				  * Transverse stitches may not be perpendicular to the Layer's normal,
+				  * and tangent stitches may not be perfectly tangent, but the chosen
+				  * nomenclature does aim to reflect the typical usage.
+				  *
+				  * For non-Stitch Strips (i.e. where isStitch is false) this variable
+				  * has no meaning.
+				  */
+				const bool isTransverseStitch;
 
 				std::vector<Bundle*> adjacentBundles; /**< A list of all Bundles that contain vertices used by polygons of this Strip. */
 
@@ -199,10 +222,11 @@ namespace strata
 				}
 			protected:
 			public:
-				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer, bool _isStitch) :
+				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer, bool _isStitch, bool _isTransverseStitch) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
 					Mesh<StripVertex>(_renderer),
-					isStitch(_isStitch)
+					isStitch(_isStitch),
+					isTransverseStitch(_isTransverseStitch)
 				{
 				}
 
