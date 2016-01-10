@@ -140,18 +140,83 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 //				break;
 			}
 	// Make a Stitch Strip object.
-/*	Strip * stitch = 0;
+	Strip * stitch = 0;
 	while(edgeVertices.size() > 0)
 	{
-		StripVertex startVertex = edgeVertices.size();
-		stitch = makeNewStitch();
+		StripVertex stripVertex = edgeVertices.back();
+		stitch = makeNewStitch(stitchTransverse);
+		if(stitchTransverse) stitchLayerTransverse(stitch, stripVertex);
+		else std::cout << " Terrain::stitchLayer() : No possibility yet for stitching non-transverse Layer! "<<std::endl;
+		edgeVertices.pop_back();
+		// Remove all edge vertices that have been added to the Stitch, since
+		// no more Strips need to be made for them.
+		for(unsigned int i = 0; i < edgeVertices.size(); i++)
+		{
+			if(stitch->findVertexByRemoteIndex(edgeVertices[i].getOwningBundle(), edgeVertices[i].getRemoteIndex()) > 0)
+			{
+				edgeVertices[i] = edgeVertices.back();
+				edgeVertices.pop_back();
+				i--;
+			}
+		}
+		// Set Stitch texture and parent.
+		stitch->resetTexture(layer->getStitchTexture());
+		stitch->setParentLayer(layer);
+//		stitch->setScaleFactor(startBundle->getScaleFactor());
 	}
-	// Set Stitch texture and parent.
-	stitch->resetTexture(layer->getStitchTexture());
-	stitch->setParentLayer(layer);*/
-//	stitch->setScaleFactor(startBundle->getScaleFactor());
 }
 
-void Terrain::getUnderlyingVertex(Bundle * & bundle, xVert & index, const Layer * baseLayer, tiny::vec3 v)
+/** Transverse-stitch a Layer starting by startVertex, which must be at the edge of
+  * the Layer to be stitched.
+  *
+  * The procedure for transverse stitching will be as follows:
+  * - First, find a vertex from the Layer and one on the underlying terrain to start with;
+  * - Second, find the next vertex along the Layer's edge (called the leading vertex);
+  * - Third, perform the following loop:
+  *   - Find a trajectory on the underlying terrain to get close to the point beneath the
+  *     leading vertex;
+  *   - For each vertex along the trajectory, add a polygon connecting to either of the
+  *     two upper vertices (leading or trailing, whichever is closer);
+  *   - Set the upper leading vertex to be the upper trailing vertex, and find a new leading
+  *     vertex along the Layer's edge.
+  * The loop continues until the leading vertices equal the starting pair, at which point
+  * the stitch is complete (as a closed circle).
+  */
+void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
+	StripVertex upperVertexLeading = startVertex;
+	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
+}
+
+/** Find the underlying Vertex to the position 'v'. The Vertex that is found
+  * is returned as a StitchVertex so that it contains all the necessary
+  * information.
+  * This function should look across all layers for the most nearby vertex 'w'
+  * with the following requirements:
+  * - 'w' is not a part of 'bundle';
+  * - 'w' has an averaged normal whose inner product with the direction vector
+  *   (v-w) is positive (such that the vertex 'v' can be said to be 'above'
+  *   the underlying Vertex).
+  *
+  * Even with these requirements, there are situations in which the resulting
+  * Vertex would not truly belong to the underlying Layer, so this function
+  * should ideally be used on Layers that are flat enough (i.e. where the
+  * curvature is not strong enough to cause vertices of overlying layers
+  * to have a tangent plane that intersects underlying layers very nearby).
+  *
+  * These problem situations would arise when strong curvature is described
+  * by insufficient mesh divisions (causing the normal to fluctuate wildly
+  * between vertices and their neighbours). It seems to be difficult to
+  * devise rigorous checks on this, but the most logical choice appears to
+  * be to ensure that no underlying vertex has the original vertex as
+  * an underlying vertex.
+  *
+  * The implementation is similar to getVerticalHeight(): we look through
+  * nearby Bundles and see which of their vertices best satisfies the
+  * requirements.
+  */
+StripVertex Terrain::getUnderlyingVertex(tiny::vec3 v)
+{
+	StripVertex underlyingVertex(v);
+	return underlyingVertex;
 }

@@ -372,6 +372,15 @@ namespace strata
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
 
+				xVert findVertexByRemoteIndex(const Bundle * owningBundle, xVert remoteIndex)
+				{
+					for(unsigned int i = 1; i < vertices.size(); i++)
+						if(vertices[i].getOwningBundle() == owningBundle
+								&& vertices[i].getRemoteIndex() == remoteIndex)
+							return vertices[i].index;
+					return 0;
+				}
+
 				/** Get the remote vertex that is the (counter)clockwise neighbor
 				  * of the vertex with remote index 'w' with respect to 'v'. In other words,
 				  * find the 'a' of the following situation (if clockwise=true):

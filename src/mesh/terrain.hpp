@@ -146,6 +146,10 @@ namespace strata
 				/** Stitch a Layer to the underlying layers. Possible only on
 				  * Layers that are not yet stitched onto the rest of the Terrain. */
 				void stitchLayer(Layer * layer, bool stitchTransverse);
+
+				/** Stitch a Layer transversely to the Layers underneath it. This will
+				  * expose the cross-section of the Layer that is stitched. */
+				void stitchLayerTransverse(Strip * stitch, StripVertex startVertex);
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
@@ -200,31 +204,10 @@ namespace strata
 					duplicateLayer((layers.size() == 0 ? masterLayer : layers.back()), thickness);
 				}
 
-				/** Find the underlying Vertex (defined uniquely via its owning Bundle, 'bundle',
-				  * plus the index of the Vertex in that bundle, 'index') for the Vertex at
-				  * position 'v' in the Layer 'baseLayer'.
-				  * This function should look across all layers for the most nearby vertex 'w'
-				  * with the following requirements:
-				  * - 'w' is not a part of baseLayer;
-				  * - 'w' has an averaged normal whose inner product with the direction vector
-				  *   (v-w) is positive (such that the vertex 'v' can be said to be 'above'
-				  *   the underlying Vertex).
-				  *
-				  * Even with these requirements, there are situations in which the resulting
-				  * Vertex would not truly belong to the underlying Layer, so this function
-				  * should ideally be used on Layers that are flat enough (i.e. where the
-				  * curvature is not strong enough to cause vertices of overlying layers
-				  * to have a tangent plane that intersects underlying layers very nearby).
-				  *
-				  * These problem situations would arise when strong curvature is described
-				  * by insufficient mesh divisions (causing the normal to fluctuate wildly
-				  * between vertices and their neighbours). It seems to be difficult to
-				  * devise rigorous checks on this, but the most logical choice appears to
-				  * be to ensure that no underlying vertex has the original vertex as
-				  * an underlying vertex.
-				  */
-				void getUnderlyingVertex(Bundle * & bundle, xVert & index,
-						const Layer * baseLayer, tiny::vec3 v);
+				/** Get the vertex under position 'v'. Returned are the Bundle that contains
+				  * the Vertex (returned by reference) and the index of the vertex in that
+				  * Bundle. */
+				StripVertex getUnderlyingVertex(tiny::vec3 v);
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.
 				  * This procedure could be considerably more efficient if a decent'

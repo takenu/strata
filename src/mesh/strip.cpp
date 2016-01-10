@@ -27,6 +27,19 @@ using namespace strata::mesh;
   * original Strip. */
 bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> makeNewStrip)
 {
+	if(isStitch)
+	{
+		// TODO: It should be possible to split Stitches, but it won't work right now because
+		// we would need to access makeNewStitch(), not makeNewStrip(). There are several
+		// solutions possible (e.g. passing that function from Terrain to here, or using a
+		// specialized split function to be called by the Terrain directly).
+		// Perhaps better, one could call this with makeNewStitch() from the Terrain, but then
+		// that function would need to have 0 arguments, and isTransverseStitch would have
+		// to become mutable.
+		std::cout << " Strip::split() : Stitch Strips cannot be split yet. "<<std::endl;
+		return false;
+	}
+
 	Strip * f = 0;
 	Strip * g = 0;
 
