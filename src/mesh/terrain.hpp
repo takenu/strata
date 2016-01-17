@@ -117,6 +117,30 @@ namespace strata
 					return meshesAreConsistent;
 				}
 
+				/** Fix the search parameters of the TopologicalMesh. After
+				  * this has been set, searching can be sped up by skipping
+				  * meshes outside the region of interest. This function would
+				  * need to be called again regularly as the fixed values lose
+				  * their correctness when vertices move and mesh topologies
+				  * change. */
+				template <typename MeshType>
+				void fixSearchParameters(tiny::algo::TypeCluster<long unsigned int, MeshType> &tc)
+				{
+					for(typename std::map<long unsigned int, MeshType*>::iterator it = tc.begin(); it != tc.end(); it++)
+						it->second->fixSearchParameters();
+				}
+
+				/** Compile a list of nearby meshes. Meshes are 'nearby' if
+				  * their central point is less than 'margin' plus the mesh's
+				  * maxVertexDistance from the reference position 'v'. */
+				template <typename MeshType>
+				void listNearbyMeshes(const tiny::algo::TypeCluster<long unsigned int, MeshType> &tc, std::vector<MeshType*> &meshes, const tiny::vec3 &v, float margin) const
+				{
+					for(typename std::map<long unsigned int, MeshType*>::const_iterator it = tc.cbegin(); it != tc.cend(); it++)
+						if(calcHorizontalSeparation(v, it->second->getCentralPoint()) < it->second->getMaxVertexDistance() + margin)
+							meshes.push_back(it->second);
+				}
+
 				/** Calculate the number of bytes of memory used. */
 				long unsigned int usedMemory(void)
 				{
@@ -207,7 +231,7 @@ namespace strata
 				/** Get the vertex under position 'v'. Returned are the Bundle that contains
 				  * the Vertex (returned by reference) and the index of the vertex in that
 				  * Bundle. */
-				StripVertex getUnderlyingVertex(tiny::vec3 v);
+				StripVertex getUnderlyingVertex(const tiny::vec3 &v) const;
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.
 				  * This procedure could be considerably more efficient if a decent'

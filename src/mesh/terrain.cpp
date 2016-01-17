@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <functional>
+#include <limits>
 
 #include "terrain.hpp"
 
@@ -184,6 +185,8 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
   */
 void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
+	fixSearchParameters(bundles);
+	fixSearchParameters(strips);
 	StripVertex upperVertexLeading = startVertex;
 	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
 }
@@ -214,9 +217,22 @@ void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
   * The implementation is similar to getVerticalHeight(): we look through
   * nearby Bundles and see which of their vertices best satisfies the
   * requirements.
+  *
+  * USAGE: Make sure to use fixSearchParameters() before this function when
+  * necessary, which will fix the TopologicalMesh's fixed search parameters
+  * for determining whether or not a Bundle is close to the position 'v'.
   */
-StripVertex Terrain::getUnderlyingVertex(tiny::vec3 v)
+StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 {
 	StripVertex underlyingVertex(v);
+	float currentDistance = std::numeric_limits<float>::max();
+	float margin = 10.0f;
+	std::vector<Bundle*> nearbyBundles;
+	listNearbyMeshes(bundles, nearbyBundles, v, margin);
+	for(unsigned int i = 0; i < nearbyBundles.size(); i++)
+	{
+		xVert index = 0;
+		tiny::vec3 pos;
+	}
 	return underlyingVertex;
 }

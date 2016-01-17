@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <deque>
 #include <map>
+#include <limits>
 
 #include <tiny/math/vec.h>
 #include <tiny/mesh/staticmesh.h>
@@ -83,7 +84,7 @@ namespace strata
 				  * of vertices changes, they may lose correctness, and it is up to
 				  * the Terrain class to ensure that recalculation is performed when necessary.
 				  */
-				void fixParameters(void)
+				void fixSearchParameters(void)
 				{
 					centralPoint = findCentralPoint();
 					maxDistanceFromCenter = maxVertexDistance(centralPoint);
@@ -120,6 +121,23 @@ namespace strata
 					return sqrt(x);
 				}
 
+				/** Find the nearest Vertex (as a pair index+pos) to the position 'p'. */
+				void findNearestVertex(const tiny::vec3 &p, xVert &v, tiny::vec3 &vpos)
+				{
+					v = 0;
+					float x = std::numeric_limits<float>::max();
+					for(unsigned int i = 1; i < vertices.size(); i++)
+					{
+						float dist = tiny::length2(p, vertices[i].pos);
+						if(dist < x)
+						{
+							x = dist;
+							v = vertices[i].index;
+							vpos = vertices[i].pos;
+						}
+					}
+				}
+
 				/** Check if the polygon 'p' contains the point 'v'. This check makes sense only if the given point
 				  * is inside the polygon plane.
 				  * The point is inside the polygon if all three cross products between the edges and the vertex-to-point
@@ -135,7 +153,7 @@ namespace strata
 					tiny::vec3 cra = cross(b-a, v-a);
 					tiny::vec3 crb = cross(c-b, v-b);
 					tiny::vec3 crc = cross(a-c, v-c);
-					if(dot(cra,crb)>0 && dot(cra,crc)>0) std::cout << " TopologicalMesh::findIntersectionPoint() : Polygon ("<<a<<"->"<<b<<"->"<<c<<") contains "<<v<<"!"<<std::endl;
+					if(dot(cra,crb)>0 && dot(cra,crc)>0) std::cout << " TopologicalMesh::polygonContainsPoint() : Polygon ("<<a<<"->"<<b<<"->"<<c<<") contains "<<v<<"!"<<std::endl;
 					return ( dot(cra, crb) > 0 && dot(cra, crc) > 0);
 				}
 
