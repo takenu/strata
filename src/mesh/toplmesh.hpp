@@ -918,13 +918,13 @@ namespace strata
 				/** A function guaranteed to return an edge vertex. */
 				xVert findRandomEdgeVertex(bool _printSteps = false) const
 				{
-					unsigned int step = ve.size()/7 + 1;
+					unsigned int step = vertices.size()/7 + 1;
 					unsigned int startVertex = 1;
 					unsigned int edgeVertex = (unsigned int)(-1);
 					unsigned int maxAttemptsRemaining = 100;
 					while(edgeVertex == (unsigned int)(-1) && (--maxAttemptsRemaining) != (unsigned int)-1)
 					{
-						startVertex = ((startVertex + step) % ve.size()); // take modulo to get next vertex
+						startVertex = ((startVertex + step) % vertices.size()); // take modulo to get next vertex
 						if(startVertex != 0)
 						{
 							if(_printSteps)
@@ -932,10 +932,18 @@ namespace strata
 								std::cout << " TopologicalMesh::findRandomEdgeVertex() : start="<<startVertex;
 								std::cout << " result="<<findEdgeVertex(startVertex, true)<<std::endl;
 							}
-							edgeVertex = findEdgeVertex(startVertex);
+							edgeVertex = findEdgeVertex(vertices[startVertex].index);
 						}
 					}
-					if(edgeVertex == (unsigned int)-1 || !isEdgeVertex(edgeVertex)) { std::cout << " Mesh::findRandomEdgeVertex() : No edge vertex found! "<<std::endl; return 0; }
+					if(edgeVertex == (unsigned int)-1 || !isEdgeVertex(edgeVertex))
+					{
+						std::cout << " TopologicalMesh::findRandomEdgeVertex() :";
+						std::cout << " No edge vertex found for TopologicalMesh ";
+						std::cout << this<<" with "<<vertices.size()<<" verts! "<<std::endl;
+//						assert(!(edgeVertex == (unsigned int)-1 || !isEdgeVertex(edgeVertex)));
+						return 0;
+					}
+//					else std::cout << " Found edge vertex "<<edgeVertex<<std::endl;
 					return edgeVertex;
 				}
 
@@ -943,7 +951,7 @@ namespace strata
 				  * This situation is best dealt with by trying to find an edge vertex but starting at another vertex randomly. */
 				xVert findEdgeVertex(xVert _v, bool _printSteps = false) const
 				{
-					if(_v == 0) { std::cout << " Mesh::findEdgeVertex() : Cannot find edge vertex starting from xVert error value 0! "<<std::endl; return (unsigned int)(-1); }
+					if(_v == 0) { std::cout << " TopologicalMesh::findEdgeVertex() : Cannot find edge vertex starting from xVert error value 0! "<<std::endl; return (unsigned int)(-1); }
 					if(_printSteps) std::cout << " Trying edge vertex near xVert "<<_v<<"..."<<std::endl;
 					if(isEdgeVertex(_v)) return _v;
 					const Vertex & v = vertices[ve[_v]];
@@ -954,7 +962,7 @@ namespace strata
 						xVert w = findPolyNeighbor(polygons[po[v.poly[i]]], v.index, true); // Only need to consider one direction - the other vertex will be found in the neighbouring polygon for a non-edge vertex
 						if(vertices[ve[w]].pos.x > v.pos.x) return findEdgeVertex(w);
 					}
-					std::cout << " Mesh::findEdgeVertex() : No edge vertex found! "<<std::endl;
+					std::cout << " TopologicalMesh::findEdgeVertex() : No edge vertex found! "<<std::endl;
 					return (unsigned int)(-1);
 				}
 

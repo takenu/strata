@@ -84,6 +84,9 @@ bool Strip::split(std::function<Bundle * (void)>, std::function<Strip * (void)> 
 		}
 	}
 
+	if(f->vertices.size() < 3) std::cout << " Strip::split() : WARNING: Strip "<<f<<" cannot have polygons! "<<std::endl;
+	if(g->vertices.size() < 3) std::cout << " Strip::split() : WARNING: Strip "<<g<<" cannot have polygons! "<<std::endl;
+
 	return true;
 }
 

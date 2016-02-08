@@ -105,6 +105,15 @@ void Terrain::duplicateLayer(const Layer * baseLayer, float thickness)
 		it->second->setScaleFactor(it->first->getScaleFactor());
 		it->second->resetTexture(layers.back()->getStripTexture());
 	}
+	// Check validity of all objects
+	checkMeshConsistency(bundles);
+	checkMeshConsistency(strips);
+	for(std::map<const Bundle*, Bundle*>::iterator it = bmap.begin(); it != bmap.end(); it++)
+		if(it->second->numVertices() != it->first->numVertices())
+			std::cout << " duplicateLayer() : Duplicate Bundle has different size!"<<std::endl;
+	for(std::map<const Strip*, Strip*>::iterator it = smap.begin(); it != smap.end(); it++)
+		if(it->second->numVertices() != it->first->numVertices())
+			std::cout << " duplicateLayer() : Duplicate Strip has different size!"<<std::endl;
 	// Collect layer edge vertices and connect them to the underlying layer. Since
 	// layer duplication is normally done on flat terrains, extending Layers along
 	// their surface is not an option and we force all Stitches to be transversal
@@ -148,6 +157,7 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 		stitch = makeNewStitch(stitchTransverse);
 		if(stitchTransverse) stitchLayerTransverse(stitch, stripVertex);
 		else std::cout << " Terrain::stitchLayer() : No possibility yet for stitching non-transverse Layer! "<<std::endl;
+		if(stitch->numVertices() < 3) std::cout << " Terrain::stitchLayer() : Made very small Stitch! "<<std::endl;
 		edgeVertices.pop_back();
 		// Remove all edge vertices that have been added to the Stitch, since
 		// no more Strips need to be made for them.
@@ -186,7 +196,7 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
 	fixSearchParameters(bundles);
-	fixSearchParameters(strips);
+//	fixSearchParameters(strips);
 	StripVertex upperVertexLeading = startVertex;
 	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
 }
