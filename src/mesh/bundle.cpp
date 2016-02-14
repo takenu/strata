@@ -365,3 +365,36 @@ bool Bundle::isAtLayerEdge(xVert v) const
 		return (neighborIndex != endIndex);
 	}
 }
+
+/** Check whether the position 'p' is 'near' the Bundle's mesh. This function does most of
+  * the work for isAboveMeshAtIndex() and isBelowMeshAtIndex(). See the former for a detailed
+  * functional description. */
+bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
+{
+	// TODO: Write function body, using inner products on normals of neighboring vertices
+	// to determine whether the position 'p' is near the mesh in the required way.
+	return false;
+}
+
+/** Check whether the position 'p' is strictly above the mesh defined by the neighborhood
+  * of the vertex with index 'v'.
+  * More precisely, this function looks whether 'p' is contained within the cone formed by
+  * the normals of all of v's neighbors.
+  * In the special case that 'v' happens to be an edge vertex, every 'p' with a positive
+  * inner product with v's normal and being 'in between' the two mesh edges that v is
+  * connected to, will also be considered as 'above'.
+  * In all remaining cases, 'p' is either under or next to the mesh, and is thus considered
+  * 'not above'. */
+bool Bundle::isAboveMeshAtIndex(xVert v, tiny::vec3 p)
+{
+	return isNearMeshAtIndex(v, p, true);
+}
+
+/** As isAboveMeshAtIndex() except that the region opposite to the normal at 'v' is
+  * considered. */
+bool Bundle::isBelowMeshAtIndex(xVert v, tiny::vec3 p)
+{
+	return isNearMeshAtIndex(v, p, false);
+}
+
+

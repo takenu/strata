@@ -128,10 +128,10 @@ namespace strata
 					float x = std::numeric_limits<float>::max();
 					for(unsigned int i = 1; i < vertices.size(); i++)
 					{
-						float dist = tiny::length2(p, vertices[i].pos);
-						if(dist < x)
+						float d = dist(p, vertices[i].pos);
+						if(d < x)
 						{
-							x = dist;
+							x = d;
 							v = vertices[i].index;
 							vpos = vertices[i].pos;
 						}

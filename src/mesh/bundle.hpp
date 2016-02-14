@@ -44,45 +44,44 @@ namespace strata
 			private:
 				friend class Mesh<Vertex>; /**< Our base class can add vertices to us. */
 
-				std::vector<Strip*> adjacentStrips; /**< A list of all Strips that use vertices belonging to this Bundle. */
+				/** A list of all Strips that use vertices belonging to this Bundle. */
+				std::vector<Strip*> adjacentStrips;
 
 				long unsigned int polyAttempts;
 
-				bool splitVertexHasConnectedPolygon(const xVert &w, const std::map<xVert, xVert> & addedVertices) const;
+				bool splitVertexHasConnectedPolygon(const xVert &w,
+						const std::map<xVert, xVert> & addedVertices) const;
 
 				/** Update the adjacent strips to refer to the new Bundle instead of 'this'. */
 				void splitUpdateAdjacentStrips(std::map<xVert, xVert> & vmap, Bundle * newBundle);
 
-				/** Assign a thus-far-unassigned spike vertex with index 'v' to the mapping 'vmap' by splitting the edge
-				  * opposite to it on its i-th polygon. */
-				void splitAssignSpikeVertexToNewBundle(Bundle * f, unsigned int i, const xVert &v, std::map<xVert, xVert> &vmap);
+				/** Assign a thus-far-unassigned spike vertex with index 'v' to the mapping 'vmap'
+				  * by splitting the edge opposite to it on its i-th polygon. */
+				void splitAssignSpikeVertexToNewBundle(Bundle * f, unsigned int i,
+						const xVert &v, std::map<xVert, xVert> &vmap);
 
-				/** Assign so-far-not-connected vertices by adding a new vertex along one of its connected edges and then
-				  * redoing the assignment. */
-				bool splitAssignSpikeVertices(Bundle * f, Bundle * g, std::map<xVert, xVert> &fvert, std::map<xVert, xVert> &gvert);
+				/** Assign so-far-not-connected vertices by adding a new vertex along one of its
+				  * connected edges and then redoing the assignment. */
+				bool splitAssignSpikeVertices(Bundle * f, Bundle * g,
+						std::map<xVert, xVert> &fvert, std::map<xVert, xVert> &gvert);
 
 				virtual xVert addVertex(const Vertex &v) { return Mesh<Vertex>::addVertex(v); }
 				xVert addVertex(tiny::vec3 &p) { return addVertex( Vertex(p) ); }
 				xVert addVertex(float x, float y, float z) { return addVertex( Vertex(tiny::vec3(x,y,z)) ); }
 			public:
+				/** Calculate the required memory usage of the Bundle. */
 				unsigned int usedMemory(void) const
 				{
 					return vertices.size()*sizeof(Vertex) + polygons.size()*sizeof(Polygon)
 						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
 
+				/** Calculate the cumulative memory allocation for the Bundle. */
 				unsigned int usedCapacity(void) const
 				{
 					return vertices.capacity()*sizeof(Vertex) + polygons.capacity()*sizeof(Polygon)
 						+ ve.capacity()*sizeof(xVert) + po.capacity()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
-
-				unsigned int numberOfVertices(void) const
-				{
-					return vertices.size();
-				}
-
-				using tiny::algo::TypeClusterObject<long unsigned int, Bundle>::getKey;
 
 				/** Get the owning bundle of a Vertex. Since Bundles are always owner of vertices
 				  * belonging to them, there is no other possibility than 'this' Checks that the vertex
@@ -179,6 +178,10 @@ namespace strata
 				  * a vertex is at a Layer's edge if and only if there are unique
 				  * edges among its adjacent polygons. */
 				bool isAtLayerEdge(xVert v) const;
+
+				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal);
+				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p);
+				bool isBelowMeshAtIndex(xVert v, tiny::vec3 p);
 		};
 	}
 }

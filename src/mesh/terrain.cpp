@@ -143,7 +143,8 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 			if(it->second->findVertexAtLayerEdge(startVertex))
 			{
 //				startBundle = it->second;
-				if(layers.size()==1) std::cout << " stitchLayer() : Found vertex at layer edge at "<<it->second->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
+				if(layers.size()==1) std::cout << " stitchLayer() : Found vertex at layer edge at "
+					<<it->second->getVertexPositionFromIndex(startVertex)<<"..."<<std::endl;
 				edgeVertices.push_back( it->second->getVertexPositionFromIndex(startVertex) );
 				edgeVertices.back().setOwningBundle(it->second);
 				edgeVertices.back().setRemoteIndex(startVertex);
@@ -151,6 +152,8 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 			}
 	// Make a Stitch Strip object.
 	Strip * stitch = 0;
+	fixSearchParameters(bundles);
+//	fixSearchParameters(strips);
 	while(edgeVertices.size() > 0)
 	{
 		StripVertex stripVertex = edgeVertices.back();
@@ -195,10 +198,10 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
   */
 void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
-	fixSearchParameters(bundles);
-//	fixSearchParameters(strips);
 	StripVertex upperVertexLeading = startVertex;
 	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
+	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
+	std::cout << startVertex.getPosition()<<" and "<<lowerVertexLeading.getPosition()<<std::endl;
 }
 
 /** Find the underlying Vertex to the position 'v'. The Vertex that is found
@@ -234,8 +237,8 @@ void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
   */
 StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 {
-	StripVertex underlyingVertex(v);
 	float currentDistance = std::numeric_limits<float>::max();
+	StripVertex underlyingVertex(tiny::vec3(0.0f,-0.5f*currentDistance,0.0f) + v);
 	float margin = 10.0f;
 	std::vector<Bundle*> nearbyBundles;
 	listNearbyMeshes(bundles, nearbyBundles, v, margin);
@@ -243,6 +246,45 @@ StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 	{
 		xVert index = 0;
 		tiny::vec3 pos;
+		nearbyBundles[i]->findNearestVertex(v, index, pos);
+		// If mesh overlies the original position, skip this Bundle, since
+		// it is not underlying the position at 'v'.
+		if(!nearbyBundles[i]->isAboveMeshAtIndex(index, v)) continue;
+		// If the bundle does not overlie the previously found underlying
+		// vertex, it is thus deeper below the point 'v' and therefore, even
+		// it the found vertex is spatially closer, it still needs to be
+		// discarded as it is not on the layer directly underlying 'v'.
+		// We check twice; once from the new Bundle and once from the Bundle
+		// that contains the current candidate for the underlying vertex.
+		// The reason for checking twice is that the 'is-above' check may fail
+		// if the above layer has very big vertices that the neighbourhood of
+		// a vertex on the lower layer fits entirely inside of.
+		else if(underlyingVertex.getRemoteIndex() > 0)
+		{
+			if(nearbyBundles[i]->isAboveMeshAtIndex(index, underlyingVertex.getPosition()))
+				continue;
+			if(underlyingVertex.getOwningBundle()->isBelowMeshAtIndex(
+						underlyingVertex.getRemoteIndex(), pos))
+				continue;
+		}
+		// In all remaining cases, no matter how far away the resulting vertex is, it
+		// can validly be considered an underlying vertex in a topological sense. The
+		// only situation we still need to consider is comparisons beteen candidate
+		// underlying vertices that are horizontally separated (and potentially on the
+		// same layer). For such situations, neither layer will be determined as being
+		// above or below the other layer.
+		// In this case, we do simply consider the actual distance, in order to keep
+		// only the most nearby candidate underlying vertex.
+		if(underlyingVertex.getRemoteIndex() == 0
+				|| dist(v, pos) < dist(v, underlyingVertex.getPosition()))
+		{
+			std::cout << " Terrain::getUnderlyingVertex() : Set "<<pos<<" as underlying to "<<v<<std::endl;
+			underlyingVertex.setRemoteIndex(index);
+			underlyingVertex.setOwningBundle(nearbyBundles[i]);
+			underlyingVertex.setPosition(pos);
+		}
 	}
+	std::cout << " Terrain::getUnderlyingVertex() : Found underlying vertex "
+		<< underlyingVertex.getPosition()<<std::endl;
 	return underlyingVertex;
 }

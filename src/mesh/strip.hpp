@@ -37,6 +37,11 @@ namespace strata
 		  * For Strip meshes that are also Stitches, a secondary remote Vertex is
 		  * defined and the actual location of the StripVertex is understood to be
 		  * somewhere along the line connecting the primary and the secondary Vertex.
+		  *
+		  * Besides their primary use as components of Strip objects, StripVertex objects
+		  * can also be used as standalone objects for representing vertex-bundle
+		  * pairs (i.e. an object carrying information that a certain vertex exists
+		  * in the Mesh as a component of a Bundle with a certain index).
 		  */
 		class StripVertex : public Vertex
 		{

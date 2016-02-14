@@ -62,6 +62,13 @@ namespace strata
 					if(poly[i] == 0) return i;
 				return STRATA_VERTEX_MAX_LINKS;
 			}
+
+			/** Set the position of the Vertex. (The variable 'pos' is public at this time,
+			  * but it may still be desirable to use a function rather than simple assignment.) */
+			inline void setPosition( tiny::vec3 _p )
+			{
+				pos = _p;
+			}
 		};
 
 		/** A polygon, for being part of a mesh. */
