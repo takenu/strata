@@ -169,6 +169,11 @@ namespace strata
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
 
+				/** Find a neighbor vertex that may be in another Bundle. */
+				void findRemoteNeighborVertex(const Bundle * &neighborBundle,
+						const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
+						xVert v, bool rotateClockwise) const;
+
 				/** Find a Vertex at the Layer's edge. If none of the Bundle's vertices
 				  * are at this edge, false is returned. Otherwise, true is returned, and
 				  * the 'index' variable is set to the edge vertex's index. */

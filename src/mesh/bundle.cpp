@@ -318,6 +318,27 @@ bool Bundle::findVertexAtLayerEdge(xVert &index) const
 	return false;
 }
 
+void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
+		const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
+		xVert v, bool rotateClockwise) const
+{
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		// Try finding (nextIndex, nextBundle) using the pairs (v, this)
+		// and (neighborIndex, neighborBundle) to uniquely fix the target.
+		nextIndex = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
+				nextBundle, v, neighborIndex, this, neighborBundle, rotateClockwise);
+		if(nextIndex > 0)
+		{
+//					std::cout << " Bundle::isAtLayerEdge() : Found next vertex in Strip! "<<std::endl;
+			neighborIndex = nextIndex;
+			neighborBundle = nextBundle;
+			break; // Break loop over strips, continue 'while'
+		}
+//				else if(i+1==adjacentStrips.size()) std::cout << " Bundle::isAtLayerEdge() : No next vertex! "<<std::endl;
+	}
+}
+
 /** Check whether the vertex with index 'v' is at the Layer's edge.
   * The check has two steps: first we check if the vertex is an edge vertex under the
   * usual definition of the TopologicalMesh. If not, it cannot be on the Layer's edge
@@ -345,21 +366,7 @@ bool Bundle::isAtLayerEdge(xVert v) const
 		while(neighborIndex != endIndex || neighborBundle != this)
 		{
 			// Try to find neighborIndex from all nearby Strips.
-			for(unsigned int i = 0; i < adjacentStrips.size(); i++)
-			{
-				// Try finding (nextIndex, nextBundle) using the pairs (v, this)
-				// and (neighborIndex, neighborBundle) to uniquely fix the target.
-				nextIndex = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
-						nextBundle, v, neighborIndex, this, neighborBundle, true);
-				if(nextIndex > 0)
-				{
-//					std::cout << " Bundle::isAtLayerEdge() : Found next vertex in Strip! "<<std::endl;
-					neighborIndex = nextIndex;
-					neighborBundle = nextBundle;
-					break; // Break loop over strips, continue 'while'
-				}
-//				else if(i+1==adjacentStrips.size()) std::cout << " Bundle::isAtLayerEdge() : No next vertex! "<<std::endl;
-			}
+			findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v, true);
 			if(nextIndex == 0) break; // Failed to find next vertex - this is the edge
 		}
 		return (neighborIndex != endIndex);
@@ -368,11 +375,32 @@ bool Bundle::isAtLayerEdge(xVert v) const
 
 /** Check whether the position 'p' is 'near' the Bundle's mesh. This function does most of
   * the work for isAboveMeshAtIndex() and isBelowMeshAtIndex(). See the former for a detailed
-  * functional description. */
+  * functional description of what the function is expected to return.
+  *
+  * The method for traversing all neighbors is similar to that in isAtLayerEdge(), as in the
+  * present function we also need to consider neighbors that are not part of the same Bundle.
+  */
 bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
 {
 	// TODO: Write function body, using inner products on normals of neighboring vertices
 	// to determine whether the position 'p' is near the mesh in the required way.
+/*	xVert startIndex = findPolyNeighbor(0, v, true);
+	xVert neighborIndex = startIndex;
+	const Bundle * neighborBundle = this;
+	xVert nextIndex = 0;
+	const Bundle * nextBundle = 0;
+	bool rotateClockwise = true;
+	while(neighborIndex != endIndex || neighborBundle != this)
+	{
+		findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v,
+			rotateClockwise);
+		if(nextIndex == 0)
+		{
+			if(!rotateClockwise) break;
+			rotateClockwise = false;
+			neighborIndex = startIndex;
+		}
+	}*/
 	return false;
 }
 
