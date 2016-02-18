@@ -318,6 +318,21 @@ bool Bundle::findVertexAtLayerEdge(xVert &index) const
 	return false;
 }
 
+tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
+{
+	tiny::vec3 norm(0.0f,0.0f,0.0f);
+	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+	{
+		if(vertices[ve[v]].poly[i] == 0) break;
+		else norm += computeNormal(vertices[ve[v]].poly[i]);
+	}
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		norm += adjacentStrips[i]->computeSumOfPolygonNormals(this, v);
+	}
+	return normalize(norm);
+}
+
 void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
 		const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
 		xVert v, bool rotateClockwise) const
@@ -384,23 +399,34 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
 {
 	// TODO: Write function body, using inner products on normals of neighboring vertices
 	// to determine whether the position 'p' is near the mesh in the required way.
-/*	xVert startIndex = findPolyNeighbor(0, v, true);
+	xVert startIndex = findPolyNeighbor(0, v, true);
 	xVert neighborIndex = startIndex;
 	const Bundle * neighborBundle = this;
 	xVert nextIndex = 0;
 	const Bundle * nextBundle = 0;
 	bool rotateClockwise = true;
-	while(neighborIndex != endIndex || neighborBundle != this)
+	bool isNearMesh = true;
+	// While-loop over all neighbours - finishes when circle is complete
+	while( (neighborIndex != startIndex || nextIndex == 0) || neighborBundle != this)
 	{
 		findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v,
 			rotateClockwise);
 		if(nextIndex == 0)
 		{
-			if(!rotateClockwise) break;
+			if(!rotateClockwise) break; // Exit point for on-layer-edge vertices
 			rotateClockwise = false;
 			neighborIndex = startIndex;
 		}
-	}*/
+		else
+		{
+			// TODO: Find some measure for whether or not a Vertex is on v's side of
+			// the plane spanned by the neighbor's normal and some vector perpendicular to both
+			// the neighbor's normal and the v->neighbor vector.
+			tiny::vec3 norm = neighborBundle->calculateVertexNormal(neighborIndex);
+//			tiny::vec3 vec
+		}
+	}
+//	std::cout << " Bundle::isNearMeshAtIndex() : Result = "<<isNearMesh<<std::endl;
 	return false;
 }
 
@@ -424,5 +450,3 @@ bool Bundle::isBelowMeshAtIndex(xVert v, tiny::vec3 p)
 {
 	return isNearMeshAtIndex(v, p, false);
 }
-
-

@@ -377,6 +377,8 @@ namespace strata
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
 
+				/** Find the Strip-local index for the Vertex owned by 'owningBundle' with a remote
+				  * index in that Bundle of 'remoteIndex'. */
 				xVert findVertexByRemoteIndex(const Bundle * owningBundle, xVert remoteIndex)
 				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
@@ -384,6 +386,16 @@ namespace strata
 								&& vertices[i].getRemoteIndex() == remoteIndex)
 							return vertices[i].index;
 					return 0;
+				}
+
+				/** Calculate the sum of all polygon normals that the referenced remote vertex has in this
+				  * Strip. */
+				tiny::vec3 computeSumOfPolygonNormals(const Bundle * owningBundle, xVert remoteIndex)
+				{
+					tiny::vec3 sumOfNormals(0.0f,0.0f,0.0f);
+					xVert v = findVertexByRemoteIndex(owningBundle, remoteIndex);
+					if(v > 0) sumOfNormals = getSumOfPolygonNormals(v);
+					return sumOfNormals;
 				}
 
 				/** Get the remote vertex that is the (counter)clockwise neighbor

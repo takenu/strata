@@ -169,6 +169,11 @@ namespace strata
 				/** Provide a means to detect invalid vertex indices. */
 				inline bool isValidVertexIndex(const xVert & _index) const { return (_index > 0 && _index < ve.size()); }
 
+				/** Calculate a Vertex's full normal. (Note that TopologicalMesh has a function
+				  * getVertexNormal() which calculates a rough normal, but which cannot use
+				  * the normals of polygons outside the Bundle (i.e. in Strips)). */
+				tiny::vec3 calculateVertexNormal(xVert v) const;
+
 				/** Find a neighbor vertex that may be in another Bundle. */
 				void findRemoteNeighborVertex(const Bundle * &neighborBundle,
 						const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,

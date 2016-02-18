@@ -214,14 +214,32 @@ namespace strata
 					return getVertexNormal(vertices[i+1]);
 				}
 
-				/** Get the normal at a vertex, calculated as an average of the normals of its adjacent polygons. */
-				tiny::vec3 getVertexNormal(const Vertex & v) const
+				/** Get the sum of polygon normals at a vertex. */
+				tiny::vec3 getSumOfPolygonNormals(const Vertex & v) const
 				{
 					tiny::vec3 norm(0.0f, 0.0f, 0.0f);
 					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 						if(v.poly[i] > 0)
 							norm = norm + computeNormal(polygons[po[v.poly[i]]]);
-					return normalize(norm);
+					return norm;
+				}
+
+				/** Get the sum of polygon normals from a Vertex's index. */
+				tiny::vec3 getSumOfPolygonNormals(const xVert &v) const
+				{
+					return getSumOfPolygonNormals(vertices[ve[v]]);
+				}
+
+				/** Get the normal at a vertex, calculated as an average of the normals of its adjacent polygons. */
+				tiny::vec3 getVertexNormal(const Vertex & v) const
+				{
+					return normalize(getSumOfPolygonNormals(v));
+				}
+
+				/** Get the normal at a vertex from that Vertex's index. */
+				tiny::vec3 getVertexNormal(const xVert &v) const
+				{
+					return getVertexNormal(vertices[ve[v]]);
 				}
 
 				// Re-define pure virtual function for splitting a mesh, first defined in MeshInterface.
