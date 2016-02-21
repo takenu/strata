@@ -333,10 +333,22 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
 	return normalize(norm);
 }
 
+/** Find a (possibly remote) neighbor vertex to the given vertex 'v'. This will set nextIndex
+  * and nextBundle to the index/bundle pair for the next vertex, and then it also sets
+  * neighborIndex and nextIndex. */
 void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
 		const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
 		xVert v, bool rotateClockwise) const
 {
+	if(neighborBundle == this)
+	{
+		nextIndex = findPolyNeighborFromVertexPair(v, neighborIndex);
+		if(nextIndex > 0)
+		{
+			neighborIndex = nextIndex;
+			return; // Neighbor vertex found now - no need for more
+		}
+	}
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
 		// Try finding (nextIndex, nextBundle) using the pairs (v, this)
@@ -394,8 +406,42 @@ bool Bundle::isAtLayerEdge(xVert v) const
   *
   * The method for traversing all neighbors is similar to that in isAtLayerEdge(), as in the
   * present function we also need to consider neighbors that are not part of the same Bundle.
+  *
+  * For determining whether the position 'p' qualifies as "near" 'v', we require that for all
+  * neighbors 'w' a certain property is satisfied. First we introduce a bit of nomenclature:
+  *
+  * n *_   _* q
+  *   |\   /|
+  *     \ /
+  *    w *---->* v
+  *
+  * - Suppose 'n' is the normal of 'w' (as defined by calculateVertexNormal());
+  * - Suppose 'v' denotes the vector from the neighbor 'w' to the vertex 'v';
+  * - Suppose p some position in 3D space;
+  * - Define p' as the projection of p onto the plane spanned by v and n;
+  * - and define q as the vector from w to the projected point p';
+  *
+  * then if we have that (v x q) dot (q x n) > 0 for all neighbors 'w' of a vertex 'v', AND
+  * if (v x q) dot (v x n) > 0,  the point 'p' is said to be "nearby" the mesh at vertex 'v'.
+  * The second condition excludes 'mirror side' issues where points 'q' in the lower left
+  * region both have a negative cross product (such that the dot of these is again positive).
+  *
+  * This definition of nearbyness is approximate to the intuitive meaning of 'near' but it
+  * is to be expected for warped meshes to have points that are 'nearby' for more than
+  * one vertex, or (worse) that are not nearby to any vertex of the mesh.
+  *
+  * However, given the loose definition, the procedure should accept at least one vertex (and
+  * typically three) of a layer for any position that is reasonably close. It could be that
+  * in exotic cases all elements of a mesh reject a position that is truly far away, but this
+  * should never occur for reasonable situations.
+  *
+  * In order to deal with points that are practically at the mesh (due to numerical errors
+  * they could thus be either under or above the mesh), points are only considered 'near' the
+  * mesh if they are at least marginAlongNormal times the distance to the nearest neighbor
+  * away from the mesh. The value for marginAlongNormal can also be negative to help vertices
+  * to fall on the correct side.
   */
-bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
+bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal)
 {
 	// TODO: Write function body, using inner products on normals of neighboring vertices
 	// to determine whether the position 'p' is near the mesh in the required way.
@@ -422,12 +468,30 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
 			// TODO: Find some measure for whether or not a Vertex is on v's side of
 			// the plane spanned by the neighbor's normal and some vector perpendicular to both
 			// the neighbor's normal and the v->neighbor vector.
+			tiny::vec3 wpos = neighborBundle->getVertexPositionFromIndex(neighborIndex);
 			tiny::vec3 norm = neighborBundle->calculateVertexNormal(neighborIndex);
-//			tiny::vec3 vec
+			tiny::vec3 vvec = vertices[ve[v]].pos - wpos;
+			tiny::vec3 perp = cross(vvec, norm);
+//			p = p + marginAlongNormal * calculateVertexNormal(v)
+//				* tiny::length(vvec) * (isAlongNormal ? 1.0f : -1.0f);
+			// TODO: findIntersection doesn't work for parallel n and v!
+			tiny::vec3 pprime = findIntersection(p, perp, wpos, perp); // Project p onto v-n plane
+			tiny::vec3 q = pprime - wpos;
+			if(!isAlongNormal)
+				norm = norm*-1.0f; // Invert the direction of the normal to look 'below' the terrain
+			isNearMesh &= ( dot(cross(vvec,q), cross(q, norm)) >= 0.0f); // q between v and n
+			isNearMesh &= ( dot(cross(vvec,q), cross(vvec, norm)) > 0.0f); // q not on mirror side
+/*			std::cout << " Comparison: wpos="<<wpos<<" norm="<<norm<<" vvec="<<vvec
+				<<" perp="<<perp<<" p="<<p<<" pprime="<<pprime<<" q="<<q<<" check1="
+				<< (dot(cross(vvec,q), cross(q, norm))>0.0f) <<" check2="
+				<< (dot(cross(vvec,q), cross(vvec, norm))>0.0f) << std::endl;
+			std::cout << " Crosses: v x q = "<<cross(vvec, q)<<", q x n = "<<cross(q, norm)
+				<<", v x n = "<<cross(vvec, norm)<<std::endl;*/
 		}
+		if(!isNearMesh) break;
 	}
-//	std::cout << " Bundle::isNearMeshAtIndex() : Result = "<<isNearMesh<<std::endl;
-	return false;
+	std::cout << " Bundle::isNearMeshAtIndex() : p = "<<p<<", v = "<<vertices[ve[v]].pos<<", result = "<<isNearMesh<<std::endl;
+	return isNearMesh;
 }
 
 /** Check whether the position 'p' is strictly above the mesh defined by the neighborhood
@@ -439,14 +503,14 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal)
   * connected to, will also be considered as 'above'.
   * In all remaining cases, 'p' is either under or next to the mesh, and is thus considered
   * 'not above'. */
-bool Bundle::isAboveMeshAtIndex(xVert v, tiny::vec3 p)
+bool Bundle::isAboveMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal)
 {
-	return isNearMeshAtIndex(v, p, true);
+	return isNearMeshAtIndex(v, p, marginAlongNormal, true);
 }
 
 /** As isAboveMeshAtIndex() except that the region opposite to the normal at 'v' is
   * considered. */
-bool Bundle::isBelowMeshAtIndex(xVert v, tiny::vec3 p)
+bool Bundle::isBelowMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal)
 {
-	return isNearMeshAtIndex(v, p, false);
+	return isNearMeshAtIndex(v, p, marginAlongNormal, false);
 }

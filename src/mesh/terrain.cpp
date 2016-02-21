@@ -249,7 +249,7 @@ StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 		nearbyBundles[i]->findNearestVertex(v, index, pos);
 		// If mesh overlies the original position, skip this Bundle, since
 		// it is not underlying the position at 'v'.
-		if(!nearbyBundles[i]->isAboveMeshAtIndex(index, v)) continue;
+		if(!nearbyBundles[i]->isAboveMeshAtIndex(index, v, 0.001f)) continue;
 		// If the bundle does not overlie the previously found underlying
 		// vertex, it is thus deeper below the point 'v' and therefore, even
 		// it the found vertex is spatially closer, it still needs to be
@@ -261,10 +261,11 @@ StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 		// a vertex on the lower layer fits entirely inside of.
 		else if(underlyingVertex.getRemoteIndex() > 0)
 		{
-			if(nearbyBundles[i]->isAboveMeshAtIndex(index, underlyingVertex.getPosition()))
+			if(nearbyBundles[i]->isAboveMeshAtIndex(
+						index, underlyingVertex.getPosition(), -0.001f))
 				continue;
 			if(underlyingVertex.getOwningBundle()->isBelowMeshAtIndex(
-						underlyingVertex.getRemoteIndex(), pos))
+						underlyingVertex.getRemoteIndex(), pos, -0.001f))
 				continue;
 		}
 		// In all remaining cases, no matter how far away the resulting vertex is, it

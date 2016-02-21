@@ -189,9 +189,9 @@ namespace strata
 				  * edges among its adjacent polygons. */
 				bool isAtLayerEdge(xVert v) const;
 
-				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, bool isAlongNormal);
-				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p);
-				bool isBelowMeshAtIndex(xVert v, tiny::vec3 p);
+				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal);
+				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal);
+				bool isBelowMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal);
 		};
 	}
 }

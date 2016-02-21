@@ -90,8 +90,10 @@ namespace strata
 		{
 			float dot1 = dot(n, z-p);
 			float dot2 = dot(n, v);
+			// A zero dot1 means the point 'p' is already at the intersection. Then return p.
+			if(std::abs(dot1) < std::numeric_limits<float>::epsilon()) return p;
 			// Very small numerators mean near-parallel lines - in this case numerical precision is poor. Then return the zero vector. */
-			if(dot2/dot1 < std::numeric_limits<float>::epsilon()) return tiny::vec3(0.0f, 0.0f, 0.0f);
+			if(std::abs(dot2/dot1) < std::numeric_limits<float>::epsilon()) return tiny::vec3(0.0f, 0.0f, 0.0f);
 			else return (p + v*(dot1/dot2));
 		}
 	}
