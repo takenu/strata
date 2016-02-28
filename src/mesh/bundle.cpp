@@ -302,7 +302,7 @@ Bundle::~Bundle(void)
 	else std::cout << " Bundle::~Bundle() : WARNING: No parentLayer found, cannot release Bundle from Layer! "<<std::endl;
 }
 
-bool Bundle::findVertexAtLayerEdge(xVert &index) const
+bool Bundle::findVertexAtLayerEdge(xVert &index)
 {
 //	return false;
 	for(unsigned int i = 1; i < vertices.size(); i++)
@@ -336,9 +336,9 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
 /** Find a (possibly remote) neighbor vertex to the given vertex 'v'. This will set nextIndex
   * and nextBundle to the index/bundle pair for the next vertex, and then it also sets
   * neighborIndex and nextIndex. */
-void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
-		const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
-		xVert v, bool rotateClockwise) const
+void Bundle::findRemoteNeighborVertex(Bundle * &neighborBundle,
+		Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
+		xVert v, bool rotateClockwise)
 {
 	if(neighborBundle == this)
 	{
@@ -366,8 +366,8 @@ void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
 	}
 }
 
-/** Check whether the vertex with index 'v' is at the Layer's edge.
-  * The check has two steps: first we check if the vertex is an edge vertex under the
+/** Search for the neighbor vertex along the edge of the Layer containing the vertex.
+  * The procedure has two steps: first we check if the vertex is an edge vertex under the
   * usual definition of the TopologicalMesh. If not, it cannot be on the Layer's edge
   * either. If it is, we do a second check, namely that we can complete a circle around
   * the current Vertex by finding neighbours until we reach the start again.
@@ -376,9 +376,9 @@ void Bundle::findRemoteNeighborVertex(const Bundle * &neighborBundle,
   * The strategy for this second step is analogous to the non-edge-vertex procedure in
   * TopologicalMesh::checkTopology().
   */
-bool Bundle::isAtLayerEdge(xVert v) const
+StripVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 {
-	if(!isEdgeVertex(v)) return false;
+	if(!isEdgeVertex(v)) return StripVertex(tiny::vec3(), 0, 0);
 	else
 	{
 		xVert startIndex = findAdjacentEdgeVertex(v, false);
@@ -387,17 +387,28 @@ bool Bundle::isAtLayerEdge(xVert v) const
 		// Now try to find polygons via which we can move clockwise around 'v'
 		// from startIndex to endIndex.
 		xVert neighborIndex = startIndex;
-		const Bundle * neighborBundle = this;
+		Bundle * neighborBundle = this;
 		xVert nextIndex = 0;
-		const Bundle * nextBundle = 0;
+		Bundle * nextBundle = 0;
 		while(neighborIndex != endIndex || neighborBundle != this)
 		{
 			// Try to find neighborIndex from all nearby Strips.
-			findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v, true);
+			findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v, !clockwise);
 			if(nextIndex == 0) break; // Failed to find next vertex - this is the edge
 		}
-		return (neighborIndex != endIndex);
+		if (neighborIndex != endIndex)
+			return StripVertex(tiny::vec3(), neighborBundle, neighborIndex);
+		else return StripVertex(tiny::vec3(), 0, 0);
 	}
+}
+
+/** Check whether the vertex with index 'v' is at the Layer's edge. The check is performed
+  * through looking for the along-the-layer-edge vertex, the function for which returns 0
+  * for non-edge vertices. */
+bool Bundle::isAtLayerEdge(xVert v)
+{
+	StripVertex sv = findAlongLayerEdge(v, true);
+	return (sv.getRemoteIndex() != 0);
 }
 
 /** Check whether the position 'p' is 'near' the Bundle's mesh. This function does most of
@@ -447,9 +458,9 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, b
 	// to determine whether the position 'p' is near the mesh in the required way.
 	xVert startIndex = findPolyNeighbor(0, v, true);
 	xVert neighborIndex = startIndex;
-	const Bundle * neighborBundle = this;
+	Bundle * neighborBundle = this;
 	xVert nextIndex = 0;
-	const Bundle * nextBundle = 0;
+	Bundle * nextBundle = 0;
 	bool rotateClockwise = true;
 	bool isNearMesh = true;
 	// While-loop over all neighbours - finishes when circle is complete

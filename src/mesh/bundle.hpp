@@ -31,6 +31,7 @@ namespace strata
 	namespace mesh
 	{
 		class Strip;
+		class StripVertex;
 
 		/** A Bundle is a mesh, consisting of vertices and polygons that link the vertices together. Some helper functions
 		  * are never required as 'outside' functions, therefore they are hidden (as opposed to some direct mesh alteration
@@ -175,19 +176,23 @@ namespace strata
 				tiny::vec3 calculateVertexNormal(xVert v) const;
 
 				/** Find a neighbor vertex that may be in another Bundle. */
-				void findRemoteNeighborVertex(const Bundle * &neighborBundle,
-						const Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
-						xVert v, bool rotateClockwise) const;
+				void findRemoteNeighborVertex(Bundle * &neighborBundle,
+						Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
+						xVert v, bool rotateClockwise);
+
+				/** Find a vertex along the edge of the Layer. Returns a StripVertex with
+				  * zero index (and null owning bundle) unless such a vertex is found. */
+				StripVertex findAlongLayerEdge(xVert v, bool clockwise);
 
 				/** Find a Vertex at the Layer's edge. If none of the Bundle's vertices
 				  * are at this edge, false is returned. Otherwise, true is returned, and
 				  * the 'index' variable is set to the edge vertex's index. */
-				bool findVertexAtLayerEdge(xVert &index) const;
+				bool findVertexAtLayerEdge(xVert &index);
 
 				/** Check whether this Vertex is at the Layer's edge. Note that
 				  * a vertex is at a Layer's edge if and only if there are unique
 				  * edges among its adjacent polygons. */
-				bool isAtLayerEdge(xVert v) const;
+				bool isAtLayerEdge(xVert v);
 
 				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal);
 				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal);

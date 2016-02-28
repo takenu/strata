@@ -103,6 +103,13 @@ namespace strata
 					if(isStitchVertex()) return (pos*(1.0f-offset)+secondaryPos*offset);
 					else return pos;
 				}
+
+				inline bool operator == (const StripVertex &sv) const
+				{
+					return (owner == sv.owner && remoteIndex == sv.remoteIndex);
+				}
+
+				inline bool operator != (const StripVertex &sv) const { return !(*this == sv); }
 		};
 
 		/** A standalone polygon defined by three StripVertices. Multiple of these
@@ -406,8 +413,8 @@ namespace strata
 				  *  \ /
 				  *   v
 				  */
-				xVert findRemoteVertexPolyNeighbor(const Bundle * &neighborBundle, xVert v, xVert w,
-						const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const;
+				xVert findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
+						const Bundle * vBundle, const Bundle * wBundle, bool clockwise);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */

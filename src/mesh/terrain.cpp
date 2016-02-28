@@ -200,8 +200,18 @@ void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
 	StripVertex upperVertexLeading = startVertex;
 	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
+	StripVertex upperVertexStart = upperVertexLeading;
+	StripVertex lowerVertexStart = lowerVertexLeading;
+	StripVertex upperVertexNext = upperVertexLeading.getOwningBundle()->findAlongLayerEdge(
+			upperVertexLeading.getRemoteIndex(), false);
 	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
 	std::cout << startVertex.getPosition()<<" and "<<lowerVertexLeading.getPosition()<<std::endl;
+	do
+	{
+//		if(upperVertexLeading == lowerVertexLeading)
+		{
+		}
+	} while(upperVertexLeading != upperVertexStart || lowerVertexLeading != lowerVertexStart);
 }
 
 /** Find the underlying Vertex to the position 'v'. The Vertex that is found

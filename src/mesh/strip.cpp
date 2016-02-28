@@ -148,8 +148,8 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   * This function doesn't make sense for Stitch Strips so there is no attempt
   * to include secondary Bundles.
   */
-xVert Strip::findRemoteVertexPolyNeighbor(const Bundle * &neighborBundle, xVert v, xVert w,
-		const Bundle * vBundle, const Bundle * wBundle, bool clockwise) const
+xVert Strip::findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
+		const Bundle * vBundle, const Bundle * wBundle, bool clockwise)
 {
 	xVert remoteNeighborIndex = 0;
 	xVert vLocal = 0;
