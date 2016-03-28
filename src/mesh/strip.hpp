@@ -51,7 +51,9 @@ namespace strata
 				Bundle * secondaryOwner; /**< The Bundle that owns the secondary Vertex. */
 				xVert secondaryIndex; /**< The index of the secondary Vertex in its Bundle. */
 				tiny::vec3 secondaryPos; /**< The position of the secondary Vertex. */
-				float offset; /**< The offset (between 0 and 1) of the vertex from the primary towards the secondary Vertex.*/
+				/** The offset (between 0 and 1) of the vertex from the primary towards the secondary Vertex,
+				  * with the convention that at 0 the vertex is at the primary remote vertex. */
+				float offset;
 			public:
 				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
 				  * This form allows construction from remote index + remote bundle + position. This can be used
@@ -63,6 +65,12 @@ namespace strata
 				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex from a Bundle into a Strip.
 				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
 				StripVertex(const Vertex &v, Bundle * _owner) : StripVertex(v.pos,  _owner, v.index) {}
+
+				/** Allow position-less creation of StripVertex objects, which can then be used as
+				  * owningBundle-remoteIndex pair objects. */
+				StripVertex(Bundle * _owner, xVert _remoteIndex) : StripVertex(tiny::vec3(), _owner, _remoteIndex)
+				{
+				}
 
 				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as the generic VertexType constructor. */
 				StripVertex(tiny::vec3 _pos) : StripVertex(_pos, 0, 0) {}
@@ -413,8 +421,9 @@ namespace strata
 				  *  \ /
 				  *   v
 				  */
-				xVert findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
-						const Bundle * vBundle, const Bundle * wBundle, bool clockwise);
+				StripVertex findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise);
+//				xVert findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
+//						const Bundle * vBundle, const Bundle * wBundle, bool clockwise);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */

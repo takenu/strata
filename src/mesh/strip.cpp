@@ -148,20 +148,25 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   * This function doesn't make sense for Stitch Strips so there is no attempt
   * to include secondary Bundles.
   */
-xVert Strip::findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
-		const Bundle * vBundle, const Bundle * wBundle, bool clockwise)
+//xVert Strip::findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
+//		const Bundle * vBundle, const Bundle * wBundle, bool clockwise)
+StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise)
 {
 	xVert remoteNeighborIndex = 0;
 	xVert vLocal = 0;
 	xVert wLocal = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)
-		if(vertices[i].getRemoteIndex() == v && vertices[i].getOwningBundle() == vBundle)
+//		if(vertices[i].getRemoteIndex() == v && vertices[i].getOwningBundle() == vBundle)
+		// Short-cut the logic by using the == operator which returns 'true' if both owning
+		// bundle and remote index are equal.
+		if(vertices[i] == v)
 		{
 			vLocal = vertices[i].index;
 			break;
 		}
 	for(unsigned int i = 1; i < vertices.size(); i++)
-		if(vertices[i].getRemoteIndex() == w && vertices[i].getOwningBundle() == wBundle)
+//		if(vertices[i].getRemoteIndex() == w && vertices[i].getOwningBundle() == wBundle)
+		if(vertices[i] == w)
 		{
 			wLocal = vertices[i].index;
 			break;
@@ -175,19 +180,24 @@ xVert Strip::findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVe
 	}
 	else
 	{
-		xVert localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
+		xVert localNeighbor;
+		if(clockwise) localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
+		else localNeighbor = findPolyNeighborFromVertexPair(wLocal, vLocal);
 		if(localNeighbor > 0)
 		{
 //			std::cout << " Strip::fRVPN() : Found poly "<<vertices[ve[vLocal]].pos<<", "
 //				<< vertices[ve[wLocal]].pos<<", "<<vertices[ve[localNeighbor]].pos<<std::endl;
-			remoteNeighborIndex = vertices[ve[localNeighbor]].getRemoteIndex();
-			neighborBundle = vertices[ve[localNeighbor]].getOwningBundle();
+//			remoteNeighborIndex = vertices[ve[localNeighbor]].getRemoteIndex();
+//			neighborBundle = vertices[ve[localNeighbor]].getOwningBundle();
+//			return StripVertex(vertices[ve[localNeighbor]].getOwningBundle(),
+//								vertices[ve[localNeighbor]].getRemoteIndex());
+			return StripVertex(vertices[ve[localNeighbor]]);
 		}
 		// This also may happen, if the neighbor is not in this Strip but in another Strip that
 		// also contains the vertex 'v'.
 //		else std::cout << " Strip::findRemoteVertexPolyNeighbor() : Not found! "<<std::endl;
 	}
-	return remoteNeighborIndex;
+	return StripVertex(0,0);
 }
 
 Strip::~Strip(void)
