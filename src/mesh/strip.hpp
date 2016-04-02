@@ -382,13 +382,6 @@ namespace strata
 				unsigned int nPolys(void) const { return polygons.size(); }
 				unsigned int nPolyIndices(void) const { return po.size(); }
 
-//				virtual xVert addVertex(const StitchVertex &v)
-//				{
-//					return Mesh<StripVertex>::addVertex(v);
-////					xVert _v = Mesh<StripVertex>::addVertex(v);
-////					vertices[ve[_v]].setRemoteIndex(v.getRemoteIndex()); // Copy remote index of vertex in owner's mesh. (Shouldn't be necessary if copy constructor does what it is expected to do.)
-//				}
-
 				/** Create a Strip in order to connect meshbundle 'a' to 'b' on all vertices 'aVerts'. */
 				void connectMeshes(Bundle &a, Bundle &b, std::vector<xVert> aVerts);
 
@@ -422,8 +415,6 @@ namespace strata
 				  *   v
 				  */
 				StripVertex findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise);
-//				xVert findRemoteVertexPolyNeighbor(Bundle * &neighborBundle, xVert v, xVert w,
-//						const Bundle * vBundle, const Bundle * wBundle, bool clockwise);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */

@@ -176,8 +176,6 @@ namespace strata
 				tiny::vec3 calculateVertexNormal(xVert v) const;
 
 				/** Find a neighbor vertex that may be in another Bundle. */
-//				void findRemoteNeighborVertex(Bundle * &neighborBundle,
-//						Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
 				void findRemoteNeighborVertex(StripVertex &pivot, StripVertex &sv, bool rotateClockwise);
 
 				/** Find a vertex along the edge of the Layer. Returns a StripVertex with

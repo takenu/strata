@@ -304,16 +304,13 @@ Bundle::~Bundle(void)
 
 bool Bundle::findVertexAtLayerEdge(xVert &index)
 {
-//	return false;
 	for(unsigned int i = 1; i < vertices.size(); i++)
 	{
 		if(isAtLayerEdge(vertices[i].index))
 		{
-//			std::cout << " Bundle::findVertexAtLayerEdge() : Found edge at "<<vertices[i].pos<<"!"<<std::endl;
 			index = vertices[i].index;
 			return true;
 		}
-//		else std::cout << " Bundle::findVertexAtLayerEdge() : Vertex "<<i<<" at "<<vertices[i].pos<<" is not at edge! "<<std::endl;
 	}
 	return false;
 }
@@ -345,41 +342,27 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
 //		xVert v, bool rotateClockwise)
 void Bundle::findRemoteNeighborVertex(StripVertex &pivot, StripVertex &sv, bool rotateClockwise)
 {
-//	if(neighborBundle == this)
 	if(sv.getOwningBundle() == this)
 	{
-//		nextIndex = findPolyNeighborFromVertexPair(v, neighborIndex);
 		xVert nextIndex = findPolyNeighborFromVertexPair(pivot.getRemoteIndex(), sv.getRemoteIndex());
 		if(nextIndex > 0)
 		{
-//			neighborIndex = nextIndex;
 			sv = StripVertex(this, nextIndex);
 			return; // Neighbor vertex found now - no need for more
 		}
 	}
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
-		// Try finding (nextIndex, nextBundle) using the pairs (v, this)
-		// and (neighborIndex, neighborBundle) to uniquely fix the target.
-//		xVert nextIndex = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
-//				nextBundle, v, neighborIndex, this, neighborBundle, rotateClockwise);
+		// Search for the neighbor in the i-th Strip of the adjacency list.
 		StripVertex next = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
 				pivot, sv, rotateClockwise);
-//		if(nextIndex > 0)
 		if(next.getRemoteIndex() > 0)
 		{
-//			std::cout << " Bundle::isAtLayerEdge() : Found next vertex in Strip! "<<std::endl;
-//			std::cout << " Bundle::findRemoteNeighborVertex() : Found neighbor at "
-//				<<next.getOwningBundle()->getVertexPositionFromIndex(next.getRemoteIndex())<<std::endl;
-//			neighborIndex = nextIndex;
-//			neighborBundle = nextBundle;
 			sv = next;
 			break; // Break loop over strips
 		}
 		else if(i+1 == adjacentStrips.size())
 			sv = StripVertex(0,0); // NOT FOUND - none of the adjacent Strips has it!
-//		else std::cout << " Next vertex not yet found in "<<i<<"/"<<adjacentStrips.size()-1<<"... "<<std::endl;
-//				else if(i+1==adjacentStrips.size()) std::cout << " Bundle::isAtLayerEdge() : No next vertex! "<<std::endl;
 	}
 }
 
@@ -398,33 +381,18 @@ StripVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 	if(!isEdgeVertex(v)) return StripVertex(0, 0);
 	else
 	{
-//		xVert startIndex = findAdjacentEdgeVertex(v, false);
-//		xVert endIndex = findAdjacentEdgeVertex(v, true);
-//		std::cout << " Neighbor vertices are at "<<vertices[ve[startIndex]].pos<<" and "<<vertices[ve[endIndex]].pos<<std::endl;
-		// Now try to find polygons via which we can move clockwise around 'v'
-		// from startIndex to endIndex.
-//		xVert neighborIndex = startIndex;
-//		Bundle * neighborBundle = this;
-//		xVert nextIndex = 0;
-//		Bundle * nextBundle = 0;
 		StripVertex neighbor(this, findAdjacentEdgeVertex(v, false));
 		StripVertex endVertex(this, findAdjacentEdgeVertex(v, true));
 		StripVertex pivot(this, v);
 		assert(neighbor != endVertex);
-//		while(neighborIndex != endIndex || neighborBundle != this)
 		while(neighbor != endVertex)
 		{
 			StripVertex newNeighbor = neighbor;
 			// Try to find neighborIndex from all nearby Strips.
-//			findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v, !clockwise);
 			findRemoteNeighborVertex(pivot, newNeighbor, clockwise);
-//			std::cout << " New neighbor = "<<newNeighbor.getRemoteIndex()<<" of "<<newNeighbor.getOwningBundle()<<std::endl;
-//			std::cout << " End vertex = "<<endVertex.getRemoteIndex()<<" of "<<endVertex.getOwningBundle()<<std::endl;
 			if(newNeighbor.getRemoteIndex() == 0) break; // Failed to find next vertex - this is the edge
 			else neighbor = newNeighbor;
 		}
-//		if (neighborIndex != endIndex)
-//			return StripVertex(neighborBundle, neighborIndex);
 		if(neighbor != endVertex) return neighbor;
 		else return StripVertex(0, 0);
 	}
@@ -436,10 +404,6 @@ StripVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 bool Bundle::isAtLayerEdge(xVert v)
 {
 	StripVertex sv = findAlongLayerEdge(v, true);
-//	if(sv.getRemoteIndex() == 0) std::cout << " Vertex "<<v<<" of "<<this<<" is not at Layer's edge! "<<std::endl;
-//	else std::cout << " Vertex "<<v<<" of "<<this<<" is at Layer's edge! "<<std::endl;
-//	if(sv.getRemoteIndex() == 0) std::cout << " Vertex "<<sv.getRemoteIndex()<<" of "<<sv.getOwningBundle()<<" is not at layer's edge! " << std::endl;
-//	else std::cout << " Vertex "<<sv.getRemoteIndex()<<" of "<<sv.getOwningBundle()<<" is at layer's edge! " << std::endl;
 	return (sv.getRemoteIndex() != 0);
 }
 
@@ -486,31 +450,19 @@ bool Bundle::isAtLayerEdge(xVert v)
   */
 bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal)
 {
-	// TODO: Write function body, using inner products on normals of neighboring vertices
-	// to determine whether the position 'p' is near the mesh in the required way.
-//	xVert startIndex = findPolyNeighbor(0, v, true);
-//	xVert neighborIndex = startIndex;
 	StripVertex neighbor(this, findPolyNeighbor(0, v, false));
 	StripVertex endVertex(this, findPolyNeighbor(0, v, true));
 	StripVertex pivot(this, v);
-	// TODO: Replace Bundle/xVert by StripVertex
-//	Bundle * neighborBundle = this;
-//	xVert nextIndex = 0;
-//	Bundle * nextBundle = 0;
 	bool rotateClockwise = true;
 	bool isNearMesh = true;
 	// While-loop over all neighbours - finishes when circle is complete
-//	while( (neighborIndex != startIndex || nextIndex == 0) || neighborBundle != this)
 	while(neighbor != endVertex)
 	{
-//		findRemoteNeighborVertex(neighborBundle, nextBundle, neighborIndex, nextIndex, v,
-//			rotateClockwise);
 		findRemoteNeighborVertex(pivot, neighbor, rotateClockwise);
 		if(neighbor.getRemoteIndex() == 0)
 		{
 			if(!rotateClockwise) break; // Exit point for on-layer-edge vertices
 			rotateClockwise = false;
-//			neighborIndex = startIndex;
 			neighbor = StripVertex(this, findPolyNeighbor(0, v, true));
 			endVertex = StripVertex(this, findPolyNeighbor(0, v, false));
 		}
@@ -518,16 +470,12 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, b
 		{
 			Bundle * neighborBundle = neighbor.getOwningBundle();
 			xVert neighborIndex = neighbor.getRemoteIndex();
-			// TODO: Find some measure for whether or not a Vertex is on v's side of
-			// the plane spanned by the neighbor's normal and some vector perpendicular to both
-			// the neighbor's normal and the v->neighbor vector.
 			tiny::vec3 wpos = neighborBundle->getVertexPositionFromIndex(neighborIndex);
 			tiny::vec3 norm = neighborBundle->calculateVertexNormal(neighborIndex);
 			tiny::vec3 vvec = vertices[ve[v]].pos - wpos;
 			tiny::vec3 perp = cross(vvec, norm);
 //			p = p + marginAlongNormal * calculateVertexNormal(v)
 //				* tiny::length(vvec) * (isAlongNormal ? 1.0f : -1.0f);
-			// TODO: findIntersection doesn't work for parallel n and v!
 			tiny::vec3 pprime = findIntersection(p, perp, wpos, perp); // Project p onto v-n plane
 			tiny::vec3 q = pprime - wpos;
 			if(!isAlongNormal)
