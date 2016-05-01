@@ -330,6 +330,30 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
 	return normalize(norm);
 }
 
+/** Find the neighbor (among all neighbors of a vertex both inside this Bundle and
+  * inside adjacent Strips) of the vertex with index 'v' that is closest to the position 'pos'. */
+StripVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
+{
+	// TODO: Finding nearest neighbors may not result in a match in extreme topologies where
+	// all neighbors of a point are farther from the target point than the vertex 'v' itself.
+	// Currently these cases are not dealt with, but for a complete treatment a more
+	// sophisticated measure of 'nearness' than a simple Euclidean distance is required.
+	StripVertex sv(this, v);
+	StripVertex nn(0, 0);
+	// Look among neighbors in this Bundle.
+	nn = StripVertex(this, findNearestNeighbor(v,pos));
+	// Look for neighbors in adjacent Strips, if this vertex is at the Bundle's edge.
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		StripVertex nnCandidate = adjacentStrips[i]->findNearestNeighborInStrip(sv, pos);
+		if(dist(pos, nnCandidate.getPosition()) < dist(pos, nn.getPosition()))
+			nn = nnCandidate;
+	}
+	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
+	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<"."<<std::endl;
+	return nn;
+}
+
 /** Find a (possibly remote) neighbor vertex to the given vertex 'v'. This will find a 
   * This will set nextIndex
   * and nextBundle to the index/bundle pair for the next vertex, and then it also sets

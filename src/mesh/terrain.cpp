@@ -198,14 +198,18 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
   */
 void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 {
-	StripVertex upperVertexLeading = startVertex;
-	StripVertex lowerVertexLeading = getUnderlyingVertex(startVertex.getPosition());
-	StripVertex upperVertexStart = upperVertexLeading;
-	StripVertex lowerVertexStart = lowerVertexLeading;
-	StripVertex upperVertexNext = upperVertexLeading.getOwningBundle()->findAlongLayerEdge(
-			upperVertexLeading.getRemoteIndex(), false);
+	StripVertex upperVertexTrailing = startVertex;
+	StripVertex lowerVertexTrailing = getUnderlyingVertex(startVertex.getPosition());
+	StripVertex upperVertexStart = upperVertexTrailing;
+	StripVertex lowerVertexStart = lowerVertexTrailing;
+	StripVertex upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
+			upperVertexTrailing.getRemoteIndex(), false);
+	std::cout << " Terrain::stitchLayerTransverse() : Found upper leading vertex at "<<upperVertexLeading.getPosition()<<std::endl;
+	StripVertex lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
+			lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
 	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
-	std::cout << startVertex.getPosition()<<" and "<<lowerVertexLeading.getPosition()<<std::endl;
+	std::cout << startVertex.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<std::endl;
+	return;
 	do
 	{
 //		if(upperVertexLeading == lowerVertexLeading)

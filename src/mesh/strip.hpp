@@ -58,8 +58,11 @@ namespace strata
 				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
 				  * This form allows construction from remote index + remote bundle + position. This can be used
 				  * when splitting meshes through the TopologicalMesh class. */
-				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) : Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex)
+				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) :
+					Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex),
+					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
+					resetPosition();
 				}
 
 				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex from a Bundle into a Strip.
@@ -82,6 +85,7 @@ namespace strata
 				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
 					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
+					resetPosition();
 				}
 
 				const xVert & getRemoteIndex(void) const { return remoteIndex; }
@@ -111,6 +115,8 @@ namespace strata
 					if(isStitchVertex()) return (pos*(1.0f-offset)+secondaryPos*offset);
 					else return pos;
 				}
+
+				void resetPosition(void);
 
 				inline bool operator == (const StripVertex &sv) const
 				{
@@ -405,6 +411,9 @@ namespace strata
 					if(v > 0) sumOfNormals = getSumOfPolygonNormals(v);
 					return sumOfNormals;
 				}
+
+				/** Find the nearest neighbor (with respect to the position 'pos') of 'sv'. */
+				StripVertex findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos);
 
 				/** Get the remote vertex that is the (counter)clockwise neighbor
 				  * of the vertex with remote index 'w' with respect to 'v'. In other words,

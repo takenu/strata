@@ -22,6 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::mesh;
 
+void StripVertex::resetPosition(void)
+{
+	if(owner != 0) setPosition( owner->getVertexPositionFromIndex(remoteIndex) );
+}
+
 /** Split the Strip object. This function is roughly similar to the Bundle implementation for splitting Bundles,
   * but it is simpler since the Strip is only split into two Strips that are each roughly half as long as the
   * original Strip. */
@@ -139,6 +144,25 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
 	return false;
 }
 
+/** Find the nearest neighbor to 'sv' from the Strip's StripVertex objects. If 'sv' is not in the Strip,
+  * this returns the (0,0) StripVertex, otherwise this function should always return a valid StripVertex. */
+StripVertex Strip::findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos)
+{
+	xVert v = 0;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		if(vertices[i] == sv)
+		{
+			v = vertices[i].index;
+			break;
+		}
+	if(v == 0) return StripVertex(0,0); // Can happen normally if this adjacentStrip doesn't contain sv
+	else
+	{
+		xVert localNeighbor = findNearestNeighbor(v, pos);
+		return StripVertex(vertices[ve[localNeighbor]]); // Make a copy of StripVertex for return value
+	}
+}
+
 /** Find 'a' in the following situation (clockwise=true)
   * w---a
   *  \ /
@@ -150,7 +174,6 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   */
 StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise)
 {
-	xVert remoteNeighborIndex = 0;
 	xVert vLocal = 0;
 	xVert wLocal = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)

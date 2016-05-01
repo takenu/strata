@@ -175,6 +175,9 @@ namespace strata
 				  * the normals of polygons outside the Bundle (i.e. in Strips)). */
 				tiny::vec3 calculateVertexNormal(xVert v) const;
 
+				/** Find the neigbor to the vertex 'v' who is nearest to the position 'pos'. */
+				StripVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos);
+
 				/** Find a neighbor vertex that may be in another Bundle. */
 				void findRemoteNeighborVertex(StripVertex &pivot, StripVertex &sv, bool rotateClockwise);
 

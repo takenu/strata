@@ -653,6 +653,30 @@ namespace strata
 
 				virtual ~TopologicalMesh(void) { polygons.clear(); vertices.clear(); ve.clear(); po.clear(); }
 
+				/** Find the index of the neighbor to the vertex 'v' that (among v's neighbors) is
+				  * the closest to the position 'pos'. */
+				xVert findNearestNeighbor(xVert v, const tiny::vec3 pos)
+				{
+					xVert n = 0;
+					for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+					{
+						if(vertices[ve[v]].poly[i] == 0) break;
+						tiny::vec3 closestNeighborPos =
+							(n == 0 ? tiny::vec3(0.0f,0.0f,0.0f) : getVertexPositionFromIndex(n));
+						tiny::vec3 clockwiseNeighborPos = getVertexPositionFromIndex(
+								findPolyNeighbor(i, v, true));
+						tiny::vec3 counterclockwiseNeighborPos = getVertexPositionFromIndex(
+								findPolyNeighbor(i, v, false));
+						if(n == 0 ||
+								dist(pos, closestNeighborPos) > dist(pos, clockwiseNeighborPos))
+							n = findPolyNeighbor(i, v, true);
+						else if(dist(pos, closestNeighborPos) > dist(pos, counterclockwiseNeighborPos))
+							n = findPolyNeighbor(i, v, false);
+					}
+					if(n == 0) std::cout << " TopologicalMesh::findNearestNeighbor() : Not found!"<<std::endl;
+					return n;
+				}
+
 				/** Find a neighbouring vertex based on an edge.
 				  *
 				  * This function returns the vertex on the other side of the first edge radiating away from 'v' in a (counter)clockwise fashion, measured starting from j.
