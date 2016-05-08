@@ -118,6 +118,8 @@ namespace strata
 
 				void resetPosition(void);
 
+				bool isValid(void) const { return (owner != 0 && remoteIndex != 0); }
+
 				inline bool operator == (const StripVertex &sv) const
 				{
 					return (owner == sv.owner && remoteIndex == sv.remoteIndex);
@@ -393,18 +395,24 @@ namespace strata
 
 				/** Find the Strip-local index for the Vertex owned by 'owningBundle' with a remote
 				  * index in that Bundle of 'remoteIndex'. */
-				xVert findVertexByRemoteIndex(const Bundle * owningBundle, xVert remoteIndex)
+				xVert findVertexByRemoteIndex(Bundle * owningBundle, xVert remoteIndex)
 				{
+					return findLocalVertexIndex( StripVertex(owningBundle, remoteIndex) );
+				}
+/*				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
 						if(vertices[i].getOwningBundle() == owningBundle
 								&& vertices[i].getRemoteIndex() == remoteIndex)
 							return vertices[i].index;
 					return 0;
-				}
+				}*/
+
+				/** Find the Strip-local index of a remote vertex. */
+				xVert findLocalVertexIndex(const StripVertex & sv) const;
 
 				/** Calculate the sum of all polygon normals that the referenced remote vertex has in this
 				  * Strip. */
-				tiny::vec3 computeSumOfPolygonNormals(const Bundle * owningBundle, xVert remoteIndex)
+				tiny::vec3 computeSumOfPolygonNormals(Bundle * owningBundle, xVert remoteIndex)
 				{
 					tiny::vec3 sumOfNormals(0.0f,0.0f,0.0f);
 					xVert v = findVertexByRemoteIndex(owningBundle, remoteIndex);
@@ -414,6 +422,9 @@ namespace strata
 
 				/** Find the nearest neighbor (with respect to the position 'pos') of 'sv'. */
 				StripVertex findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos);
+
+				/** Determine whether 'sv' is a neighbor to 'rv' within the scope of the Strip. */
+				bool isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & rv);
 
 				/** Get the remote vertex that is the (counter)clockwise neighbor
 				  * of the vertex with remote index 'w' with respect to 'v'. In other words,

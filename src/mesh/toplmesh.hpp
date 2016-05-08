@@ -721,6 +721,10 @@ namespace strata
 				/** Find a neighbor vertex in a polygon using the index of the polygon in the vertex. Redirects to findPolyNeighbor. */
 				inline const xVert & findPolyNeighbor(unsigned int i, const xVert &v, bool clockwise) const
 				{
+					assert(v<ve.size());
+					assert(ve[v]<vertices.size());
+					assert(vertices[ve[v]].poly[i]<po.size());
+					assert(po[vertices[ve[v]].poly[i]]<polygons.size());
 					return findPolyNeighbor(polygons[po[vertices[ve[v]].poly[i]]],v,clockwise);
 				}
 

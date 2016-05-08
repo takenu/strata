@@ -173,7 +173,7 @@ namespace strata
 				/** Calculate a Vertex's full normal. (Note that TopologicalMesh has a function
 				  * getVertexNormal() which calculates a rough normal, but which cannot use
 				  * the normals of polygons outside the Bundle (i.e. in Strips)). */
-				tiny::vec3 calculateVertexNormal(xVert v) const;
+				tiny::vec3 calculateVertexNormal(xVert v);
 
 				/** Find the neigbor to the vertex 'v' who is nearest to the position 'pos'. */
 				StripVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos);
@@ -194,6 +194,13 @@ namespace strata
 				  * a vertex is at a Layer's edge if and only if there are unique
 				  * edges among its adjacent polygons. */
 				bool isAtLayerEdge(xVert v);
+
+				/** Check whether 'sv' is among the neighbors of 'v'. This includes neighbors of 'v'
+				  * that are owned by other Bundles, even in other Layers. */
+				bool isAmongNeighbors(const StripVertex & sv, xVert v);
+
+				/** Check whether 'sv' is among the neighbors of 'v' within the scope of this Bundle. */
+				bool isAmongNeighborsInBundle(const StripVertex & sv, xVert v);
 
 				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal);
 				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal);

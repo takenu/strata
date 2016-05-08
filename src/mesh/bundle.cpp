@@ -315,7 +315,7 @@ bool Bundle::findVertexAtLayerEdge(xVert &index)
 	return false;
 }
 
-tiny::vec3 Bundle::calculateVertexNormal(xVert v) const
+tiny::vec3 Bundle::calculateVertexNormal(xVert v)
 {
 	tiny::vec3 norm(0.0f,0.0f,0.0f);
 	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
@@ -346,8 +346,40 @@ StripVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
 		StripVertex nnCandidate = adjacentStrips[i]->findNearestNeighborInStrip(sv, pos);
-		if(dist(pos, nnCandidate.getPosition()) < dist(pos, nn.getPosition()))
+		if(!nnCandidate.isValid()) continue;
+		// Logic of the test condition:
+		// - if the vertex is a neighbor of the current candidate, and it is closer, then add it
+		// - if the vertex is above the current candidate, then add it
+		// - if the vertex is not below the current candidate and it is closer, then add it
+		// The reason for this complex logic is that 'is above/below' is poorly defined for neighbor
+		// vertices, so in that case 'being closer' suffices. For non-neighbor, however, it is quite
+		// important to include the above/below check. If the new vertex defeats the current candidate,
+		// then it must be used regardless of whether it is closer, since the current candidate is
+		// apparently not on the surface. Furthermore, if the new vertex is closer without being below,
+		// then it must also be added. (Note that 'above' and 'not below' are not the same: for faraway
+		// vertices the test always fails.)
+		if( (dist(pos, nnCandidate.getPosition()) < dist(pos, nn.getPosition())
+				&& nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex()))
+			|| nnCandidate.getOwningBundle()->isBelowMeshAtIndex(
+				nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f)
+			|| (dist(pos, nnCandidate.getPosition()) < dist(pos, nn.getPosition())
+				&& nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex())
+				&& !nnCandidate.getOwningBundle()->isAboveMeshAtIndex(
+					nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f))
+				)
+		{
+			// TODO: If two vertices from distinct layers are exactly on top of each other one cannot
+			// see which one is 'above' without looking at the neighbors. Therefore this approach might
+			// not work well for places where the layer thickness is (very near) zero.
+			// One way to 'solve' this issue is to forbid ultrathin layers and require that Strata
+			// merges vertices that are too close together.
 			nn = nnCandidate;
+		}
+		else
+		{
+			std::cout << " findNearestNeighborInBundle() : Candidate not suitable! ";
+			std::cout << " Skipping "<<nnCandidate.getPosition()<<" for "<<nn.getPosition()<<std::endl;
+		}
 	}
 	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
 	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<"."<<std::endl;
@@ -429,6 +461,60 @@ bool Bundle::isAtLayerEdge(xVert v)
 {
 	StripVertex sv = findAlongLayerEdge(v, true);
 	return (sv.getRemoteIndex() != 0);
+}
+
+/** Check whether the StripVertex 'sv' is a neighbor of 'v'.
+  * This function works similar to isNearMeshAtIndex() but it looks for neighbors indices instead of
+  * certain topological conditions.
+  */
+bool Bundle::isAmongNeighbors(const StripVertex & sv, xVert v)
+{
+	if(isAmongNeighborsInBundle(sv, v)) return true;
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		if(adjacentStrips[i]->isAmongNeighborsInStrip(sv, StripVertex(this, v))) return true;
+	}
+	return false;
+}
+
+bool Bundle::isAmongNeighborsInBundle(const StripVertex &sv, xVert v)
+{
+	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+	{
+		if(vertices[ve[v]].poly[i] == 0) break;
+		StripVertex m(this, findPolyNeighbor(i, v, false));
+		StripVertex n(this, findPolyNeighbor(i, v, true));
+		if(m == sv || n == sv)
+		{
+			return true;
+		}
+	}
+	return false;
+/*	if(neighbor == sv || endVertex == sv)
+	{
+		std::cout << " Bundle::isAmongNeighbors() : Found as start or end vertex! "<<std::endl;
+		return true;
+	}
+	StripVertex pivot(this, v);
+	bool rotateClockwise = true;
+	bool isNearMesh = true;
+	// While-loop over all neighbours - finishes when circle is complete
+	while(neighbor != endVertex)
+	{
+		findRemoteNeighborVertex(pivot, neighbor, rotateClockwise);
+		if(neighbor.getRemoteIndex() == 0)
+		{
+			if(!rotateClockwise) break; // Exit point for on-layer-edge vertices
+			rotateClockwise = false;
+			neighbor = StripVertex(this, findPolyNeighbor(0, v, true));
+			endVertex = StripVertex(this, findPolyNeighbor(0, v, false));
+		}
+		else
+		{
+			if(neighbor == sv) return true;
+		}
+	}
+	return false;*/
 }
 
 /** Check whether the position 'p' is 'near' the Bundle's mesh. This function does most of

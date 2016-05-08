@@ -148,19 +148,55 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
   * this returns the (0,0) StripVertex, otherwise this function should always return a valid StripVertex. */
 StripVertex Strip::findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos)
 {
-	xVert v = 0;
+/*	xVert v = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)
 		if(vertices[i] == sv)
 		{
 			v = vertices[i].index;
 			break;
-		}
+		}*/
+	xVert v = findLocalVertexIndex(sv);
 	if(v == 0) return StripVertex(0,0); // Can happen normally if this adjacentStrip doesn't contain sv
 	else
 	{
 		xVert localNeighbor = findNearestNeighbor(v, pos);
 		return StripVertex(vertices[ve[localNeighbor]]); // Make a copy of StripVertex for return value
 	}
+}
+
+/** Find the Strip-local index of a remote vertex, uniquely defined from its owning Bundle and its
+  * remote index in that Bundle. */
+xVert Strip::findLocalVertexIndex(const StripVertex & sv) const
+{
+	for(unsigned int i = 1; i < vertices.size(); i++)
+		if(vertices[i] == sv) // Use StripVertex::operator==
+			return vertices[i].index;
+	return 0;
+}
+
+/** Determine whether the vertex 'sv' is among the neighbors of the remote vertex 'rv', within
+  * the scope of the Strip itself. */
+bool Strip::isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & rv)
+{
+/*	xVert vLocal = 0;
+	for(unsigned int i = 1; i < vertices.size(); i++)
+	{
+		if(vertices[i] == rv)
+		{
+			vLocal = vertices[i].index;
+			break;
+		}
+	}*/
+	xVert vLocal = findLocalVertexIndex(rv);
+	if(vLocal == 0) return false; // 'rv' is not in this Strip, so no neighbor found either
+	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+	{
+		if(vertices[ve[vLocal]].poly[i] == 0) break;
+		StripVertex m = vertices[ve[ findPolyNeighbor(i,vLocal,false) ]];
+		StripVertex n = vertices[ve[ findPolyNeighbor(i,vLocal, true) ]];
+		if(m == sv || n == sv) return true;
+	}
+	return false;
 }
 
 /** Find 'a' in the following situation (clockwise=true)
@@ -174,7 +210,7 @@ StripVertex Strip::findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &
   */
 StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise)
 {
-	xVert vLocal = 0;
+/*	xVert vLocal = 0;
 	xVert wLocal = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)
 		// Short-cut the logic by using the == operator which returns 'true' if both owning
@@ -189,8 +225,10 @@ StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, 
 		{
 			wLocal = vertices[i].index;
 			break;
-		}
-	if(!(vLocal == 0 || wLocal == 0))
+		}*/
+	xVert vLocal = findLocalVertexIndex(v);
+	xVert wLocal = findLocalVertexIndex(w);
+	if(vLocal != 0 && wLocal != 0)
 	{
 		xVert localNeighbor;
 		if(clockwise) localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
