@@ -123,5 +123,7 @@ namespace strata
 
 				inline bool operator != (const StripVertex &sv) const { return !(*this == sv); }
 		};
+
+		typedef StripVertex RemoteVertex;
 	}
 }

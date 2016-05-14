@@ -26,24 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vecmath.hpp"
 #include "interface.hpp"
 #include "toplmesh.hpp"
+#include "remotevertex.hpp"
 
 namespace strata
 {
 	namespace mesh
 	{
 		class Layer; // for parentLayer, a pointer to the Layer to which this Mesh belongs
-
-		// TODO: RemoteVertex should be removed, StripVertex can do this but StripVertex needs to
-		// be moved out of the Strip source file such that it can be included here.
-		/** A class to contain the parameters for constructing remote vertices for Strip objects. */
-		class RemoteVertex
-		{
-			public:
-				Bundle * owner;
-				xVert index;
-				tiny::vec3 pos;
-				RemoteVertex(Bundle * b, xVert v, tiny::vec3 p) : owner(b), index(v), pos(p) {}
-		};
 
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex. It 
@@ -189,9 +178,9 @@ namespace strata
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
-					xVert _a = addIfNewVertex(VertexType(a.pos, a.owner, a.index), tolerance);
-					xVert _b = addIfNewVertex(VertexType(b.pos, b.owner, b.index), tolerance);
-					xVert _c = addIfNewVertex(VertexType(c.pos, c.owner, c.index), tolerance);
+					xVert _a = addIfNewVertex(VertexType(a.pos, a.getOwningBundle(), a.getRemoteIndex()), tolerance);
+					xVert _b = addIfNewVertex(VertexType(b.pos, b.getOwningBundle(), b.getRemoteIndex()), tolerance);
+					xVert _c = addIfNewVertex(VertexType(c.pos, c.getOwningBundle(), c.getRemoteIndex()), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
@@ -711,11 +700,8 @@ namespace strata
 							xVert _a = (fvert.find(a) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(a)) : f->getRemoteVertexIndex(fvert.at(a)));
 							xVert _b = (fvert.find(b) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(b)) : f->getRemoteVertexIndex(fvert.at(b)));
 							xVert _c = (fvert.find(c) == fvert.end() ? g->getRemoteVertexIndex(gvert.at(c)) : f->getRemoteVertexIndex(fvert.at(c)));
-							tiny::vec3 ap = vertices[ve[a]].pos;
-							tiny::vec3 bp = vertices[ve[b]].pos;
-							tiny::vec3 cp = vertices[ve[c]].pos;
 							// Add to Stitch, and specify which vertices from which meshes it is using
-							s->addPolygonWithVertices(RemoteVertex(_abundle, _a, ap), RemoteVertex(_bbundle, _b, bp), RemoteVertex(_cbundle, _c, cp));
+							s->addPolygonWithVertices(RemoteVertex(_abundle, _a), RemoteVertex(_bbundle, _b), RemoteVertex(_cbundle, _c));
 						}
 					}
 				}
