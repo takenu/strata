@@ -662,18 +662,29 @@ namespace strata
 					{
 						if(vertices[ve[v]].poly[i] == 0) break;
 						tiny::vec3 closestNeighborPos =
-							(n == 0 ? tiny::vec3(0.0f,0.0f,0.0f) : getVertexPositionFromIndex(n));
+							(n == 0 ? tiny::vec3(1.0e12f,1.0e12f,1.0e12f) : getVertexPositionFromIndex(n));
 						tiny::vec3 clockwiseNeighborPos = getVertexPositionFromIndex(
 								findPolyNeighbor(i, v, true));
 						tiny::vec3 counterclockwiseNeighborPos = getVertexPositionFromIndex(
 								findPolyNeighbor(i, v, false));
-						if(n == 0 ||
+						if( (n == 0 ||
 								dist(pos, closestNeighborPos) > dist(pos, clockwiseNeighborPos))
+								  && dist(pos, clockwiseNeighborPos) < dist(pos, counterclockwiseNeighborPos) )
+						{
+//							std::cout << " TopologicalMesh::findNearestNeighbor() : Found closer neighbor to "<<pos<<": (clockwise) "<<clockwiseNeighborPos<<" is better than "<<closestNeighborPos<<" and "<<counterclockwiseNeighborPos<<std::endl;
 							n = findPolyNeighbor(i, v, true);
-						else if(dist(pos, closestNeighborPos) > dist(pos, counterclockwiseNeighborPos))
+						}
+						else if(n == 0 || dist(pos, closestNeighborPos) > dist(pos, counterclockwiseNeighborPos))
+						{
+//							std::cout << " TopologicalMesh::findNearestNeighbor() : Found closer neighbor to "<<pos<<": (counter-clockwise) "<<counterclockwiseNeighborPos<<" is better than "<<closestNeighborPos<<" and "<<clockwiseNeighborPos<<std::endl;
 							n = findPolyNeighbor(i, v, false);
+						}
+						else
+						{
+//							std::cout << " TopologicalMesh::findNearestNeighbor() : Did not find closer neighbor to "<<pos<<": "<<counterclockwiseNeighborPos<<" and "<<clockwiseNeighborPos<<" are worse than "<<closestNeighborPos<<std::endl;
+						}
 					}
-					if(n == 0) std::cout << " TopologicalMesh::findNearestNeighbor() : Not found!"<<std::endl;
+					if(n == 0) std::cout << " TopologicalMesh::findNearestNeighbor() : No neighbor found!"<<std::endl;
 					return n;
 				}
 

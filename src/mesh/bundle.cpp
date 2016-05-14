@@ -342,6 +342,11 @@ StripVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 	StripVertex nn(0, 0);
 	// Look among neighbors in this Bundle.
 	nn = StripVertex(this, findNearestNeighbor(v,pos));
+/*	if(nn.isValid())
+	{
+		std::cout << " findNearestNeighborInBundle() : Found candidate in bundle! ";
+		std::cout << " Using "<<nn.getPosition()<<std::endl;
+	}*/
 	// Look for neighbors in adjacent Strips, if this vertex is at the Bundle's edge.
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
@@ -373,16 +378,19 @@ StripVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 			// not work well for places where the layer thickness is (very near) zero.
 			// One way to 'solve' this issue is to forbid ultrathin layers and require that Strata
 			// merges vertices that are too close together.
+//			std::cout << " findNearestNeighborInBundle() : Found suitable candidate! ";
+//			std::cout << " Using "<<nnCandidate.getPosition()<<" instead of "<<nn.getPosition()<<std::endl;
 			nn = nnCandidate;
 		}
 		else
 		{
-			std::cout << " findNearestNeighborInBundle() : Candidate not suitable! ";
-			std::cout << " Skipping "<<nnCandidate.getPosition()<<" for "<<nn.getPosition()<<std::endl;
+//			std::cout << " findNearestNeighborInBundle() : Candidate not suitable! ";
+//			std::cout << " Skipping "<<nnCandidate.getPosition()<<" for "<<nn.getPosition()<<std::endl;
 		}
 	}
 	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
-	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<"."<<std::endl;
+	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<" (dist=";
+	std::cout << dist(pos,nn.getPosition())<<")."<<std::endl;
 	return nn;
 }
 
