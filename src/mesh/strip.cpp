@@ -22,11 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::mesh;
 
-void StripVertex::resetPosition(void)
-{
-	if(owner != 0) setPosition( owner->getVertexPositionFromIndex(remoteIndex) );
-}
-
 /** Split the Strip object. This function is roughly similar to the Bundle implementation for splitting Bundles,
   * but it is simpler since the Strip is only split into two Strips that are each roughly half as long as the
   * original Strip. */

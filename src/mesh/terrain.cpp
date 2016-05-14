@@ -208,13 +208,24 @@ void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
 	StripVertex lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
 			lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
 	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
-	std::cout << startVertex.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<std::endl;
+	std::cout << upperVertexTrailing.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<std::endl;
 	return;
 	do
 	{
-//		if(upperVertexLeading == lowerVertexLeading)
+		// If lower trailing vertex closer to leading than trailing upper vertex,
+		// new polygons will never use the trailing upper vertex anymore. Therefore,
+		// we move the upper trailing vertex to leading, and find a new leading vertex.
+		// We also add a polygon with 2 points from the upper layer.
+		if(   dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition())
+			< dist(lowerVertexTrailing.getPosition(), upperVertexTrailing.getPosition()) )
 		{
+			// TODO: Add polygon
+			upperVertexTrailing = upperVertexLeading;
+			upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
+					upperVertexTrailing.getRemoteIndex(), false);
 		}
+		// Otherwise, if upper trailing vertex closer to leading than trailing lower vertex,
+		// do the same thing but for the lower vertices.
 	} while(upperVertexLeading != upperVertexStart || lowerVertexLeading != lowerVertexStart);
 }
 

@@ -33,6 +33,8 @@ namespace strata
 	{
 		class Layer; // for parentLayer, a pointer to the Layer to which this Mesh belongs
 
+		// TODO: RemoteVertex should be removed, StripVertex can do this but StripVertex needs to
+		// be moved out of the Strip source file such that it can be included here.
 		/** A class to contain the parameters for constructing remote vertices for Strip objects. */
 		class RemoteVertex
 		{

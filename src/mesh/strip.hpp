@@ -23,111 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 #include <tiny/algo/typecluster.h>
 
+#include "remotevertex.hpp"
+
 #include "mesh.hpp"
 
 namespace strata
 {
 	namespace mesh
 	{
-		class Bundle;
-
-		/** A borrowed vertex from some Bundle. It is used for Strip meshes, and it
-		  * contains a reference to the Bundle that owns the original Vertex as well
-		  * as the index of this Vertex in the owning Bundle.
-		  * For Strip meshes that are also Stitches, a secondary remote Vertex is
-		  * defined and the actual location of the StripVertex is understood to be
-		  * somewhere along the line connecting the primary and the secondary Vertex.
-		  *
-		  * Besides their primary use as components of Strip objects, StripVertex objects
-		  * can also be used as standalone objects for representing vertex-bundle
-		  * pairs (i.e. an object carrying information that a certain vertex exists
-		  * in the Mesh as a component of a Bundle with a certain index).
-		  */
-		class StripVertex : public Vertex
-		{
-			private:
-				Bundle * owner; /**< The Bundle that owns this Vertex. */
-				xVert remoteIndex; /**< The index of this Vertex in its owning Bundle. */
-				Bundle * secondaryOwner; /**< The Bundle that owns the secondary Vertex. */
-				xVert secondaryIndex; /**< The index of the secondary Vertex in its Bundle. */
-				tiny::vec3 secondaryPos; /**< The position of the secondary Vertex. */
-				/** The offset (between 0 and 1) of the vertex from the primary towards the secondary Vertex,
-				  * with the convention that at 0 the vertex is at the primary remote vertex. */
-				float offset;
-			public:
-				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
-				  * This form allows construction from remote index + remote bundle + position. This can be used
-				  * when splitting meshes through the TopologicalMesh class. */
-				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) :
-					Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex),
-					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
-				{
-					resetPosition();
-				}
-
-				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex from a Bundle into a Strip.
-				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
-				StripVertex(const Vertex &v, Bundle * _owner) : StripVertex(v.pos,  _owner, v.index) {}
-
-				/** Allow position-less creation of StripVertex objects, which can then be used as
-				  * owningBundle-remoteIndex pair objects. */
-				StripVertex(Bundle * _owner, xVert _remoteIndex) : StripVertex(tiny::vec3(), _owner, _remoteIndex)
-				{
-				}
-
-				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as the generic VertexType constructor. */
-				StripVertex(tiny::vec3 _pos) : StripVertex(_pos, 0, 0) {}
-
-				/** Allow construction from existing strip vertex.
-				  * This duplicates the remoteIndex and mfid, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
-				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.owner, v.remoteIndex) {}
-
-				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
-					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
-				{
-					resetPosition();
-				}
-
-				const xVert & getRemoteIndex(void) const { return remoteIndex; }
-				void setRemoteIndex(const xVert &v) { remoteIndex = v; }
-
-				Bundle * getOwningBundle(void) { return owner; }
-				const Bundle * getOwningBundle(void) const { return owner; }
-				void setOwningBundle(Bundle * _owner) { owner = _owner; }
-
-				const xVert & getSecondaryIndex(void) const { return secondaryIndex; }
-				void setSecondaryIndex(const xVert &v) { secondaryIndex = v; }
-
-				void setSecondaryBundle(Bundle * _owner) { secondaryOwner = _owner; }
-				Bundle * getSecondaryBundle(void) { return secondaryOwner; }
-				const Bundle * getSecondaryBundle(void) const { return secondaryOwner; }
-
-				void setOffset(float f) { offset = f; }
-				float getOffset(void) const { return offset; }
-
-				void setSecondaryPos(tiny::vec3 p) { secondaryPos = p; }
-				tiny::vec3 getSecondaryPos(void) const { return secondaryPos; }
-
-				bool isStitchVertex(void) const { return (secondaryOwner != 0); }
-
-				tiny::vec3 getPosition(void) const
-				{
-					if(isStitchVertex()) return (pos*(1.0f-offset)+secondaryPos*offset);
-					else return pos;
-				}
-
-				void resetPosition(void);
-
-				bool isValid(void) const { return (owner != 0 && remoteIndex != 0); }
-
-				inline bool operator == (const StripVertex &sv) const
-				{
-					return (owner == sv.owner && remoteIndex == sv.remoteIndex);
-				}
-
-				inline bool operator != (const StripVertex &sv) const { return !(*this == sv); }
-		};
-
 		/** A standalone polygon defined by three StripVertices. Multiple of these
 		  * polygons can be combined into a Strip. */
 		class StripPolygon
