@@ -31,7 +31,7 @@ namespace strata
 	namespace mesh
 	{
 		class Strip;
-		class StripVertex;
+		class RemoteVertex;
 
 		/** A Bundle is a mesh, consisting of vertices and polygons that link the vertices together. Some helper functions
 		  * are never required as 'outside' functions, therefore they are hidden (as opposed to some direct mesh alteration
@@ -176,14 +176,14 @@ namespace strata
 				tiny::vec3 calculateVertexNormal(xVert v);
 
 				/** Find the neigbor to the vertex 'v' who is nearest to the position 'pos'. */
-				StripVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos);
+				RemoteVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos);
 
 				/** Find a neighbor vertex that may be in another Bundle. */
-				void findRemoteNeighborVertex(StripVertex &pivot, StripVertex &sv, bool rotateClockwise);
+				void findRemoteNeighborVertex(RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise);
 
-				/** Find a vertex along the edge of the Layer. Returns a StripVertex with
+				/** Find a vertex along the edge of the Layer. Returns a RemoteVertex with
 				  * zero index (and null owning bundle) unless such a vertex is found. */
-				StripVertex findAlongLayerEdge(xVert v, bool clockwise);
+				RemoteVertex findAlongLayerEdge(xVert v, bool clockwise);
 
 				/** Find a Vertex at the Layer's edge. If none of the Bundle's vertices
 				  * are at this edge, false is returned. Otherwise, true is returned, and
@@ -197,10 +197,10 @@ namespace strata
 
 				/** Check whether 'sv' is among the neighbors of 'v'. This includes neighbors of 'v'
 				  * that are owned by other Bundles, even in other Layers. */
-				bool isAmongNeighbors(const StripVertex & sv, xVert v);
+				bool isAmongNeighbors(const RemoteVertex & sv, xVert v);
 
 				/** Check whether 'sv' is among the neighbors of 'v' within the scope of this Bundle. */
-				bool isAmongNeighborsInBundle(const StripVertex & sv, xVert v);
+				bool isAmongNeighborsInBundle(const RemoteVertex & sv, xVert v);
 
 				bool isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, bool isAlongNormal);
 				bool isAboveMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal);

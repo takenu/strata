@@ -37,9 +37,9 @@ namespace strata
 		{
 			private:
 			public:
-				StripVertex a;
-				StripVertex b;
-				StripVertex c;
+				RemoteVertex a;
+				RemoteVertex b;
+				RemoteVertex c;
 
 				/** Construct a StripPolygon from three Vertices and their owning Bundles. */
 				StripPolygon(Bundle * aowner, const Vertex &_a, Bundle * bowner,
@@ -49,7 +49,7 @@ namespace strata
 				}
 
 				/** Construct a StripPolygon from three StripVertices. */
-				StripPolygon(const StripVertex &_a, const StripVertex &_b, const StripVertex &_c) :
+				StripPolygon(const RemoteVertex &_a, const RemoteVertex &_b, const RemoteVertex &_c) :
 					a(_a), b(_b), c(_c)
 				{
 				}
@@ -57,11 +57,11 @@ namespace strata
 
 		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
 		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
-		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<StripVertex>
+		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<RemoteVertex>
 		{
 			private:
 				friend class Mesh<Vertex>; // to give the Bundle access to our protected Mesh base functions
-				friend class Mesh<StripVertex>; // to let the Mesh access our protected getkey()
+				friend class Mesh<RemoteVertex>; // to let the Mesh access our protected getkey()
 
 				/** A bool to determine whether the Strip is a Stitch (connecting distinct Layers)
 				  * or a normal Strip (connecting Bundles of the same Layer).
@@ -145,7 +145,7 @@ namespace strata
 				  * of the vertices of this Strip has a remoteIndex equal to b's index. */
 				virtual bool isAdjacentToVertices(const Bundle * b) const;
 
-				virtual std::string printVertexInfo(const StripVertex & v) const
+				virtual std::string printVertexInfo(const RemoteVertex & v) const
 				{
 					std::stringstream ss;
 					ss << " r="<<v.getRemoteIndex();
@@ -155,7 +155,7 @@ namespace strata
 			public:
 				Strip(long unsigned int meshId, tiny::algo::TypeCluster<long unsigned int, Strip> &tc, intf::RenderInterface * _renderer, bool _isStitch, bool _isTransverseStitch) :
 					tiny::algo::TypeClusterObject<long unsigned int, Strip>(meshId, this, tc),
-					Mesh<StripVertex>(_renderer),
+					Mesh<RemoteVertex>(_renderer),
 					isStitch(_isStitch),
 					isTransverseStitch(_isTransverseStitch)
 				{
@@ -163,13 +163,13 @@ namespace strata
 
 				unsigned int usedMemory(void) const
 				{
-					return vertices.size()*sizeof(StripVertex) + polygons.size()*sizeof(Polygon)
+					return vertices.size()*sizeof(RemoteVertex) + polygons.size()*sizeof(Polygon)
 						+ ve.size()*sizeof(xVert) + po.size()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
 
 				unsigned int usedCapacity(void) const
 				{
-					return vertices.capacity()*sizeof(StripVertex) + polygons.capacity()*sizeof(Polygon)
+					return vertices.capacity()*sizeof(RemoteVertex) + polygons.capacity()*sizeof(Polygon)
 						+ ve.capacity()*sizeof(xVert) + po.capacity()*sizeof(xPoly) + renderMesh->bufferSize();
 				}
 
@@ -300,7 +300,7 @@ namespace strata
 				  * index in that Bundle of 'remoteIndex'. */
 				xVert findVertexByRemoteIndex(Bundle * owningBundle, xVert remoteIndex)
 				{
-					return findLocalVertexIndex( StripVertex(owningBundle, remoteIndex) );
+					return findLocalVertexIndex( RemoteVertex(owningBundle, remoteIndex) );
 				}
 /*				{
 					for(unsigned int i = 1; i < vertices.size(); i++)
@@ -311,7 +311,7 @@ namespace strata
 				}*/
 
 				/** Find the Strip-local index of a remote vertex. */
-				xVert findLocalVertexIndex(const StripVertex & sv) const;
+				xVert findLocalVertexIndex(const RemoteVertex & sv) const;
 
 				/** Calculate the sum of all polygon normals that the referenced remote vertex has in this
 				  * Strip. */
@@ -324,10 +324,10 @@ namespace strata
 				}
 
 				/** Find the nearest neighbor (with respect to the position 'pos') of 'sv'. */
-				StripVertex findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos);
+				RemoteVertex findNearestNeighborInStrip(RemoteVertex sv, const tiny::vec3 &pos);
 
 				/** Determine whether 'sv' is a neighbor to 'rv' within the scope of the Strip. */
-				bool isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & rv);
+				bool isAmongNeighborsInStrip(const RemoteVertex & sv, const RemoteVertex & rv);
 
 				/** Get the remote vertex that is the (counter)clockwise neighbor
 				  * of the vertex with remote index 'w' with respect to 'v'. In other words,
@@ -337,7 +337,7 @@ namespace strata
 				  *  \ /
 				  *   v
 				  */
-				StripVertex findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise);
+				RemoteVertex findRemoteVertexPolyNeighbor(RemoteVertex &v, RemoteVertex &w, bool clockwise);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */

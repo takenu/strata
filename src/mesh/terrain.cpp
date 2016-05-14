@@ -132,7 +132,7 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 //	std::cout << " Stitch layer "<<layer<<"..."<<std::endl;
 	xVert startVertex = 0;
 //	Bundle * startBundle = 0;
-	std::vector<StripVertex> edgeVertices;
+	std::vector<RemoteVertex> edgeVertices;
 	// Find an initial vertex to start stitching.
 	// For every Bundle such a vertex is found. We will stitch until all of
 	// these vertices are stitched. Using a vertex per Bundle (rather than
@@ -156,7 +156,7 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 //	fixSearchParameters(strips);
 	while(edgeVertices.size() > 0)
 	{
-		StripVertex stripVertex = edgeVertices.back();
+		RemoteVertex stripVertex = edgeVertices.back();
 		stitch = makeNewStitch(stitchTransverse);
 		if(stitchTransverse) stitchLayerTransverse(stitch, stripVertex);
 		else std::cout << " Terrain::stitchLayer() : No possibility yet for stitching non-transverse Layer! "<<std::endl;
@@ -196,16 +196,16 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
   * The loop continues until the leading vertices equal the starting pair, at which point
   * the stitch is complete (as a closed circle).
   */
-void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
+void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 {
-	StripVertex upperVertexTrailing = startVertex;
-	StripVertex lowerVertexTrailing = getUnderlyingVertex(startVertex.getPosition());
-	StripVertex upperVertexStart = upperVertexTrailing;
-	StripVertex lowerVertexStart = lowerVertexTrailing;
-	StripVertex upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
+	RemoteVertex upperVertexTrailing = startVertex;
+	RemoteVertex lowerVertexTrailing = getUnderlyingVertex(startVertex.getPosition());
+	RemoteVertex upperVertexStart = upperVertexTrailing;
+	RemoteVertex lowerVertexStart = lowerVertexTrailing;
+	RemoteVertex upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
 			upperVertexTrailing.getRemoteIndex(), false);
 	std::cout << " Terrain::stitchLayerTransverse() : Found upper leading vertex at "<<upperVertexLeading.getPosition()<<std::endl;
-	StripVertex lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
+	RemoteVertex lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
 			lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
 	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
 	std::cout << upperVertexTrailing.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<std::endl;
@@ -260,10 +260,10 @@ void Terrain::stitchLayerTransverse(Strip * stitch, StripVertex startVertex)
   * necessary, which will fix the TopologicalMesh's fixed search parameters
   * for determining whether or not a Bundle is close to the position 'v'.
   */
-StripVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
+RemoteVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 {
 	float currentDistance = std::numeric_limits<float>::max();
-	StripVertex underlyingVertex(tiny::vec3(0.0f,-0.5f*currentDistance,0.0f) + v);
+	RemoteVertex underlyingVertex(tiny::vec3(0.0f,-0.5f*currentDistance,0.0f) + v);
 	float margin = 10.0f;
 	std::vector<Bundle*> nearbyBundles;
 	listNearbyMeshes(bundles, nearbyBundles, v, margin);

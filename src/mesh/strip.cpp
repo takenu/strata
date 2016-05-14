@@ -139,9 +139,9 @@ bool Strip::isAdjacentToVertices(const Bundle * b) const
 	return false;
 }
 
-/** Find the nearest neighbor to 'sv' from the Strip's StripVertex objects. If 'sv' is not in the Strip,
-  * this returns the (0,0) StripVertex, otherwise this function should always return a valid StripVertex. */
-StripVertex Strip::findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &pos)
+/** Find the nearest neighbor to 'sv' from the Strip's RemoteVertex objects. If 'sv' is not in the Strip,
+  * this returns the (0,0) RemoteVertex, otherwise this function should always return a valid RemoteVertex. */
+RemoteVertex Strip::findNearestNeighborInStrip(RemoteVertex sv, const tiny::vec3 &pos)
 {
 /*	xVert v = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)
@@ -151,27 +151,27 @@ StripVertex Strip::findNearestNeighborInStrip(StripVertex sv, const tiny::vec3 &
 			break;
 		}*/
 	xVert v = findLocalVertexIndex(sv);
-	if(v == 0) return StripVertex(0,0); // Can happen normally if this adjacentStrip doesn't contain sv
+	if(v == 0) return RemoteVertex(0,0); // Can happen normally if this adjacentStrip doesn't contain sv
 	else
 	{
 		xVert localNeighbor = findNearestNeighbor(v, pos);
-		return StripVertex(vertices[ve[localNeighbor]]); // Make a copy of StripVertex for return value
+		return RemoteVertex(vertices[ve[localNeighbor]]); // Make a copy of RemoteVertex for return value
 	}
 }
 
 /** Find the Strip-local index of a remote vertex, uniquely defined from its owning Bundle and its
   * remote index in that Bundle. */
-xVert Strip::findLocalVertexIndex(const StripVertex & sv) const
+xVert Strip::findLocalVertexIndex(const RemoteVertex & sv) const
 {
 	for(unsigned int i = 1; i < vertices.size(); i++)
-		if(vertices[i] == sv) // Use StripVertex::operator==
+		if(vertices[i] == sv) // Use RemoteVertex::operator==
 			return vertices[i].index;
 	return 0;
 }
 
 /** Determine whether the vertex 'sv' is among the neighbors of the remote vertex 'rv', within
   * the scope of the Strip itself. */
-bool Strip::isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & rv)
+bool Strip::isAmongNeighborsInStrip(const RemoteVertex & sv, const RemoteVertex & rv)
 {
 /*	xVert vLocal = 0;
 	for(unsigned int i = 1; i < vertices.size(); i++)
@@ -187,8 +187,8 @@ bool Strip::isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & 
 	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
 	{
 		if(vertices[ve[vLocal]].poly[i] == 0) break;
-		StripVertex m = vertices[ve[ findPolyNeighbor(i,vLocal,false) ]];
-		StripVertex n = vertices[ve[ findPolyNeighbor(i,vLocal, true) ]];
+		RemoteVertex m = vertices[ve[ findPolyNeighbor(i,vLocal,false) ]];
+		RemoteVertex n = vertices[ve[ findPolyNeighbor(i,vLocal, true) ]];
 		if(m == sv || n == sv) return true;
 	}
 	return false;
@@ -203,7 +203,7 @@ bool Strip::isAmongNeighborsInStrip(const StripVertex & sv, const StripVertex & 
   * This function doesn't make sense for Stitch Strips so there is no attempt
   * to include secondary Bundles.
   */
-StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, bool clockwise)
+RemoteVertex Strip::findRemoteVertexPolyNeighbor(RemoteVertex &v, RemoteVertex &w, bool clockwise)
 {
 /*	xVert vLocal = 0;
 	xVert wLocal = 0;
@@ -229,9 +229,9 @@ StripVertex Strip::findRemoteVertexPolyNeighbor(StripVertex &v, StripVertex &w, 
 		if(clockwise) localNeighbor = findPolyNeighborFromVertexPair(vLocal, wLocal);
 		else localNeighbor = findPolyNeighborFromVertexPair(wLocal, vLocal);
 		if(localNeighbor > 0)
-			return StripVertex(vertices[ve[localNeighbor]]);
+			return RemoteVertex(vertices[ve[localNeighbor]]);
 	}
-	return StripVertex(0,0);
+	return RemoteVertex(0,0);
 }
 
 Strip::~Strip(void)

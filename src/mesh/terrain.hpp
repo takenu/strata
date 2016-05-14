@@ -173,7 +173,7 @@ namespace strata
 
 				/** Stitch a Layer transversely to the Layers underneath it. This will
 				  * expose the cross-section of the Layer that is stitched. */
-				void stitchLayerTransverse(Strip * stitch, StripVertex startVertex);
+				void stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex);
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
@@ -231,7 +231,7 @@ namespace strata
 				/** Get the vertex under position 'v'. Returned are the Bundle that contains
 				  * the Vertex (returned by reference) and the index of the vertex in that
 				  * Bundle. */
-				StripVertex getUnderlyingVertex(const tiny::vec3 &v) const;
+				RemoteVertex getUnderlyingVertex(const tiny::vec3 &v) const;
 
 				/** Get the position of the terrain surface vertically below the 3D-position 'pos'.
 				  * This procedure could be considerably more efficient if a decent'

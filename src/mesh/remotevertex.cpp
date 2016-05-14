@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::mesh;
 
-void StripVertex::resetPosition(void)
+void RemoteVertex::resetPosition(void)
 {
 	if(owner != 0) setPosition( owner->getVertexPositionFromIndex(remoteIndex) );
 }

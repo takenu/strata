@@ -31,15 +31,15 @@ namespace strata
 		  * contains a reference to the Bundle that owns the original Vertex as well
 		  * as the index of this Vertex in the owning Bundle.
 		  * For Strip meshes that are also Stitches, a secondary remote Vertex is
-		  * defined and the actual location of the StripVertex is understood to be
+		  * defined and the actual location of the RemoteVertex is understood to be
 		  * somewhere along the line connecting the primary and the secondary Vertex.
 		  *
-		  * Besides their primary use as components of Strip objects, StripVertex objects
+		  * Besides their primary use as components of Strip objects, RemoteVertex objects
 		  * can also be used as standalone objects for representing vertex-bundle
 		  * pairs (i.e. an object carrying information that a certain vertex exists
 		  * in the Mesh as a component of a Bundle with a certain index).
 		  */
-		class StripVertex : public Vertex
+		class RemoteVertex : public Vertex
 		{
 			private:
 				Bundle * owner; /**< The Bundle that owns this Vertex. */
@@ -51,34 +51,41 @@ namespace strata
 				  * with the convention that at 0 the vertex is at the primary remote vertex. */
 				float offset;
 			public:
-				/** Create a StripVertex. Note that this does not set the 'index' field of the Vertex. 
-				  * This form allows construction from remote index + remote bundle + position. This can be used
-				  * when splitting meshes through the TopologicalMesh class. */
-				StripVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) :
+				/** Create a RemoteVertex. Note that this does not set the 'index' field of the Vertex. 
+				  * This form allows construction from remote index + remote bundle + position. This can
+				  * be used when splitting meshes through the TopologicalMesh class.
+				  * NOTE: Deprecated, supplying a position is not anymore necessary with resetPosition(),
+				  * so preferably use the two-argument RemoteVertex(Bundle*, xVert) constructor.
+				  */
+				RemoteVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) :
 					Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex),
 					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
 					resetPosition();
 				}
 
-				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex from a Bundle into a Strip.
-				  * After construction, will not yet have a valid index which must be set by the Strip creating it. */
-				StripVertex(const Vertex &v, Bundle * _owner) : StripVertex(v.pos,  _owner, v.index) {}
+				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex
+				  * from a Bundle into a Strip. After construction, the RemoteVertex will not yet have
+				  * a valid local index for the Strip, as this must be set by the Strip creating it. */
+				RemoteVertex(const Vertex &v, Bundle * _owner) : RemoteVertex(v.pos,  _owner, v.index) {}
 
-				/** Allow position-less creation of StripVertex objects, which can then be used as
+				/** Allow position-less creation of RemoteVertex objects, which can then be used as
 				  * owningBundle-remoteIndex pair objects. */
-				StripVertex(Bundle * _owner, xVert _remoteIndex) : StripVertex(tiny::vec3(), _owner, _remoteIndex)
+				RemoteVertex(Bundle * _owner, xVert _remoteIndex) :
+					RemoteVertex(tiny::vec3(), _owner, _remoteIndex)
 				{
 				}
 
-				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as the generic VertexType constructor. */
-				StripVertex(tiny::vec3 _pos) : StripVertex(_pos, 0, 0) {}
+				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as
+				  * the generic VertexType constructor. */
+				RemoteVertex(tiny::vec3 _pos) : RemoteVertex(_pos, 0, 0) {}
 
 				/** Allow construction from existing strip vertex.
-				  * This duplicates the remoteIndex and mfid, and is used when making a copy of a StripVertex from a Strip for another Strip object. */
-				StripVertex(const StripVertex &v, long unsigned int) : StripVertex(v.pos,  v.owner, v.remoteIndex) {}
+				  * This duplicates the remoteIndex and (now unused) mfid, and is used when making a copy of a
+				  * RemoteVertex from a Strip for another Strip object. */
+				RemoteVertex(const RemoteVertex &v, long unsigned int) : RemoteVertex(v.pos,  v.owner, v.remoteIndex) {}
 
-				StripVertex(const StripVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
+				RemoteVertex(const RemoteVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
 					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
 					resetPosition();
@@ -116,14 +123,12 @@ namespace strata
 
 				bool isValid(void) const { return (owner != 0 && remoteIndex != 0); }
 
-				inline bool operator == (const StripVertex &sv) const
+				inline bool operator == (const RemoteVertex &sv) const
 				{
 					return (owner == sv.owner && remoteIndex == sv.remoteIndex);
 				}
 
-				inline bool operator != (const StripVertex &sv) const { return !(*this == sv); }
+				inline bool operator != (const RemoteVertex &sv) const { return !(*this == sv); }
 		};
-
-		typedef StripVertex RemoteVertex;
 	}
 }
