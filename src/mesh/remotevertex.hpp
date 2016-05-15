@@ -51,39 +51,31 @@ namespace strata
 				  * with the convention that at 0 the vertex is at the primary remote vertex. */
 				float offset;
 			public:
+				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex
+				  * from a Bundle into a Strip. After construction, the RemoteVertex will not yet have
+				  * a valid local index for the Strip, as this must be set by the Strip creating it. */
+				RemoteVertex(const Vertex &v, Bundle * _owner) : RemoteVertex(_owner, v.index) {}
+
 				/** Create a RemoteVertex. Note that this does not set the 'index' field of the Vertex. 
-				  * This form allows construction from remote index + remote bundle + position. This can
-				  * be used when splitting meshes through the TopologicalMesh class.
-				  * NOTE: Deprecated, supplying a position is not anymore necessary with resetPosition(),
-				  * so preferably use the two-argument RemoteVertex(Bundle*, xVert) constructor.
-				  */
-				RemoteVertex(tiny::vec3 _pos, Bundle * _owner, xVert _remoteIndex) :
-					Vertex(_pos), owner(_owner), remoteIndex(_remoteIndex),
+				  * This form allows construction from remote index + remote bundle, which is the default
+				  * form. While the RemoteVertex should be a valid class in itself, its parameters must
+				  * be further specified in order for it to be used as an element of a Strip object, in
+				  * particular the 'index' field that is inherited from the Vertex class. */
+				RemoteVertex(Bundle * _owner, xVert _remoteIndex) :
+					Vertex(0.0f,0.0f,0.0f), owner(_owner), remoteIndex(_remoteIndex),
 					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)
 				{
 					resetPosition();
 				}
 
-				/** Allow construction from existing vertex plus its owner. Used when copying a Vertex
-				  * from a Bundle into a Strip. After construction, the RemoteVertex will not yet have
-				  * a valid local index for the Strip, as this must be set by the Strip creating it. */
-				RemoteVertex(const Vertex &v, Bundle * _owner) : RemoteVertex(v.pos,  _owner, v.index) {}
-
-				/** Allow position-less creation of RemoteVertex objects, which can then be used as
-				  * owningBundle-remoteIndex pair objects. */
-				RemoteVertex(Bundle * _owner, xVert _remoteIndex) :
-					RemoteVertex(tiny::vec3(), _owner, _remoteIndex)
-				{
-				}
-
 				/** A constructor for creating uninitialized strip vertices. Used by TopologicalMesh as
 				  * the generic VertexType constructor. */
-				RemoteVertex(tiny::vec3 _pos) : RemoteVertex(_pos, 0, 0) {}
+				RemoteVertex(tiny::vec3) : RemoteVertex(0, 0) {}
 
 				/** Allow construction from existing strip vertex.
 				  * This duplicates the remoteIndex and (now unused) mfid, and is used when making a copy of a
 				  * RemoteVertex from a Strip for another Strip object. */
-				RemoteVertex(const RemoteVertex &v, long unsigned int) : RemoteVertex(v.pos,  v.owner, v.remoteIndex) {}
+				RemoteVertex(const RemoteVertex &v, long unsigned int) : RemoteVertex(v.owner, v.remoteIndex) {}
 
 				RemoteVertex(const RemoteVertex &v) : Vertex(v), owner(v.owner), remoteIndex(v.remoteIndex),
 					secondaryOwner(0), secondaryIndex(0), secondaryPos(0.0f,0.0f,0.0f), offset(0.0f)

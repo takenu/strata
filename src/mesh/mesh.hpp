@@ -178,9 +178,9 @@ namespace strata
 				{
 					// Use tolerance of (relativeTolerance) times the smallest edge of the polygon to be added.
 					float tolerance = std::min( tiny::length(a.pos - b.pos), std::min( tiny::length(a.pos - c.pos), tiny::length(b.pos - c.pos) ) )*relativeTolerance;
-					xVert _a = addIfNewVertex(VertexType(a.pos, a.getOwningBundle(), a.getRemoteIndex()), tolerance);
-					xVert _b = addIfNewVertex(VertexType(b.pos, b.getOwningBundle(), b.getRemoteIndex()), tolerance);
-					xVert _c = addIfNewVertex(VertexType(c.pos, c.getOwningBundle(), c.getRemoteIndex()), tolerance);
+					xVert _a = addIfNewVertex(VertexType(a.getOwningBundle(), a.getRemoteIndex()), tolerance);
+					xVert _b = addIfNewVertex(VertexType(b.getOwningBundle(), b.getRemoteIndex()), tolerance);
+					xVert _c = addIfNewVertex(VertexType(c.getOwningBundle(), c.getRemoteIndex()), tolerance);
 					return addPolygonFromVertexIndices(_a, _b, _c);
 				}
 
