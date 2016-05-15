@@ -31,32 +31,9 @@ namespace strata
 {
 	namespace mesh
 	{
-		/** A standalone polygon defined by three StripVertices. Multiple of these
-		  * polygons can be combined into a Strip. */
-		class StripPolygon
-		{
-			private:
-			public:
-				RemoteVertex a;
-				RemoteVertex b;
-				RemoteVertex c;
-
-				/** Construct a StripPolygon from three Vertices and their owning Bundles. */
-				StripPolygon(Bundle * aowner, const Vertex &_a, Bundle * bowner,
-						const Vertex &_b, Bundle * cowner, const Vertex &_c) :
-					a(_a, aowner), b(_b, bowner), c(_c, cowner)
-				{
-				}
-
-				/** Construct a StripPolygon from three StripVertices. */
-				StripPolygon(const RemoteVertex &_a, const RemoteVertex &_b, const RemoteVertex &_c) :
-					a(_a), b(_b), c(_c)
-				{
-				}
-		};
-
-		/** A class for special stitch-meshes, which do not contain vertices but which are used to link together
-		  * meshes that do have vertices. They thus contain polygons whose vertices belong to distinct meshes. */
+		/** A class for special stitch-meshes, which do not own vertices but which are intended to
+		  * link together meshes that do have their own vertices. They thus contain polygons whose
+		  * vertices belong to distinct meshes. */
 		class Strip : public tiny::algo::TypeClusterObject<long unsigned int, Strip>, public Mesh<RemoteVertex>
 		{
 			private:
@@ -93,7 +70,8 @@ namespace strata
 				  */
 				const bool isTransverseStitch;
 
-				std::vector<Bundle*> adjacentBundles; /**< A list of all Bundles that contain vertices used by polygons of this Strip. */
+				/** A list of all Bundles that contain vertices used by polygons of this Strip. */
+				std::vector<Bundle*> adjacentBundles;
 
 				/** Find a vertex neighbor to 'v' with remoteIndex 'r'. */
 				virtual xVert findVertexNeighborByRemoteIndex(const Vertex &v, const xVert &r)
