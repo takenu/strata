@@ -237,29 +237,53 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 		//   upper-leading to lower-trailing c.q. upper-trailing to lower-leading edge, and we add
 		//   the polygon according to the combination of the trailing vertices being mutually
 		//   behind the leading vertices, and the layer-crossing edge being the shortest possible.
-/*		if(		(   dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition())
-				  < dist(lowerVertexTrailing.getPosition(), upperVertexTrailing.getPosition()) )
-			||	( (	dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition()) // TODO: Add condition that also, upper trailing is closer to lower trailing than lower leading, since otherwise we would want to use 2 lower verts instead
-				  < dist(lowerVertexLeading.getPosition(),  upperVertexTrailing.getPosition()) )
-				  && dist(lowerVertexTrailing.getPosition(), lowerVertexTrailing.getPosition()
-				)*/
-		if(	isCloser(lowerVertexTrailing, upperVertexLeading, upperVertexTrailing)
-			|| isCloser(upperVertexLeading, lowerVertexTrailing, lowerVertexLeading)
-//			|| (  dist(lowerVertexTrailing, upperVertexLeading)
-//				< dist(lowerVertexLeading,  upperVertexTrailing)
-//			  && !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) ) )
-			|| !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) )
+		// * The lower trailing vertex has already reached its initial point (thus the circle is
+		//   complete), and we only need to add polygons until also the upper trailing vertex
+		//   reaches its initial location.
+		// The cases 1-3 are only permitted in the situation that the upper trailing vertex is not
+		// at its starting position. If it is, it means the upper vertices have circled the entire
+		// layer and do not need to move anymore. The exception is when the loop is starting, and
+		// to allow starting from the end position the fourth condition (of the lower trailing
+		// vertex being at its starting position) is the only condition that is sufficient even if
+		// the upper trailing vertex is at its starting position.
+		// After we are done moving the upper vertices, we ensure that the lower leading vertex is
+		// in the direction of the new upper leading vertex. We do this by re-setting the lower
+		// leading vertex using the same findNearestNeighborInBundle() call as is used when the
+		// lower leading vertex has to be found after the lower trailing vertex replaces the lower
+		// leading vertex.
+		if(	((isCloser(lowerVertexTrailing, upperVertexLeading, upperVertexTrailing)
+			  || isCloser(upperVertexLeading, lowerVertexTrailing, lowerVertexLeading)
+			  || (  dist(lowerVertexTrailing, upperVertexLeading)
+				  < dist(lowerVertexLeading,  upperVertexTrailing)
+			    && !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) ))
+			 && upperVertexTrailing != upperVertexStart )
+			|| lowerVertexTrailing == lowerVertexStart )
 		{
-			// TODO: Add polygon
 			stitch->addPolygonWithVertices(upperVertexLeading, upperVertexTrailing, lowerVertexTrailing);
 			upperVertexTrailing = upperVertexLeading;
 			upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
 					upperVertexTrailing.getRemoteIndex(), false);
-		// TODO: Allow switching of the lower leading vertex if a new upper leading vertex is chosen, since this may help find a better lower leading vertex
+			// Allow switching of the lower leading vertex if a new upper leading vertex is chosen,
+			// since this may lead to a better lower leading vertex.
+			lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
+				lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
 		}
-		// Otherwise, if upper trailing vertex closer to leading than trailing lower vertex,
+		// Otherwise, (typically if upper trailing vertex closer to leading than to trailing lower vertex),
 		// do the same thing but for the lower vertices.
-	} while(upperVertexLeading != upperVertexStart || lowerVertexLeading != lowerVertexStart);
+		else
+		{
+			stitch->addPolygonWithVertices(upperVertexTrailing, lowerVertexTrailing, lowerVertexLeading);
+			lowerVertexTrailing = lowerVertexLeading;
+			lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
+				lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
+		}
+		if(stitch->nPolys() > 10000)
+		{
+			std::cout << " Terrain::stitchLayerTransverse() : Unreasonably high poly count!";
+			std::cout << " Stitch loop aborted! "<<std::endl;
+			break;
+		}
+	} while(upperVertexTrailing != upperVertexStart || lowerVertexTrailing != lowerVertexStart);
 }
 
 /** Find the underlying Vertex to the position 'v'. The Vertex that is found
