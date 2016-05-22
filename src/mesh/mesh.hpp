@@ -33,6 +33,7 @@ namespace strata
 	namespace mesh
 	{
 		class Layer; // for parentLayer, a pointer to the Layer to which this Mesh belongs
+		class Terrain;
 
 		/** The Mesh is a base class for objects that contain parts of the terrain as a set of vertices connected via polygons.
 		  * The VertexType is a type that represents a point in space. It should derive from the Vertex struct, or be a Vertex. It 
@@ -50,6 +51,9 @@ namespace strata
 		class Mesh : public TopologicalMesh<VertexType>
 		{
 			public:
+				/** Allow the Terrain to directly manipulate mesh geometry. */
+				friend class Terrain;
+
 				/** Add a vertex and return the xVert reference to that vertex. Note that careless construction of meshes will likely
 				  * result in invalid meshes, this function should only be used if one ensures that all vertices end up being properly
 				  * linked into a mesh (without holes or bottlenecks) by polygons.*/

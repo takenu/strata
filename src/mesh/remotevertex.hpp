@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "element.hpp"
+#include "vecmath.hpp"
 
 namespace strata
 {
@@ -122,5 +123,18 @@ namespace strata
 
 				inline bool operator != (const RemoteVertex &sv) const { return !(*this == sv); }
 		};
+
+		/** Provide a shorter version for calculating the distance between two remote vertices. */
+		inline float dist(RemoteVertex &v, RemoteVertex &w)
+		{
+			return dist(v.getPosition(), w.getPosition());
+		}
+
+		/** Check whether a remote vertex 'v' is closer than another remote vertex 'w' to a third
+		  * remote vertex 'p'. */
+		inline bool isCloser(RemoteVertex &p, RemoteVertex &v, RemoteVertex &w)
+		{
+			return (dist(p,v) <= dist(p,w));
+		}
 	}
 }

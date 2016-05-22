@@ -215,14 +215,47 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 		// If lower trailing vertex closer to leading than trailing upper vertex,
 		// new polygons will never use the trailing upper vertex anymore. Therefore,
 		// we move the upper trailing vertex to leading, and find a new leading vertex.
-		// We also add a polygon with 2 points from the upper layer.
-		if(   dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition())
-			< dist(lowerVertexTrailing.getPosition(), upperVertexTrailing.getPosition()) )
+		// In short, we want to make a polygon from the upper layer (and move upper
+		// trailing -> leading) whenever one of the following is the case:
+		// * The upper trailing vertex is farther than the upper leading vertex from the
+		//   lower trailing vertex. In this situation the upper trailing vertex is too far
+		//   behind, and we should make a polygon with 2 upper verticese (and move the upper
+		//   trailing/leading vertices forward by a step).
+		// * The lower leading vertex is farther than the lower trailing vertex from the
+		//   upper leading vertex. In this situation, the lower leading vertex could not be
+		//   found in such a way that it actually approached the upper leading vertex, so it
+		//   seems to be getting difficult to find good lower leading vertices. In order to
+		//   regain a good direction, shift the upper vertices, such that the new leading
+		//   vertex can help finding good lower layer vertices. For highly irregular underlying
+		//   meshes, this could result in being a bit too far ahead, but other than excessively
+		//   skewed triangles (which should be subjected to edge flips) nothing too bad should
+		//   result from this additional condition for moving ahead the upper vertices.
+		// * The trailing vertices are both closer to the other trailing vertex than to the upper
+		//   leading vertex. This is a pretty natural situation (especially if the upper layer is
+		//   a duplicate of (part of) the underlying surface). In this situation we are basically
+		//   free to choose which polygon to add, so we consider which polygon has the smallest
+		//   upper-leading to lower-trailing c.q. upper-trailing to lower-leading edge, and we add
+		//   the polygon according to the combination of the trailing vertices being mutually
+		//   behind the leading vertices, and the layer-crossing edge being the shortest possible.
+/*		if(		(   dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition())
+				  < dist(lowerVertexTrailing.getPosition(), upperVertexTrailing.getPosition()) )
+			||	( (	dist(lowerVertexTrailing.getPosition(), upperVertexLeading.getPosition()) // TODO: Add condition that also, upper trailing is closer to lower trailing than lower leading, since otherwise we would want to use 2 lower verts instead
+				  < dist(lowerVertexLeading.getPosition(),  upperVertexTrailing.getPosition()) )
+				  && dist(lowerVertexTrailing.getPosition(), lowerVertexTrailing.getPosition()
+				)*/
+		if(	isCloser(lowerVertexTrailing, upperVertexLeading, upperVertexTrailing)
+			|| isCloser(upperVertexLeading, lowerVertexTrailing, lowerVertexLeading)
+//			|| (  dist(lowerVertexTrailing, upperVertexLeading)
+//				< dist(lowerVertexLeading,  upperVertexTrailing)
+//			  && !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) ) )
+			|| !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) )
 		{
 			// TODO: Add polygon
+			stitch->addPolygonWithVertices(upperVertexLeading, upperVertexTrailing, lowerVertexTrailing);
 			upperVertexTrailing = upperVertexLeading;
 			upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
 					upperVertexTrailing.getRemoteIndex(), false);
+		// TODO: Allow switching of the lower leading vertex if a new upper leading vertex is chosen, since this may help find a better lower leading vertex
 		}
 		// Otherwise, if upper trailing vertex closer to leading than trailing lower vertex,
 		// do the same thing but for the lower vertices.
