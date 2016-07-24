@@ -153,9 +153,10 @@ namespace strata
 				/** Create a complete flat layer in this Bundle object. */
 				void createFlatLayer(float _size, unsigned int ndivs, float height = 0.0f);
 
-				/** Add a polygon (in the shape of an equilateral triangle) to this Bundle, using the edge _a-_b. Use an edge size
-				  * 'step' (this is equal to the length of the _a-_b edge but is used instead of this length to avoid numerical
-				  * noise). Do not add if the position of the third vertex is farther from the origin than 'limit'. */
+				/** Add a polygon (in the shape of an equilateral triangle) to this Bundle, using the edge
+				  * _a-_b. Use an edge size 'step' (this is equal to the length of the _a-_b edge but is
+				  * used instead of this length to avoid numerical noise). Do not add if the position of
+				  * the third vertex is farther from the origin than 'limit'. */
 				void createFlatLayerPolygon(std::deque<VertPair> &plist, xVert _a, xVert _b, float limit, float step);
 
 				/** Split a layer into pieces. This creates two new layers from the old one, and finishes by deleting the original layer. */

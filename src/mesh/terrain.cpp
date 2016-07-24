@@ -154,6 +154,7 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 	Strip * stitch = 0;
 	fixSearchParameters(bundles);
 //	fixSearchParameters(strips);
+	if(edgeVertices.size() == 0) std::cout << " Terrain::stitchLayer() : ERROR: No edge vertices found! "<<std::endl;
 	while(edgeVertices.size() > 0)
 	{
 		RemoteVertex stripVertex = edgeVertices.back();
@@ -161,6 +162,11 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 		if(stitchTransverse) stitchLayerTransverse(stitch, stripVertex);
 		else std::cout << " Terrain::stitchLayer() : No possibility yet for stitching non-transverse Layer! "<<std::endl;
 		if(stitch->numVertices() < 3) std::cout << " Terrain::stitchLayer() : Made very small Stitch! "<<std::endl;
+		else if(stitch->nPolys() > 10000)
+		{
+			std::cout << " Terrain::stitchLayer() : Made very large Stitch, aborting! "<<std::endl;
+			break;
+		}
 		edgeVertices.pop_back();
 		// Remove all edge vertices that have been added to the Stitch, since
 		// no more Strips need to be made for them.
@@ -203,13 +209,17 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 	RemoteVertex upperVertexStart = upperVertexTrailing;
 	RemoteVertex lowerVertexStart = lowerVertexTrailing;
 	RemoteVertex upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
-			upperVertexTrailing.getRemoteIndex(), false);
+			upperVertexTrailing.getRemoteIndex(), true);
 	std::cout << " Terrain::stitchLayerTransverse() : Found upper leading vertex at "<<upperVertexLeading.getPosition()<<std::endl;
 	RemoteVertex lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
 			lowerVertexTrailing.getRemoteIndex(), upperVertexLeading.getPosition());
 	std::cout << " Terrain::stitchLayerTransverse() : Stitching from vertices at ";
 	std::cout << upperVertexTrailing.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<std::endl;
-	return;
+	if(!upperVertexStart.getOwningBundle()->isAtLayerEdge(upperVertexStart.getRemoteIndex()))
+		std::cout << " Terrain::stitchLayerTransverse() : Upper start not at layer edge! "<<std::endl;
+	assert(upperVertexLeading.getRemoteIndex() != 0);
+	assert(lowerVertexLeading.getRemoteIndex() != 0);
+//	return;
 	do
 	{
 		// If lower trailing vertex closer to leading than trailing upper vertex,
@@ -257,12 +267,16 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 				  < dist(lowerVertexLeading,  upperVertexTrailing)
 			    && !isCloser(upperVertexTrailing, lowerVertexLeading, lowerVertexTrailing) ))
 			 && upperVertexTrailing != upperVertexStart )
-			|| lowerVertexTrailing == lowerVertexStart )
+			|| (upperVertexTrailing == upperVertexStart && lowerVertexTrailing == lowerVertexStart) )
 		{
+			std::cout << " Upper stitch "<<upperVertexTrailing.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<" to "
+				<< upperVertexLeading.getPosition()<<std::endl;
+			if(!upperVertexLeading.getOwningBundle()->isAtLayerEdge(upperVertexLeading.getRemoteIndex()))
+				std::cout << " Terrain::stitchLayerTransverse() : Upper leading not at layer edge! "<<std::endl;
 			stitch->addPolygonWithVertices(upperVertexLeading, upperVertexTrailing, lowerVertexTrailing);
 			upperVertexTrailing = upperVertexLeading;
 			upperVertexLeading = upperVertexTrailing.getOwningBundle()->findAlongLayerEdge(
-					upperVertexTrailing.getRemoteIndex(), false);
+					upperVertexTrailing.getRemoteIndex(), true);
 			// Allow switching of the lower leading vertex if a new upper leading vertex is chosen,
 			// since this may lead to a better lower leading vertex.
 			lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(
@@ -272,6 +286,8 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 		// do the same thing but for the lower vertices.
 		else
 		{
+			std::cout << " Lower stitch "<<upperVertexTrailing.getPosition()<<" and "<<lowerVertexTrailing.getPosition()<<" to "
+				<< lowerVertexLeading.getPosition()<<" for upper leading = "<<upperVertexLeading.getPosition()<<std::endl;
 			stitch->addPolygonWithVertices(upperVertexTrailing, lowerVertexTrailing, lowerVertexLeading);
 			lowerVertexTrailing = lowerVertexLeading;
 			lowerVertexLeading = lowerVertexTrailing.getOwningBundle()->findNearestNeighborInBundle(

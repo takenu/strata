@@ -368,7 +368,7 @@ RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 			|| nnCandidate.getOwningBundle()->isBelowMeshAtIndex(
 				nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f)
 			|| (dist(pos, nnCandidate.getPosition()) < dist(pos, nn.getPosition())
-				&& nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex())
+//				&& nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex())
 				&& !nnCandidate.getOwningBundle()->isAboveMeshAtIndex(
 					nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f))
 				)
@@ -386,6 +386,19 @@ RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 		{
 //			std::cout << " findNearestNeighborInBundle() : Candidate not suitable! ";
 //			std::cout << " Skipping "<<nnCandidate.getPosition()<<" for "<<nn.getPosition()<<std::endl;
+//			std::cout << " First test failed: "
+//				<< dist(pos, nnCandidate.getPosition()) << " < "<< dist(pos, nn.getPosition())
+//				<< " and neighbor check = "
+//				<< nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex()) << std::endl;
+////			|| nnCandidate.getOwningBundle()->isBelowMeshAtIndex(
+////				nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f)
+//			std::cout << " Third check failed: "
+//				<< dist(pos, nnCandidate.getPosition()) << " < " << dist(pos, nn.getPosition())
+//				<< " and neighbor check = "
+//				<< nn.getOwningBundle()->isAmongNeighbors(nnCandidate, nn.getRemoteIndex())
+//				<< " and not-below-mesh check = "
+//				<< !nnCandidate.getOwningBundle()->isAboveMeshAtIndex(
+//					nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f) << std::endl;
 		}
 	}
 	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
@@ -408,7 +421,9 @@ void Bundle::findRemoteNeighborVertex(RemoteVertex &pivot, RemoteVertex &sv, boo
 {
 	if(sv.getOwningBundle() == this)
 	{
-		xVert nextIndex = findPolyNeighborFromVertexPair(pivot.getRemoteIndex(), sv.getRemoteIndex());
+		xVert nextIndex = (rotateClockwise ?
+				findPolyNeighborFromVertexPair(pivot.getRemoteIndex(), sv.getRemoteIndex()) :
+				findPolyNeighborFromVertexPair(sv.getRemoteIndex(), pivot.getRemoteIndex()) );
 		if(nextIndex > 0)
 		{
 			sv = RemoteVertex(this, nextIndex);
@@ -445,15 +460,15 @@ RemoteVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 	if(!isEdgeVertex(v)) return RemoteVertex(0, 0);
 	else
 	{
-		RemoteVertex neighbor(this, findAdjacentEdgeVertex(v, false));
-		RemoteVertex endVertex(this, findAdjacentEdgeVertex(v, true));
+		RemoteVertex neighbor(this, findAdjacentEdgeVertex(v, clockwise)); // Follow edge of Bundle, not of Layer
+		RemoteVertex endVertex(this, findAdjacentEdgeVertex(v, !clockwise));
 		RemoteVertex pivot(this, v);
 		assert(neighbor != endVertex);
 		while(neighbor != endVertex)
 		{
 			RemoteVertex newNeighbor = neighbor;
 			// Try to find neighborIndex from all nearby Strips.
-			findRemoteNeighborVertex(pivot, newNeighbor, clockwise);
+			findRemoteNeighborVertex(pivot, newNeighbor, !clockwise);
 			if(newNeighbor.getRemoteIndex() == 0) break; // Failed to find next vertex - this is the edge
 			else neighbor = newNeighbor;
 		}
@@ -467,7 +482,7 @@ RemoteVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
   * for non-edge vertices. */
 bool Bundle::isAtLayerEdge(xVert v)
 {
-	RemoteVertex sv = findAlongLayerEdge(v, true);
+	RemoteVertex sv = findAlongLayerEdge(v, false);
 	return (sv.getRemoteIndex() != 0);
 }
 
