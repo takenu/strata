@@ -320,13 +320,14 @@ bool Strip::checkAdjacentMeshes(void) const
 			std::cout << " Polygon "<<i<<" has three vertices from the same Bundle!"<<std::endl;
 			adjacentMeshesAreComplete = false;
 		}
-		else if( isStitch && !(vertices[ve[polygons[i].a]].isStitchVertex() || vertices[ve[polygons[i].b]].isStitchVertex()
+		// DISABLED: Vertices don't need to be 'special' in Stitches, but they may be
+/*		else if( isStitch && !(vertices[ve[polygons[i].a]].isStitchVertex() || vertices[ve[polygons[i].b]].isStitchVertex()
 					|| vertices[ve[polygons[i].c]].isStitchVertex()))
 		{
 			std::cout << " Strip::checkAdjacentMeshes() :";
 			std::cout << " Polygon "<<i<<" is in a Stitch Strip but has no Stitch vertices!"<<std::endl;
 			adjacentMeshesAreComplete = false;
-		}
+		}*/
 	}
 	for(std::map<const Bundle*, unsigned int>::iterator it = adjacentBundleRefs.begin(); it != adjacentBundleRefs.end(); it++)
 	{

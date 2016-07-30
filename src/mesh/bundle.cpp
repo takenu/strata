@@ -264,7 +264,20 @@ void Bundle::duplicateBundle(Bundle * b) const
 	}
 	duplicateMesh(b);
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
-		b->addAdjacentStrip(adjacentStrips[i]);
+		if(!adjacentStrips[i]->isStitchMesh())
+			b->addAdjacentStrip(adjacentStrips[i]);
+}
+
+void Bundle::duplicateAdjustAdjacentStrips(std::map<const Strip*, Strip*> &smap)
+{
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		// Stitches are not duplicated, so do not adjust.
+		if(adjacentStrips[i]->isStitchMesh()) continue;
+		if(smap.find(adjacentStrips[i]) == smap.end())
+			std::cout << " Strip::duplicateAdjustAdjacentBundles() : WARNING: Failed to find adjacent bundle in map! "<<std::endl;
+		else adjacentStrips[i] = smap.at(adjacentStrips[i]);
+	}
 }
 
 /** Check the correctness of adjacency tracking of the Bundle.
@@ -332,7 +345,7 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v)
 
 /** Find the neighbor (among all neighbors of a vertex both inside this Bundle and
   * inside adjacent Strips) of the vertex with index 'v' that is closest to the position 'pos'. */
-RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
+RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos, bool skipStitches)
 {
 	// TODO: Finding nearest neighbors may not result in a match in extreme topologies where
 	// all neighbors of a point are farther from the target point than the vertex 'v' itself.
@@ -350,6 +363,7 @@ RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 	// Look for neighbors in adjacent Strips, if this vertex is at the Bundle's edge.
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
+		if(skipStitches && adjacentStrips[i]->isStitchMesh()) continue;
 		RemoteVertex nnCandidate = adjacentStrips[i]->findNearestNeighborInStrip(sv, pos);
 		if(!nnCandidate.isValid()) continue;
 		// Logic of the test condition:
@@ -401,9 +415,9 @@ RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 //					nnCandidate.getRemoteIndex(), nn.getPosition(), 0.000001f) << std::endl;
 		}
 	}
-	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
-	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<" (dist=";
-	std::cout << dist(pos,nn.getPosition())<<")."<<std::endl;
+//	std::cout << " findNearestNeighborInBundle() : Nearest vertex to "<<pos<<" found at ";
+//	std::cout << nn.getPosition()<<" from "<<sv.getPosition()<<" (dist=";
+//	std::cout << dist(pos,nn.getPosition())<<")."<<std::endl;
 	return nn;
 }
 
@@ -417,7 +431,8 @@ RemoteVertex Bundle::findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos)
 //void Bundle::findRemoteNeighborVertex(Bundle * &neighborBundle,
 //		Bundle * &nextBundle, xVert &neighborIndex, xVert &nextIndex,
 //		xVert v, bool rotateClockwise)
-void Bundle::findRemoteNeighborVertex(RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise)
+void Bundle::findRemoteNeighborVertex(bool skipStitches,
+		RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise)
 {
 	if(sv.getOwningBundle() == this)
 	{
@@ -432,6 +447,12 @@ void Bundle::findRemoteNeighborVertex(RemoteVertex &pivot, RemoteVertex &sv, boo
 	}
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
+		if(skipStitches && adjacentStrips[i]->isStitchMesh())
+		{
+			if(i+1 == adjacentStrips.size())
+				sv = RemoteVertex(0,0); // NOT FOUND - none of the adjacent Strips has it!
+			continue;
+		}
 		// Search for the neighbor in the i-th Strip of the adjacency list.
 		RemoteVertex next = adjacentStrips[i]->findRemoteVertexPolyNeighbor(
 				pivot, sv, rotateClockwise);
@@ -467,8 +488,8 @@ RemoteVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 		while(neighbor != endVertex)
 		{
 			RemoteVertex newNeighbor = neighbor;
-			// Try to find neighborIndex from all nearby Strips.
-			findRemoteNeighborVertex(pivot, newNeighbor, !clockwise);
+			// Try to find neighborIndex from all nearby non-Stitch Strips.
+			findRemoteNeighborVertex(false, pivot, newNeighbor, !clockwise);
 			if(newNeighbor.getRemoteIndex() == 0) break; // Failed to find next vertex - this is the edge
 			else neighbor = newNeighbor;
 		}
@@ -591,7 +612,7 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, b
 	// While-loop over all neighbours - finishes when circle is complete
 	while(neighbor != endVertex)
 	{
-		findRemoteNeighborVertex(pivot, neighbor, rotateClockwise);
+		findRemoteNeighborVertex(false, pivot, neighbor, rotateClockwise);
 		if(neighbor.getRemoteIndex() == 0)
 		{
 			if(!rotateClockwise) break; // Exit point for on-layer-edge vertices

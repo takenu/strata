@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <deque>
 #include <map>
+#include <set>
 #include <limits>
 
 #include <tiny/math/vec.h>
@@ -348,14 +349,30 @@ namespace strata
 								else
 								{
 									unsigned int numPolys = 0;
+									std::set<xVert> foundNeighbors;
+									unsigned int numberOfNeighbors = 0;
 									while(v != 0)
 									{
 										v = findPolyNeighborFromVertexPair(vertices[i].index, v);
 										if(v>0) ++numPolys;
+										else if(foundNeighbors.count(v)>0)
+										{
+											std::cout << " TopologicalMesh::checkTopology() : Edge vertex "<<i<<" has a subcycle among its neighbors! "<<std::endl;
+											topologyIsValid = false;
+											break;
+										}
+										foundNeighbors.emplace(v);
+										++numberOfNeighbors;
+										if(numberOfNeighbors > STRATA_VERTEX_MAX_LINKS)
+										{
+											std::cout << " TopologicalMesh::checkTopology() : Edge vertex "<<i<<" has too many neighbors! "<<std::endl;
+											topologyIsValid = false;
+											break;
+										}
 									}
 									if(numPolys != vertices[i].nPolys())
 									{
-										std::cout << " TopologicalMesh::checkTopology() : Edge vertex "<<i<<" found only "<<numPolys<<" of its "<<vertices[i].nPolys()<<" polygons! "<<std::endl;
+										std::cout << " TopologicalMesh::checkTopology() : Edge vertex "<<i<<" found "<<numPolys<<" polygons while it should have found "<<vertices[i].nPolys()<<" polygons! "<<std::endl;
 										topologyIsValid = false;
 									}
 								}
@@ -365,6 +382,8 @@ namespace strata
 								// For non-edge vertices we perform a similar check as for edge vertices, but we simply try to make a circle.
 								xVert v = findPolyNeighbor(0, vertices[i].index, true);
 								unsigned int numPolys = 1; // Start at 1 because we stop instantly when we find the last polygon
+								std::set<xVert> foundNeighbors;
+								unsigned int numberOfNeighbors = 0;
 								while(v != findPolyNeighborFromVertexPair(findPolyNeighbor(0, vertices[i].index, true), vertices[i].index)) // Stop when finding back the zeroth polygon.
 								{
 									++numPolys;
@@ -378,6 +397,20 @@ namespace strata
 									else if(numPolys > STRATA_VERTEX_MAX_LINKS)
 									{
 										std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" found too many polygons! "<<std::endl;
+										topologyIsValid = false;
+										break;
+									}
+									else if(foundNeighbors.count(v)>0)
+									{
+										std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" has a subcycle among its neighbors! "<<std::endl;
+										topologyIsValid = false;
+										break;
+									}
+									foundNeighbors.emplace(v);
+									++numberOfNeighbors;
+									if(numberOfNeighbors > STRATA_VERTEX_MAX_LINKS)
+									{
+										std::cout << " TopologicalMesh::checkTopology() : Interior vertex "<<i<<" has too many neighbors! "<<std::endl;
 										topologyIsValid = false;
 										break;
 									}

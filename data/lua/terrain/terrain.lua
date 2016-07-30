@@ -6,6 +6,7 @@ function terrain_terrain(path)
 	-- Add layers one by one. Start with thicker ones and finish with
 	-- thinner layers for more detail.
 	terrain.addLayer(2.0)
+	terrain.addLayer(2.0)
 --[[	terrain.addLayer(1.0)
 	terrain.addLayer(1.0)
 	terrain.addLayer(1.0)

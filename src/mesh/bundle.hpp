@@ -109,15 +109,8 @@ namespace strata
 				  */
 				void duplicateBundle(Bundle * b) const;
 
-				void duplicateAdjustAdjacentStrips(std::map<const Strip*, Strip*> &smap)
-				{
-					for(unsigned int i = 0; i < adjacentStrips.size(); i++)
-					{
-						if(smap.find(adjacentStrips[i]) == smap.end())
-							std::cout << " Strip::duplicateAdjustAdjacentBundles() : WARNING: Failed to find adjacent bundle in map! "<<std::endl;
-						else adjacentStrips[i] = smap.at(adjacentStrips[i]);
-					}
-				}
+				/** Adjust the adjacent strips to refer to the duplicate instead of the original. */
+				void duplicateAdjustAdjacentStrips(std::map<const Strip*, Strip*> &smap);
 
 				/** Add a Strip as being adjacent to this Bundle. */
 				void addAdjacentStrip(Strip * strip)
@@ -176,11 +169,14 @@ namespace strata
 				  * the normals of polygons outside the Bundle (i.e. in Strips)). */
 				tiny::vec3 calculateVertexNormal(xVert v);
 
-				/** Find the neigbor to the vertex 'v' who is nearest to the position 'pos'. */
-				RemoteVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos);
+				/** Find the neigbor to the vertex 'v' who is nearest to the position 'pos'.
+				  * If only neighbors in the same layer are desired, one can skip Stitch strips.
+				  */
+				RemoteVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos, bool skipStitches);
 
 				/** Find a neighbor vertex that may be in another Bundle. */
-				void findRemoteNeighborVertex(RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise);
+				void findRemoteNeighborVertex(bool skipStitches,
+						RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise);
 
 				/** Find a vertex along the edge of the Layer. Returns a RemoteVertex with
 				  * zero index (and null owning bundle) unless such a vertex is found. */
