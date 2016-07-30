@@ -180,9 +180,9 @@ void Terrain::stitchLayer(Layer * layer, bool stitchTransverse)
 			}
 		}
 		// Set Stitch texture and parent.
+		stitch->setScaleFactor(stripVertex.getOwningBundle()->getScaleFactor());
 		stitch->resetTexture(layer->getStitchTexture());
 		stitch->setParentLayer(layer);
-//		stitch->setScaleFactor(startBundle->getScaleFactor());
 	}
 }
 
@@ -302,9 +302,10 @@ void Terrain::stitchLayerTransverse(Strip * stitch, RemoteVertex startVertex)
 	} while(upperVertexTrailing != upperVertexStart || lowerVertexTrailing != lowerVertexStart);
 }
 
-/** Find the underlying Vertex to the position 'v'. The Vertex that is found
-  * is returned as a StitchVertex so that it contains all the necessary
-  * information.
+/** Find the underlying Vertex to the position 'v'.
+  *
+  * Return value: the RemoteVertex that most closely underlies the given position.
+  *
   * This function should look across all layers for the most nearby vertex 'w'
   * with the following requirements:
   * - 'w' is not a part of 'bundle';

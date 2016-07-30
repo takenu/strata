@@ -35,6 +35,7 @@ namespace strata
 				for (size_t j = 0; j < size; ++j)
 				{
 					float shade = sqrt(16*(i*(size-i)*j*(size-j)/(1.0f*size*size*size*size)));
+					shade = 0.5+0.5*shade;
 
 					*data++ = (unsigned char)(r*shade);
 					*data++ = (unsigned char)(g*shade);
