@@ -338,6 +338,7 @@ tiny::vec3 Bundle::calculateVertexNormal(xVert v)
 	}
 	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
 	{
+		if(adjacentStrips[i]->isStitchMesh()) continue; // Stitch polygons may not contribute to the normal!
 		norm += adjacentStrips[i]->computeSumOfPolygonNormals(this, v);
 	}
 	return normalize(norm);
@@ -489,7 +490,7 @@ RemoteVertex Bundle::findAlongLayerEdge(xVert v, bool clockwise)
 		{
 			RemoteVertex newNeighbor = neighbor;
 			// Try to find neighborIndex from all nearby non-Stitch Strips.
-			findRemoteNeighborVertex(false, pivot, newNeighbor, !clockwise);
+			findRemoteNeighborVertex(true, pivot, newNeighbor, !clockwise);
 			if(newNeighbor.getRemoteIndex() == 0) break; // Failed to find next vertex - this is the edge
 			else neighbor = newNeighbor;
 		}
@@ -612,7 +613,7 @@ bool Bundle::isNearMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal, b
 	// While-loop over all neighbours - finishes when circle is complete
 	while(neighbor != endVertex)
 	{
-		findRemoteNeighborVertex(false, pivot, neighbor, rotateClockwise);
+		findRemoteNeighborVertex(true, pivot, neighbor, rotateClockwise);
 		if(neighbor.getRemoteIndex() == 0)
 		{
 			if(!rotateClockwise) break; // Exit point for on-layer-edge vertices

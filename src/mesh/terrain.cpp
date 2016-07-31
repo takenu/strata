@@ -365,12 +365,19 @@ RemoteVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 		xVert index = 0;
 		tiny::vec3 pos;
 		nearbyBundles[i]->findNearestVertex(v, index, pos);
-		// If mesh overlies the original position, skip this Bundle, since
-		// it is not underlying the position at 'v'.
-		if(!nearbyBundles[i]->isAboveMeshAtIndex(index, v, 0.001f)) continue;
+//		std::cout << " Terrain::getUnderlyingVertex() : Testing vertex at "<<pos<<"..."<<std::endl;
+		// If mesh at v does not underlie the target position, skip this Bundle. In principle this
+		// restriction is severe (given that faraway vertices always fail this) but we can still
+		// safely require this, since every truly underlying mesh should have at least one vertex
+		// for which v should be recognised as overlying (and usually there is more than one).
+		if(!nearbyBundles[i]->isAboveMeshAtIndex(index, v, 0.001f))
+		{
+//			std::cout << " Terrain::getUnderlyingVertex() : Position does not overlie candidate!"<<std::endl;
+			continue;
+		}
 		// If the bundle does not overlie the previously found underlying
 		// vertex, it is thus deeper below the point 'v' and therefore, even
-		// it the found vertex is spatially closer, it still needs to be
+		// if the found vertex is spatially closer, it still needs to be
 		// discarded as it is not on the layer directly underlying 'v'.
 		// We check twice; once from the new Bundle and once from the Bundle
 		// that contains the current candidate for the underlying vertex.
@@ -381,10 +388,16 @@ RemoteVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 		{
 			if(nearbyBundles[i]->isAboveMeshAtIndex(
 						index, underlyingVertex.getPosition(), -0.001f))
+			{
+//				std::cout << " Terrain::getUnderlyingVertex() : New candidate mesh under existing candidate!"<<std::endl;
 				continue;
+			}
 			if(underlyingVertex.getOwningBundle()->isBelowMeshAtIndex(
 						underlyingVertex.getRemoteIndex(), pos, -0.001f))
+			{
+//				std::cout << " Terrain::getUnderlyingVertex() : Existing candidate mesh above new candidate!"<<std::endl;
 				continue;
+			}
 		}
 		// In all remaining cases, no matter how far away the resulting vertex is, it
 		// can validly be considered an underlying vertex in a topological sense. The
@@ -402,6 +415,7 @@ RemoteVertex Terrain::getUnderlyingVertex(const tiny::vec3 &v) const
 			underlyingVertex.setOwningBundle(nearbyBundles[i]);
 			underlyingVertex.setPosition(pos);
 		}
+//		else std::cout << " Terrain::getUnderlyingVertex() : Existing candidate closer than new candidate! "<<std::endl;
 	}
 	std::cout << " Terrain::getUnderlyingVertex() : Found underlying vertex "
 		<< underlyingVertex.getPosition()<<std::endl;
