@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <selene.h>
 
 #include "../tools/convertstring.hpp"
+#include "../tools/texture.hpp"
 
 #include "ui.hpp"
 
@@ -69,6 +70,11 @@ void UIManager::loadMonitorWindow(float left, float top, float right, float bott
 			tiny::draw::Colour(static_cast<unsigned char>(r),
 				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title);
 	monitor->setBoxDimensions(left, top, right, bottom);
+	ui::ScreenSquare * monitorBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
+	monitorBackground->setBoxDimensions(left, top, right, bottom);
+	monitor->setBackground(monitorBackground);
+	// Add background first, so that it goes behind the text
+	renderInterface->addScreenRenderable(monitorBackground, false, false, tiny::draw::BlendMix);
 	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 

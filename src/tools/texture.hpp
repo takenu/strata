@@ -22,8 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace strata
 {
-	namespace mesh
+	namespace tools
 	{
+		/** Create an opaque test texture of type RGBTexture2D. */
 		inline tiny::draw::RGBTexture2D * createTestTexture(const unsigned int &size = 64, const unsigned char &r = 255, const unsigned char &g = 255, const unsigned char &b = 255)
 		{
 			tiny::img::Image image(size, size);
@@ -45,6 +46,30 @@ namespace strata
 			}
 
 			return new tiny::draw::RGBTexture2D(image);
+		}
+
+		/** Create a test texture with added alpha channel, of type RGBATexture2D. */
+		inline tiny::draw::RGBATexture2D * createTestTextureAlpha(const unsigned int &size = 64, const unsigned char &r = 255, const unsigned char &g = 255, const unsigned char &b = 255, const unsigned char &a = 255)
+		{
+			tiny::img::Image image(size, size);
+			unsigned char * data = &image.data[0];
+
+			//Create a simple test image.
+			for (size_t i = 0; i < size; ++i)
+			{
+				for (size_t j = 0; j < size; ++j)
+				{
+					float shade = sqrt(16*(i*(size-i)*j*(size-j)/(1.0f*size*size*size*size)));
+					shade = 0.5+0.5*shade;
+
+					*data++ = (unsigned char)(r*shade);
+					*data++ = (unsigned char)(g*shade);
+					*data++ = (unsigned char)(b*shade);
+					*data++ = a;
+				}
+			}
+
+			return new tiny::draw::RGBATexture2D(image, tiny::draw::tf::filter);
 		}
 	}
 }

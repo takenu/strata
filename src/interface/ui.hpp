@@ -23,6 +23,31 @@ namespace strata
 {
 	namespace intf
 	{
+		class UIInterface;
+
+		/** The UIListener is a base class to every object that can react to user input.
+		  * Such listeners can subscribe to certain inputs, which are only applicable in
+		  * specific contexts.
+		  * Subscription is done through its link to the UI that governs it. The UI contains
+		  * an InputInterpreter that processes the input and tracks who is subscribed to what.
+		  */
+		class UIListener
+		{
+			private:
+				UIInterface * ui; /**< A link to the UI that governs the listener. */
+			public:
+				UIListener(UIInterface * _ui) : ui(_ui)
+				{
+				}
+
+				~UIListener(void) {}
+
+				/** Signal that a key is pressed down. */
+				virtual void receiveKeyDown(const int & k) = 0;
+				/** Signal that a key that was pressed down is no longer being pressed. */
+				virtual void receiveKeyUp(const int & k) = 0;
+		};
+
 		/** The UIInformation holds information to be used by the UI (for displaying
 		  * the information on-screen). It is stored as attribute-value pairs. */
 		class UIInformation
@@ -35,8 +60,6 @@ namespace strata
 					pairs.push_back( make_pair(attr, val) );
 				}
 		};
-
-		class UIInterface;
 
 		/** The UISource is a base class to every object that is UI-representable.
 		  * Such objects can be given UI elements (e.g. windows, health bars) to

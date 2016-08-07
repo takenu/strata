@@ -27,6 +27,10 @@ namespace strata
 {
 	namespace ui
 	{
+		/** The Monitor is a specific Window that displays (a subset of) a limited number of Strata
+		  * parameters, such as the fps and the memory usage. Such parameters are a consequence of
+		  * the choices made when creating a Terrain, but they are not adjustable and merely give
+		  * an indication of the effective complexity of the landscape that is being generated. */
 		class Monitor : public Window
 		{
 			private:

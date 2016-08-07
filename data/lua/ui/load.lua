@@ -37,6 +37,8 @@ end
 UIMonitorWindow = UIWindow:new{
 	title = "",
 	fps = false,
+	right = 0.0,
+	bottom = 0.4,
 }
 
 function UIFont:collectArgs(path)
