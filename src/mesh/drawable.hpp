@@ -21,8 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmesh.h>
 
 #include "../interface/render.hpp"
-
-#include "texture.hpp"
+#include "../tools/texture.hpp"
 
 namespace strata
 {

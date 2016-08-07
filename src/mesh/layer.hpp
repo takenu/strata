@@ -23,9 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
 
+#include "../tools/texture.hpp"
+
 #include "bundle.hpp"
 #include "strip.hpp"
-#include "texture.hpp"
 
 namespace strata
 {
