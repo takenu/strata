@@ -1,7 +1,6 @@
-
 /*
 This file is part of Chathran Strata: https://github.com/takenu/strata
-Copyright 2015, Matthijs van Dorp.
+Copyright 2015-2016, Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include "../interface/ui.hpp"
+
 namespace strata
 {
 	namespace ui
@@ -26,6 +27,7 @@ namespace strata
 		class InputInterpreter
 		{
 			private:
+				std::vector<intf::UIListener> listeners;
 			public:
 				InputInterpreter(void)
 				{

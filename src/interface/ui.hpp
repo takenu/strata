@@ -17,13 +17,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <set>
+#include <SDL.h> // for SDLKey enum only
+
 #include <tiny/algo/typecluster.h>
+
+#include "uikeys.hpp"
 
 namespace strata
 {
 	namespace intf
 	{
 		class UIInterface;
+
+		/** The InputSet is an object where a set of (keyboard/mouse) input commands can be defined,
+		  * via their respective SDLKey symbols. */
+		class InputSet
+		{
+			private:
+				std::set<SDLKey> keys;
+			public:
+				InputSet(void) {}
+				~InputSet(void) {}
+
+				void addKey(SDLKey k) { keys.emplace(k); }
+				void addKeySet(std::set<SDLKey> ks)
+				{
+					keys.insert(ks.begin(), ks.end());
+				}
+		};
 
 		/** The UIListener is a base class to every object that can react to user input.
 		  * Such listeners can subscribe to certain inputs, which are only applicable in
