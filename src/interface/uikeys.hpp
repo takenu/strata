@@ -89,6 +89,21 @@ namespace strata
 		return keys;
 	}
 
+	/** The key set of all alphabetical and numerical keys, without spaces. */
+	inline std::set<SDLKey> keySetAlphanumericWithoutSpace(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetAlphabetWithoutSpace(),keySetNumbers());
+		return keys;
+	}
+
+	/** The key set of all alphabetical keys. Includes a space by default, if spaces are not allowed,
+	  * use keySetAllphabetWithoutSpace instead. */
+	inline std::set<SDLKey> keySetAlphanumeric(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetAlphabet(),keySetNumbers());
+		return keys;
+	}
+
 	inline std::set<SDLKey> keySetFunctionKeys(void)
 	{
 		std::set<SDLKey> keys;
@@ -107,12 +122,12 @@ namespace strata
 		return keys;
 	}
 
+	/** Punctuation characters, seen in normal text usage. */
 	inline std::set<SDLKey> keySetPunctuation(void)
 	{
 		std::set<SDLKey> keys;
 		keys.emplace(SDLK_EXCLAIM);
 		keys.emplace(SDLK_QUOTEDBL);
-		keys.emplace(SDLK_AMPERSAND);
 		keys.emplace(SDLK_QUOTE);
 		keys.emplace(SDLK_LEFTPAREN);
 		keys.emplace(SDLK_RIGHTPAREN);
@@ -122,6 +137,71 @@ namespace strata
 		keys.emplace(SDLK_COLON);
 		keys.emplace(SDLK_SEMICOLON);
 		keys.emplace(SDLK_QUESTION);
+		return keys;
+	}
+
+	/** Symbolic stuff, i.e. keys that are not punctuation or alphanumeric,
+	  * but that do have a typical written form. */
+	inline std::set<SDLKey> keySetSymbolic(void)
+	{
+		std::set<SDLKey> keys;
+		keys.emplace(SDLK_HASH);
+		keys.emplace(SDLK_DOLLAR);
+		keys.emplace(SDLK_AMPERSAND);
+		keys.emplace(SDLK_ASTERISK);
+		keys.emplace(SDLK_PLUS);
+		keys.emplace(SDLK_SLASH);
+		keys.emplace(SDLK_LESS);
+		keys.emplace(SDLK_EQUALS);
+		keys.emplace(SDLK_GREATER);
+		keys.emplace(SDLK_AT);
+		keys.emplace(SDLK_LEFTBRACKET);
+		keys.emplace(SDLK_RIGHTBRACKET);
+		keys.emplace(SDLK_CARET);
+		keys.emplace(SDLK_UNDERSCORE);
+		keys.emplace(SDLK_BACKQUOTE);
+		keys.emplace(SDLK_BACKSLASH);
+		return keys;
+	}
+
+	/** Special input that is used when inputting text but in unusual ways. */
+	inline std::set<SDLKey> keySetSpecial(void)
+	{
+		std::set<SDLKey> keys;
+		keys.emplace(SDLK_BACKSPACE);
+		keys.emplace(SDLK_TAB);
+		keys.emplace(SDLK_RETURN);
+		keys.emplace(SDLK_ESCAPE);
+		keys.emplace(SDLK_DELETE);
+		keys.emplace(SDLK_INSERT);
+		keys.emplace(SDLK_HOME);
+		keys.emplace(SDLK_END);
+		keys.emplace(SDLK_PAGEUP);
+		keys.emplace(SDLK_PAGEDOWN);
+		return keys;
+	}
+
+	/** Arrow keys. */
+	inline std::set<SDLKey> keySetArrows(void)
+	{
+		std::set<SDLKey> keys;
+		keys.emplace(SDLK_UP);
+		keys.emplace(SDLK_DOWN);
+		keys.emplace(SDLK_LEFT);
+		keys.emplace(SDLK_RIGHT);
+		return keys;
+	}
+
+	/** Modifier keys. */
+	inline std::set<SDLKey> keySetModifier(void)
+	{
+		std::set<SDLKey> keys;
+		keys.emplace(SDLK_RSHIFT);
+		keys.emplace(SDLK_LSHIFT);
+		keys.emplace(SDLK_RCTRL);
+		keys.emplace(SDLK_LCTRL);
+		keys.emplace(SDLK_RALT);
+		keys.emplace(SDLK_LALT);
 		return keys;
 	}
 } // end namespace strata
