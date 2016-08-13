@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/algo/typecluster.h>
 
-#include "uikeys.hpp"
+#include "keys.hpp"
 
 namespace strata
 {
