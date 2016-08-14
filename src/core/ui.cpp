@@ -31,9 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace strata::core;
 
 /** Interpret key press events. */
-void UIManager::keyDown(const int & keyIndex)
+void UIManager::keyEvent(const int & keyIndex, bool isDown)
 {
 	const SDLKey k = static_cast<SDLKey>(keyIndex);
+
+	inputInterpreter.receiveInput(k, isDown);
 
 	if(k == SDLK_ESCAPE)
 	{

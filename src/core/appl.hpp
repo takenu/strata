@@ -56,7 +56,13 @@ namespace strata
 				/** Inherit function from tiny::os::SDLApplication to send key up/down events to UI. */
 				virtual void keyDownCallback(const int &k)
 				{
-					uiInterface->keyDown(k);
+					uiInterface->keyEvent(k, true);
+				}
+
+				/** Inherit function from tiny::os::SDLApplication to send key up/down events to UI. */
+				virtual void keyUpCallback(const int &k)
+				{
+					uiInterface->keyEvent(k, false);
 				}
 		};
 	}

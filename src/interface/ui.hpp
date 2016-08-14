@@ -29,21 +29,49 @@ namespace strata
 	namespace intf
 	{
 		class UIInterface;
+		class UIListener;
 
 		/** The InputSet is an object where a set of (keyboard/mouse) input commands can be defined,
 		  * via their respective SDLKey symbols. */
 		class InputSet
 		{
 			private:
-				std::set<SDLKey> keys;
+				UIListener * listener; /**< A pointer to the class that will respond to key input. */
+				std::set<SDLKey> keys; /**< The keys that are registered by the listener. */
 			public:
-				InputSet(void) {}
+				InputSet(UIListener * _listener) : listener(_listener) {}
 				~InputSet(void) {}
 
-				void addKey(SDLKey k) { keys.emplace(k); }
+				/** Get the UIListener that the InputSet is defined for. */
+				UIListener * getListener(void)
+				{
+					return listener;
+				}
+
+				void addKey(SDLKey k)
+				{
+					keys.emplace(k);
+				}
+
 				void addKeySet(std::set<SDLKey> ks)
 				{
 					keys.insert(ks.begin(), ks.end());
+				}
+
+				void clearKeySet(void)
+				{
+					keys.clear();
+				}
+
+				void resetKeySet(std::set<SDLKey> ks)
+				{
+					clearKeySet();
+					addKeySet(ks);
+				}
+
+				inline bool isSubscribed(const SDLKey &k)
+				{
+					return (keys.count(k) > 0);
 				}
 		};
 
@@ -64,10 +92,8 @@ namespace strata
 
 				~UIListener(void) {}
 
-				/** Signal that a key is pressed down. */
-				virtual void receiveKeyDown(const int & k) = 0;
-				/** Signal that a key that was pressed down is no longer being pressed. */
-				virtual void receiveKeyUp(const int & k) = 0;
+				/** Signal that a key is pressed down or no longer pressed down. */
+				virtual void receiveKeyInput(const int & k, bool isDown) = 0;
 		};
 
 		/** The UIInformation holds information to be used by the UI (for displaying
@@ -123,7 +149,7 @@ namespace strata
 				/** Get UI info from the UISource with identifier '_id'. */
 				UIInformation getUIInfo(std::string _id);
 
-				virtual void keyDown(const int & k) = 0;
+				virtual void keyEvent(const int & k, bool) = 0;
 		};
 	}
 }

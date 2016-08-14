@@ -37,6 +37,8 @@ namespace strata
 				intf::ApplInterface * applInterface;
 				intf::RenderInterface * renderInterface;
 
+				ui::InputInterpreter inputInterpreter;
+
 				tiny::draw::IconTexture2D * fontTexture;
 				std::vector<ui::Window*> windows;
 				ui::Monitor * monitor;
@@ -53,7 +55,7 @@ namespace strata
 				{
 				}
 
-				virtual void keyDown(const int & k);
+				virtual void keyEvent(const int & k, bool isDown);
 
 				void update(double);
 
