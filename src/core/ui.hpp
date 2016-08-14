@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/img/io/image.h>
 
 #include "../ui/monitor.hpp"
+#include "../ui/mainmenu.hpp"
 #include "../ui/input.hpp"
 
 #include "../interface/appl.hpp"
@@ -36,24 +37,51 @@ namespace strata
 		class UIManager : public intf::UIInterface
 		{
 			private:
+				class UIWindowBase
+				{
+					public:
+						float left;
+						float top;
+						float right;
+						float bottom;
+						unsigned int red;
+						unsigned int green;
+						unsigned int blue;
+						std::string title;
+
+						UIWindowBase(float _left, float _top, float _right, float _bottom,
+								unsigned int _red, unsigned int _green, unsigned int _blue,
+								std::string _title) :
+							left(_left), top(_top), right(_right), bottom(_bottom),
+							red(_red), green(_green), blue(_blue), title(_title)
+						{
+						}
+				};
+
 				intf::ApplInterface * applInterface;
 				intf::RenderInterface * renderInterface;
 
 				ui::InputInterpreter inputInterpreter;
 
+				UIWindowBase baseWindow;
+
 				tiny::draw::IconTexture2D * fontTexture;
 				std::vector<ui::Window*> windows;
 				ui::Monitor * monitor;
+				ui::MainMenu * mainMenu;
 				float defaultFontSize;
 				float defaultAspectRatio;
 
-				/** Reserve enough space for the Window to draw all of its text. */
+				/** Reserve enough space for the Window to draw all of its text, using the
+				  * Window's reserve() function. */
 				void reserve(ui::Window * window);
 			public:
 				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) :
 					intf::UIInterface(),
 					applInterface(_appl), renderInterface(_renderer),
-					fontTexture(0), monitor(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
+					inputInterpreter(),
+					baseWindow(-0.5f,0.5f,0.5f,-0.5f,35,35,35,std::string("")),
+					fontTexture(0), monitor(0), mainMenu(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
 
@@ -66,8 +94,13 @@ namespace strata
 
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
-				void loadMonitorWindow(float left, float top, float right, float bottom,
+				void loadWindowBase(float left, float top, float right, float bottom,
 						unsigned int red, unsigned int green, unsigned int blue, std::string text);
+
+//				void loadMonitorWindow(float left, float top, float right, float bottom,
+//						unsigned int red, unsigned int green, unsigned int blue, std::string text);
+				void loadMonitorWindow(void);
+				void loadMainMenuWindow(void);
 
 				void loadMonitorWindowAttribute(std::string attribute, std::string value);
 

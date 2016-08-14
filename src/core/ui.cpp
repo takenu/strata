@@ -46,32 +46,51 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,
 			"loadFont", &UIManager::loadFont,
+			"loadWindowBase", &UIManager::loadWindowBase,
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
-			"loadMonitorWindowAttribute", &UIManager::loadMonitorWindowAttribute
+			"loadMonitorWindowAttribute", &UIManager::loadMonitorWindowAttribute,
+			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
 			);
 }
 
-void UIManager::loadMonitorWindow(float left, float top, float right, float bottom,
+void UIManager::loadWindowBase(float left, float top, float right, float bottom,
 		unsigned int r, unsigned int g, unsigned int b, std::string title)
 {
 	if(left < -1.0f || left > 1.0f || top < -1.0f || top > 1.0f
 			|| right < -1.0f || right > 1.0f || bottom < -1.0f || bottom > 1.0f)
 	{
-		std::cerr << " UIManager::loadMonitorWindow() : Window box "<<left<<","<<top<<","
+		std::cerr << " UIManager::loadMainMenuWindow() : Window box "<<left<<","<<top<<","
 			<<right<<","<<bottom<<" is invalid! "<<std::endl;
 		return;
 	}
-//	std::cout << " UIManager::loadMonitorWindow() : Monitor "<<left<<","<<top<<","
-//			<<right<<","<<bottom<<" to be created with title "<<title
-//			<<" and colour "<<r<<","<<g<<","<<b<<"... "<<std::endl;
+	baseWindow = UIWindowBase(left,top,right,bottom,r,g,b,title);
+}
 
+void UIManager::loadMainMenuWindow(void)
+{
+	UIWindowBase b = baseWindow;
+	mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this),
+			fontTexture, defaultFontSize, defaultAspectRatio,
+			tiny::draw::Colour(static_cast<unsigned char>(b.red),
+				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)), b.title);
+	mainMenu->setBoxDimensions(b.left, b.top, b.right, b.bottom);
+	ui::ScreenSquare * mainMenuBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
+	mainMenuBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
+	mainMenu->setBackground(mainMenuBackground);
+	renderInterface->addScreenRenderable(mainMenuBackground, false, false, tiny::draw::BlendMix);
+	renderInterface->addScreenRenderable(mainMenu->getRenderable(), false, false, tiny::draw::BlendMix);
+}
+
+void UIManager::loadMonitorWindow(void)
+{
+	UIWindowBase b = baseWindow;
 	monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this),
 			fontTexture, defaultFontSize, defaultAspectRatio,
-			tiny::draw::Colour(static_cast<unsigned char>(r),
-				static_cast<unsigned char>(g),static_cast<unsigned char>(b)), title);
-	monitor->setBoxDimensions(left, top, right, bottom);
+			tiny::draw::Colour(static_cast<unsigned char>(b.red),
+				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)), b.title);
+	monitor->setBoxDimensions(b.left, b.top, b.right, b.bottom);
 	ui::ScreenSquare * monitorBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
-	monitorBackground->setBoxDimensions(left, top, right, bottom);
+	monitorBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
 	monitor->setBackground(monitorBackground);
 	// Add background first, so that it goes behind the text
 	renderInterface->addScreenRenderable(monitorBackground, false, false, tiny::draw::BlendMix);

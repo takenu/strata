@@ -9,7 +9,8 @@ function ui_ui(path)
 		fps = "true",
 		memusage = "true",
 	}
-	ui.loadMonitorWindow(w:collectArgs(path))
+	ui.loadWindowBase(w:collectArgs(path))
+	ui.loadMonitorWindow()
 	ui.loadMonitorWindowAttribute("fps", w.fps)
 	ui.loadMonitorWindowAttribute("memusage", w.memusage)
 end

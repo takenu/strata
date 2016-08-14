@@ -27,34 +27,36 @@ namespace strata
 {
 	namespace ui
 	{
-		/** The Monitor is a specific Window that displays (a subset of) a limited number of Strata
-		  * parameters, such as the fps and the memory usage. Such parameters are a consequence of
-		  * the choices made when creating a Terrain, but they are not adjustable and merely give
-		  * an indication of the effective complexity of the landscape that is being generated. */
-		class Monitor : public Window
+		/** The MainMenu is a Window used by the UIManager in order to perform primary tasks that
+		  * have widespread impact on the entire state of the program. Examples include exiting, saving
+		  * and loading maps, and changing global preferences. */
+		class MainMenu : public Window
 		{
 			private:
 				std::string title;
-				bool showFramesPerSecond;
-				bool showMemoryUsage;
+				tiny::draw::Colour secondaryColour;
 			public:
-				Monitor(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
+				MainMenu(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
 						std::string _title = "") :
 					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour),
-					title(_title), showFramesPerSecond(false),
-					showMemoryUsage(false)
+					title(_title), secondaryColour(55,55,0)
 				{
-					inputKeys->addKey(SDLK_m);
+					inputKeys->addKey(SDLK_ESCAPE);
 				}
 
 				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
 				{
-					Window::receiveKeyInput(k,m,isDown);
-
-					if(k == SDLK_m && isDown)
+					if(isDown)
 					{
-						setVisible(true);
+						if(k == SDLK_ESCAPE || k == SDLK_r)
+						{
+							if(!isVisible()) setVisible(true);
+							else setVisible(false);
+						}
+						else if(k == SDLK_q)
+						{
+						}
 					}
 				}
 
@@ -63,7 +65,7 @@ namespace strata
 				  * here, we do not use setText(), which instead must be
 				  * done by whoever created the Monitor and has the ability
 				  * to add and remove renderable objects. */
-				void update(double dt)
+				void update(void)
 				{
 					clear();
 					if(!isVisible()) return;
@@ -72,29 +74,18 @@ namespace strata
 						addTextFragment(title, getColour());
 						addNewline();
 					}
-					if(showFramesPerSecond)
-					{
-						std::stringstream ss;
-						ss << "Running at "<<1.0/dt<<" fps.";
-						addTextFragment(ss.str(), getColour());
-						addNewline();
-					}
-					if(showMemoryUsage)
-					{
-						intf::UIInformation meminfo = uiInterface->getUIInfo("Terrain");
-						for(unsigned int i = 0; i < meminfo.pairs.size(); i++)
-						{
-							addTextFragment("Terrain: "+meminfo.pairs[i].first+" is "+meminfo.pairs[i].second, getColour());
-							addNewline();
-						}
-					}
+					addTextFragment("Q", secondaryColour);
+					addTextFragment("uit", getColour());
+					addNewline();
+					addTextFragment("R", secondaryColour);
+					addTextFragment("esume", getColour());
+					addNewline();
 				}
 
-				/** Show/hide frames per second. */
-				void displayFPS(bool b) { showFramesPerSecond = b; }
-
-				/** Show/hide memory usage. */
-				void displayMemoryUsage(bool b) { showMemoryUsage = b; }
+				void setSecondaryColour(tiny::draw::Colour _colour)
+				{
+					secondaryColour = _colour;
+				}
 		};
 	} // end namespace ui
 } // end namespace strata
