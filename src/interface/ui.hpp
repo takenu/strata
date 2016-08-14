@@ -150,6 +150,13 @@ namespace strata
 				UIInformation getUIInfo(std::string _id);
 
 				virtual void keyEvent(const SDLKey & k, bool) = 0;
+
+				/** Subscribe the UIListener to input received by the application. The InputSet
+				  * must be filled by the UIListener, and specifies which input the UIListener
+				  * will result in the UI sending the UIListener an input event. */
+				virtual InputSet * subscribe(UIListener *) = 0;
+				virtual void unsubscribe(UIListener *) = 0;
+				virtual void bump(UIListener *) = 0;
 		};
 	}
 }

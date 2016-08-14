@@ -54,25 +54,42 @@ namespace strata
 		  * Window. The Window itself has little meaning as only derived classes implement actual
 		  * functionality (e.g. displaying inventories or skill trees), and therefore creating
 		  * Window objects directly is normally not useful. */
-		class Window : public tiny::draw::TextBox
+		class Window : public tiny::draw::TextBox, public intf::UIListener
 		{
 			private:
 				tiny::draw::Colour colour; /**< Text colour. */
 				ScreenSquare * background; /**< Background texture object. */
+				bool visible;
 			protected:
 				intf::UIInterface * uiInterface;
+				intf::InputSet * inputKeys;
+				bool isVisible(void) const { return visible; }
+				void setVisible(bool v) { visible = v; background->setAlpha(v); }
 			public:
 				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio,
 						tiny::draw::Colour _colour = tiny::draw::Colour(255,255,255)) :
 					tiny::draw::TextBox(_fontTexture, _fontSize, _aspectRatio),
-					colour(_colour), uiInterface(_ui)
+					intf::UIListener(_ui),
+					colour(_colour), background(0), visible(true),
+					uiInterface(_ui), inputKeys(0)
 				{
+					inputKeys = uiInterface->subscribe(this);
+					inputKeys->addKey(SDLK_q);
 				}
 
 				void setBackground(ScreenSquare * ss) { background = ss; }
 
 				tiny::draw::Colour getColour(void) const { return colour; }
+
+				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				{
+					if(k == SDLK_q && (m & KMOD_CTRL))
+					{
+						setVisible(false);
+						clear();
+					}
+				}
 		};
 	}
 } // end namespace strata

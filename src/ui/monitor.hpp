@@ -45,6 +45,17 @@ namespace strata
 					title(_title), showFramesPerSecond(false),
 					showMemoryUsage(false)
 				{
+					inputKeys->addKey(SDLK_m);
+				}
+
+				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				{
+					Window::receiveKeyInput(k,m,isDown);
+
+					if(k == SDLK_m)
+					{
+						setVisible(true);
+					}
 				}
 
 				/** Update the text displayed by the monitor window.
@@ -55,6 +66,7 @@ namespace strata
 				void update(double dt)
 				{
 					clear();
+					if(!isVisible()) return;
 					if(title.length() > 0)
 					{
 						addTextFragment(title, getColour());

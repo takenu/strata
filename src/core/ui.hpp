@@ -70,6 +70,24 @@ namespace strata
 						unsigned int red, unsigned int green, unsigned int blue, std::string text);
 
 				void loadMonitorWindowAttribute(std::string attribute, std::string value);
+
+				/** Redirect InputInterpreter subscription requests. */
+				virtual intf::InputSet * subscribe(intf::UIListener * l)
+				{
+					return inputInterpreter.subscribe(l);
+				}
+
+				/** Redirect InputInterpreter unsubscription requests. */
+				virtual void unsubscribe(intf::UIListener * l)
+				{
+					inputInterpreter.unsubscribe(l);
+				}
+
+				/** Redirect InputInterpreter bump requests. */
+				virtual void bump(intf::UIListener * l)
+				{
+					inputInterpreter.bump(l);
+				}
 		};
 	}
 }
