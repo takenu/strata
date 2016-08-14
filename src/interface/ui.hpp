@@ -93,7 +93,7 @@ namespace strata
 				~UIListener(void) {}
 
 				/** Signal that a key is pressed down or no longer pressed down. */
-				virtual void receiveKeyInput(const int & k, bool isDown) = 0;
+				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
 		};
 
 		/** The UIInformation holds information to be used by the UI (for displaying
@@ -149,7 +149,7 @@ namespace strata
 				/** Get UI info from the UISource with identifier '_id'. */
 				UIInformation getUIInfo(std::string _id);
 
-				virtual void keyEvent(const int & k, bool) = 0;
+				virtual void keyEvent(const SDLKey & k, bool) = 0;
 		};
 	}
 }

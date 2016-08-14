@@ -31,13 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace strata::core;
 
 /** Interpret key press events. */
-void UIManager::keyEvent(const int & keyIndex, bool isDown)
+void UIManager::keyEvent(const SDLKey & keyIndex, bool isDown)
 {
-	const SDLKey k = static_cast<SDLKey>(keyIndex);
+	inputInterpreter.receiveInput(keyIndex, (isDown ? SDL_GetModState() : KMOD_NONE), isDown);
 
-	inputInterpreter.receiveInput(k, isDown);
-
-	if(k == SDLK_ESCAPE)
+	if(keyIndex == SDLK_ESCAPE)
 	{
 		std::cout << " Strata : Quitting... "<<std::endl;
 		applInterface->stop();

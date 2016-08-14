@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <SDL.h>
+
 #include <tiny/draw/textbox.h>
 #include <tiny/img/io/image.h>
 
@@ -55,7 +57,7 @@ namespace strata
 				{
 				}
 
-				virtual void keyEvent(const int & k, bool isDown);
+				virtual void keyEvent(const SDLKey & k, bool isDown);
 
 				void update(double);
 
