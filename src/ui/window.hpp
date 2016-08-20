@@ -37,7 +37,7 @@ namespace strata
 					tiny::draw::effects::ShowImage(), texture(_texture)
 				{
 					setImageTexture(*texture);
-					setAlpha(1);
+					setAlpha(0);
 				}
 
 				void setBoxDimensions(float left, float top, float right, float bottom)
@@ -53,43 +53,146 @@ namespace strata
 		  * window and manages the interaction with the renderable object used to visualize the
 		  * Window. The Window itself has little meaning as only derived classes implement actual
 		  * functionality (e.g. displaying inventories or skill trees), and therefore creating
-		  * Window objects directly is normally not useful. */
+		  * Window objects directly is normally not useful.
+		  * Windows have a few responsibilities of their own that are intended to be shared among
+		  * all windows. They manage opening and closing of the window, they encapsulate a large
+		  * part of the management of the InputSet that it inherits from the UIListener, and they
+		  * contain two text colours, both a default colour and a secondary colour that can be
+		  * used for e.g. highlighting.
+		  */
 		class Window : public tiny::draw::TextBox, public intf::UIListener
 		{
 			private:
 				tiny::draw::Colour colour; /**< Text colour. */
+				tiny::draw::Colour secondaryColour; /**< Secondary text colour. */
 				ScreenSquare * background; /**< Background texture object. */
+				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
+				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
 				bool visible;
+
+				/** Reset the Window's input, such that it only responds to its trigger keys. */
+				void resetInputKeys(void)
+				{
+					inputKeys->resetKeySet(triggerKeys);
+				}
+
+				/** Activate the entire 'activeKeys' key set as applicable window input. */
+				void activateInputKeys(void)
+				{
+					inputKeys->resetKeySet(activeKeys);
+					inputKeys->addKeySet(triggerKeys); // for de-activation of window
+				}
+
+				/** Receive key input on the Window. First the Window gets to do its generic
+				  * operations. If the Window is in visible mode and SDLK_ESCAPE is not
+				  * explicitly registered as an input key, then SDLK_ESCAPE will trigger a
+				  * window close. If SDLK_ESCAPE is registered, the only way for the window to
+				  * close is for the window itself to call setVisible(false). However, this
+				  * registration should be avoided whenever possible, in order to keep the
+				  * Window's close key as universal as possible.
+				  * Similar to SDLK_ESCAPE, every trigger key that activates a window can also
+				  * deactivate it. However, if the trigger key is part of the active keys, it
+				  * will not deactivate the window (unless the derived class explicitly defines
+				  * it to do so).
+				  */
+				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				{
+					if(isVisible())
+					{
+						if(isDown &&
+							   ((k == SDLK_ESCAPE && activeKeys.count(SDLK_ESCAPE)==0 ) ||
+								(triggerKeys.count(k) > activeKeys.count(k))))
+						{
+							setVisible(false);
+						}
+						else receiveWindowInput(k, m, isDown);
+					}
+					else if(isDown && !isVisible() && triggerKeys.count(k) > 0)
+					{
+						setVisible(true);
+					}
+					else if(isDown)
+					{
+						std::cout << " Window::receiveKeyInput() : Received unsubscribed info! "<<std::endl;
+					}
+				}
+
+				void setVisible(bool v)
+				{
+					visible = v;
+					background->setAlpha(v);
+					if(!isVisible())
+					{
+						clear();
+						resetInputKeys();
+					}
+					else
+					{
+						activateInputKeys();
+						inputKeys->addKey(SDLK_ESCAPE); // to allow closing via Esc
+						uiInterface->bump(this);
+					}
+				}
 			protected:
 				intf::UIInterface * uiInterface;
 				intf::InputSet * inputKeys;
-				bool isVisible(void) const { return visible; }
-				void setVisible(bool v) { visible = v; background->setAlpha(v); }
+				std::string title;
+				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
+				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
+				const tiny::draw::Colour & getSecondaryColour(void) const { return secondaryColour; }
+
+				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
+
+				void drawTitle(void)
+				{
+					if(title.length() > 0)
+					{
+						addTextFragment(title, getColour());
+						addNewline();
+					}
+				}
 			public:
 				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio,
-						tiny::draw::Colour _colour = tiny::draw::Colour(255,255,255)) :
+						tiny::draw::Colour _colour = tiny::draw::Colour(255,255,255),
+						tiny::draw::Colour _colour2 = tiny::draw::Colour(55,55,55),
+						std::string _title = "") :
 					tiny::draw::TextBox(_fontTexture, _fontSize, _aspectRatio),
 					intf::UIListener(_ui),
-					colour(_colour), background(0), visible(true),
-					uiInterface(_ui), inputKeys(0)
+					colour(_colour), secondaryColour(_colour2), background(0), visible(false),
+					uiInterface(_ui), inputKeys(0), title(_title)
 				{
 					inputKeys = uiInterface->subscribe(this);
-					inputKeys->addKey(SDLK_q);
+				}
+
+				/** Register a key as a trigger that opens this Window. This function also
+				  * pushes the trigger to the initial input key set. At a later stage, the
+				  * trigger keys can be re-set as the only keys whose input can trigger
+				  * activation of the Window, using resetInputKeys(). */
+				void registerTriggerKey(const SDLKey & k)
+				{
+					triggerKeys.emplace(k);
+					inputKeys->addKey(k); // Always add to input keys (also for deactivation)
+				}
+
+				/** Register a key as a trigger to be received by the Window when it is active.
+				  * The deriving Window must implement every registered active key in its
+				  * virtual receiveWindowInput() function.
+				  */
+				void registerActiveKey(const SDLKey &k)
+				{
+					activeKeys.emplace(k);
+					if(isVisible()) inputKeys->addKey(k);
+				}
+
+				void registerActiveKeySet(const std::set<SDLKey> &k)
+				{
+					activeKeys = uniteKeySets(k, activeKeys);
 				}
 
 				void setBackground(ScreenSquare * ss) { background = ss; }
 
 				tiny::draw::Colour getColour(void) const { return colour; }
-
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
-				{
-					if(k == SDLK_q && (m & KMOD_CTRL))
-					{
-						setVisible(false);
-						clear();
-					}
-				}
 		};
 	}
 } // end namespace strata

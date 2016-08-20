@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include "../interface/ui.hpp"
+#include "../interface/appl.hpp"
 
 #include "ui/window.hpp"
 
@@ -33,31 +34,34 @@ namespace strata
 		class MainMenu : public Window
 		{
 			private:
+				intf::ApplInterface * applInterface;
 				std::string title;
-				tiny::draw::Colour secondaryColour;
-			public:
-				MainMenu(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
-						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
-						std::string _title = "") :
-					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour),
-					title(_title), secondaryColour(55,55,0)
-				{
-					inputKeys->addKey(SDLK_ESCAPE);
-				}
-
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				virtual void receiveWindowInput(const SDLKey & k, const SDLMod &, bool isDown)
 				{
 					if(isDown)
 					{
-						if(k == SDLK_ESCAPE || k == SDLK_r)
+						if(k == SDLK_r)
 						{
-							if(!isVisible()) setVisible(true);
-							else setVisible(false);
+							setInvisible();
 						}
 						else if(k == SDLK_q)
 						{
+							std::cout << " MainMenu::receiveKeyInput() : Exiting! "<<std::endl;
+							applInterface->stop(); // Will set flag, exit takes place after returning
 						}
 					}
+				}
+			public:
+				MainMenu(intf::UIInterface * _ui, intf::ApplInterface * _appl,
+						tiny::draw::IconTexture2D * _fontTexture,
+						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
+						tiny::draw::Colour _colour2, std::string _title = "") :
+					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour, _colour2, _title),
+					applInterface(_appl)
+				{
+					registerTriggerKey(SDLK_ESCAPE);
+					registerActiveKey(SDLK_q);
+					registerActiveKey(SDLK_r);
 				}
 
 				/** Update the text displayed by the monitor window.
@@ -67,24 +71,15 @@ namespace strata
 				  * to add and remove renderable objects. */
 				void update(void)
 				{
-					clear();
 					if(!isVisible()) return;
-					if(title.length() > 0)
-					{
-						addTextFragment(title, getColour());
-						addNewline();
-					}
-					addTextFragment("Q", secondaryColour);
+					clear();
+					drawTitle();
+					addTextFragment("Q", getSecondaryColour());
 					addTextFragment("uit", getColour());
 					addNewline();
-					addTextFragment("R", secondaryColour);
+					addTextFragment("R", getSecondaryColour());
 					addTextFragment("esume", getColour());
 					addNewline();
-				}
-
-				void setSecondaryColour(tiny::draw::Colour _colour)
-				{
-					secondaryColour = _colour;
 				}
 		};
 	} // end namespace ui

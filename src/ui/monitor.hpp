@@ -34,28 +34,21 @@ namespace strata
 		class Monitor : public Window
 		{
 			private:
-				std::string title;
 				bool showFramesPerSecond;
 				bool showMemoryUsage;
 			public:
 				Monitor(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
-						std::string _title = "") :
-					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour),
-					title(_title), showFramesPerSecond(false),
+						tiny::draw::Colour _colour2, std::string _title = "") :
+					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour, _colour2, _title),
+					showFramesPerSecond(false),
 					showMemoryUsage(false)
 				{
-					inputKeys->addKey(SDLK_m);
+					registerTriggerKey(SDLK_m);
 				}
 
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				virtual void receiveWindowInput(const SDLKey &, const SDLMod &, bool)
 				{
-					Window::receiveKeyInput(k,m,isDown);
-
-					if(k == SDLK_m && isDown)
-					{
-						setVisible(true);
-					}
 				}
 
 				/** Update the text displayed by the monitor window.
@@ -65,13 +58,9 @@ namespace strata
 				  * to add and remove renderable objects. */
 				void update(double dt)
 				{
-					clear();
 					if(!isVisible()) return;
-					if(title.length() > 0)
-					{
-						addTextFragment(title, getColour());
-						addNewline();
-					}
+					clear();
+					drawTitle();
 					if(showFramesPerSecond)
 					{
 						std::stringstream ss;

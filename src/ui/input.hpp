@@ -122,6 +122,7 @@ namespace strata
 						if((*it)->isSubscribed(k))
 						{
 							(*it)->getListener()->receiveKeyInput(k, m, isDown);
+							break;
 						}
 				}
 		};

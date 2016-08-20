@@ -16,9 +16,12 @@ UIWindow = {
 	top = 1.0,
 	right = 1.0,
 	bottom = -1.0,
-	red = 40,
-	green = 100,
+	red = 40, -- Text colour (RGB)
+	green = 40,
 	blue = 40,
+	red2 = 100, -- Text colour 2 (RGB)
+	green2 = 40,
+	blue2 = 40,
 }
 
 function UIFont:new(o)
@@ -41,6 +44,14 @@ UIMonitorWindow = UIWindow:new{
 	bottom = 0.4,
 }
 
+UIMainMenuWindow = UIWindow:new{
+	title = "",
+	left = -0.3,
+	top = 0.5,
+	right = 0.3,
+	bottom = -0.5,
+}
+
 function UIFont:collectArgs(path)
 	local prefix = findprefix(path)
 	return self.fonttex == "" and "" or prefix .. self.fonttex, self.fontsize, self.fontaspectratio,self.fontpixels, self.fontresolution
@@ -48,6 +59,6 @@ end
 
 function UIWindow:collectArgs(path)
 	local prefix = findprefix(path)
-	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.title
+	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.red2, self.green2, self.blue2, self.title
 end
 

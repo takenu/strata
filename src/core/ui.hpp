@@ -47,13 +47,18 @@ namespace strata
 						unsigned int red;
 						unsigned int green;
 						unsigned int blue;
+						unsigned int red2;
+						unsigned int green2;
+						unsigned int blue2;
 						std::string title;
 
 						UIWindowBase(float _left, float _top, float _right, float _bottom,
 								unsigned int _red, unsigned int _green, unsigned int _blue,
+								unsigned int _red2, unsigned int _green2, unsigned int _blue2,
 								std::string _title) :
 							left(_left), top(_top), right(_right), bottom(_bottom),
-							red(_red), green(_green), blue(_blue), title(_title)
+							red(_red), green(_green), blue(_blue),
+							red2(_red2), green2(_green2), blue2(_blue2), title(_title)
 						{
 						}
 				};
@@ -80,7 +85,7 @@ namespace strata
 					intf::UIInterface(),
 					applInterface(_appl), renderInterface(_renderer),
 					inputInterpreter(),
-					baseWindow(-0.5f,0.5f,0.5f,-0.5f,35,35,35,std::string("")),
+					baseWindow(-0.5f,0.5f,0.5f,-0.5f,35,35,35,75,75,75,std::string("")),
 					fontTexture(0), monitor(0), mainMenu(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
@@ -95,7 +100,8 @@ namespace strata
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
 				void loadWindowBase(float left, float top, float right, float bottom,
-						unsigned int red, unsigned int green, unsigned int blue, std::string text);
+						unsigned int red, unsigned int green, unsigned int blue,
+						unsigned int red2, unsigned int green2, unsigned int blue2, std::string text);
 
 //				void loadMonitorWindow(float left, float top, float right, float bottom,
 //						unsigned int red, unsigned int green, unsigned int blue, std::string text);

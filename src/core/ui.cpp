@@ -35,11 +35,11 @@ void UIManager::keyEvent(const SDLKey & keyIndex, bool isDown)
 {
 	inputInterpreter.receiveInput(keyIndex, (isDown ? SDL_GetModState() : KMOD_NONE), isDown);
 
-	if(keyIndex == SDLK_ESCAPE)
+/*	if(keyIndex == SDLK_ESCAPE)
 	{
 		std::cout << " Strata : Quitting... "<<std::endl;
 		applInterface->stop();
-	}
+	}*/
 }
 
 void UIManager::registerLuaFunctions(sel::State & luaState)
@@ -54,7 +54,8 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 }
 
 void UIManager::loadWindowBase(float left, float top, float right, float bottom,
-		unsigned int r, unsigned int g, unsigned int b, std::string title)
+		unsigned int r, unsigned int g, unsigned int b,
+		unsigned int r2, unsigned int g2, unsigned int b2, std::string title)
 {
 	if(left < -1.0f || left > 1.0f || top < -1.0f || top > 1.0f
 			|| right < -1.0f || right > 1.0f || bottom < -1.0f || bottom > 1.0f)
@@ -63,16 +64,18 @@ void UIManager::loadWindowBase(float left, float top, float right, float bottom,
 			<<right<<","<<bottom<<" is invalid! "<<std::endl;
 		return;
 	}
-	baseWindow = UIWindowBase(left,top,right,bottom,r,g,b,title);
+	baseWindow = UIWindowBase(left,top,right,bottom,r,g,b,r2,g2,b2,title);
 }
 
 void UIManager::loadMainMenuWindow(void)
 {
 	UIWindowBase b = baseWindow;
-	mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this),
+	mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(b.red),
-				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)), b.title);
+				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
+			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
+				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
 	mainMenu->setBoxDimensions(b.left, b.top, b.right, b.bottom);
 	ui::ScreenSquare * mainMenuBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
 	mainMenuBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
@@ -87,7 +90,9 @@ void UIManager::loadMonitorWindow(void)
 	monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this),
 			fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(b.red),
-				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)), b.title);
+				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
+			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
+				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
 	monitor->setBoxDimensions(b.left, b.top, b.right, b.bottom);
 	ui::ScreenSquare * monitorBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
 	monitorBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
@@ -143,5 +148,11 @@ void UIManager::update(double dt)
 		monitor->update(dt);
 		reserve(monitor);
 		monitor->setText();
+	}
+	if(mainMenu)
+	{
+		mainMenu->update();
+		reserve(mainMenu);
+		mainMenu->setText();
 	}
 }
