@@ -35,6 +35,7 @@ namespace strata
 				virtual int getScreenWidth(void) const = 0;
 				virtual int getScreenHeight(void) const = 0;
 				virtual void stop(void) = 0;
+				virtual double getFPS(void) const = 0;
 		};
 	} // end namespace intf
 }

@@ -11,6 +11,14 @@ UIFont = {
 	fontresolution = 2048,
 }
 
+UIFlatTexture = {
+	size = 64,
+	red = 50,
+	green = 50,
+	blue = 50,
+	alpha = 100,
+}
+
 UIWindow = {
 	left = -1.0,
 	top = 1.0,
@@ -22,9 +30,16 @@ UIWindow = {
 	red2 = 100, -- Text colour 2 (RGB)
 	green2 = 40,
 	blue2 = 40,
+	id = "Default"
 }
 
 function UIFont:new(o)
+	o = o or {}
+	setmetatable(o,self)
+	self.__index = self
+	return o
+end
+function UIFlatTexture:new(o)
 	o = o or {}
 	setmetatable(o,self)
 	self.__index = self
@@ -42,6 +57,7 @@ UIMonitorWindow = UIWindow:new{
 	fps = false,
 	right = 0.0,
 	bottom = 0.4,
+	id = "Default Monitor",
 }
 
 UIMainMenuWindow = UIWindow:new{
@@ -50,6 +66,7 @@ UIMainMenuWindow = UIWindow:new{
 	top = 0.5,
 	right = 0.3,
 	bottom = -0.5,
+	id = "Default Main Menu",
 }
 
 function UIFont:collectArgs(path)
@@ -57,8 +74,11 @@ function UIFont:collectArgs(path)
 	return self.fonttex == "" and "" or prefix .. self.fonttex, self.fontsize, self.fontaspectratio,self.fontpixels, self.fontresolution
 end
 
+function UIFlatTexture:collectArgs(path)
+	return self.size, self.red, self.green, self.blue, self.alpha
+end
+
 function UIWindow:collectArgs(path)
-	local prefix = findprefix(path)
 	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.red2, self.green2, self.blue2, self.title
 end
 

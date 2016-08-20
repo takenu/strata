@@ -115,7 +115,7 @@ namespace strata
 				{
 					while(applManager.isRunning())
 					{
-						double dt = applManager.pollEvents();
+						double dt = applManager.update();
 						updateCamera(dt);
 						renderManager.update(dt);
 						uiManager.update(dt);

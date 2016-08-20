@@ -46,9 +46,10 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,
 			"loadFont", &UIManager::loadFont,
+			"loadFlatTexture", &UIManager::loadFlatTexture,
 			"loadWindowBase", &UIManager::loadWindowBase,
+			"loadWindowAttribute", &UIManager::loadWindowAttribute,
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
-			"loadMonitorWindowAttribute", &UIManager::loadMonitorWindowAttribute,
 			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
 			);
 }
@@ -67,45 +68,67 @@ void UIManager::loadWindowBase(float left, float top, float right, float bottom,
 	baseWindow = UIWindowBase(left,top,right,bottom,r,g,b,r2,g2,b2,title);
 }
 
-void UIManager::loadMainMenuWindow(void)
+void UIManager::loadMainMenuWindow(std::string id)
 {
+	if(windows.count(id) > 0)
+	{
+		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
+	}
 	UIWindowBase b = baseWindow;
-	mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
+	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(b.red),
 				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
 			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
 				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
-	mainMenu->setBoxDimensions(b.left, b.top, b.right, b.bottom);
-	ui::ScreenSquare * mainMenuBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
-	mainMenuBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
-	mainMenu->setBackground(mainMenuBackground);
-	renderInterface->addScreenRenderable(mainMenuBackground, false, false, tiny::draw::BlendMix);
+	windows.emplace(id, mainMenu);
+	mainMenu->setDimensions(b.left, b.top, b.right, b.bottom);
 	renderInterface->addScreenRenderable(mainMenu->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
-void UIManager::loadMonitorWindow(void)
+void UIManager::loadMonitorWindow(std::string id)
 {
 	UIWindowBase b = baseWindow;
-	monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this),
+	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture, defaultFontSize, defaultAspectRatio,
 			tiny::draw::Colour(static_cast<unsigned char>(b.red),
 				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
 			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
 				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
-	monitor->setBoxDimensions(b.left, b.top, b.right, b.bottom);
-	ui::ScreenSquare * monitorBackground = new ui::ScreenSquare( tools::createTestTextureAlpha(64, 50, 50, 50, 100) );
-	monitorBackground->setBoxDimensions(b.left, b.top, b.right, b.bottom);
-	monitor->setBackground(monitorBackground);
-	// Add background first, so that it goes behind the text
-	renderInterface->addScreenRenderable(monitorBackground, false, false, tiny::draw::BlendMix);
+	windows.emplace(id, monitor);
+	monitor->setDimensions(b.left, b.top, b.right, b.bottom);
 	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
-void UIManager::loadMonitorWindowAttribute(std::string attribute, std::string value)
+void UIManager::loadFlatTexture(std::string target, unsigned int size, unsigned int red,
+		unsigned int green, unsigned int blue, unsigned int alpha)
 {
-	if(attribute == "fps") monitor->displayFPS( tool::toBoolean(value) );
-	else if(attribute == "memusage") monitor->displayMemoryUsage( tool::toBoolean(value) );
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window) std::cout << " loadFlatTexture() : Can't load texture for window "<<target<<"!"<<std::endl;
+	else
+	{
+		ui::ScreenSquare * background = new ui::ScreenSquare( tools::createTestTextureAlpha(
+					size, red, green, blue, alpha) );
+		window->setBackground(background);
+		renderInterface->addScreenRenderable(background, false, false, tiny::draw::BlendMix);
+		// Re-add renderable to ensure that the rest of the window goes before the background.
+		// NOTE: This often isn't necessary since reserve() tends to re-add the text screen renderable.
+		// But it is in principle possible to first set the text and then add the background, and in that
+		// situation it is necessary to re-add the text to get it in front of the background.
+		renderInterface->freeScreenRenderable(window->getRenderable());
+		renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
+	}
+}
+
+void UIManager::loadWindowAttribute(std::string target, std::string attribute, std::string value)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadMonitorWindowAttribute() : Can't load "<<attribute<<"="<<value
+			<< " for window "<<target<<"!"<<std::endl;
+	}
+	else window->setAttribute(attribute, value);
 }
 
 void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRatio,
@@ -141,18 +164,12 @@ void UIManager::reserve(ui::Window * window)
 	else if(oldTextBox) std::cout << " UIManager::reserve() : ERROR: No new renderable! "<<std::endl;
 }
 
-void UIManager::update(double dt)
+void UIManager::update(double)
 {
-	if(monitor)
+	for(std::map<std::string, ui::Window*>::iterator it = windows.begin(); it != windows.end(); it++)
 	{
-		monitor->update(dt);
-		reserve(monitor);
-		monitor->setText();
-	}
-	if(mainMenu)
-	{
-		mainMenu->update();
-		reserve(mainMenu);
-		mainMenu->setText();
+		it->second->update();
+		reserve(it->second);
+		it->second->setText();
 	}
 }

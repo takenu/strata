@@ -69,6 +69,7 @@ namespace strata
 				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
 				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
 				bool visible;
+				tiny::vec4 windowBox; /**< The box that the window is inside of. */
 
 				/** Reset the Window's input, such that it only responds to its trigger keys. */
 				void resetInputKeys(void)
@@ -190,9 +191,27 @@ namespace strata
 					activeKeys = uniteKeySets(k, activeKeys);
 				}
 
-				void setBackground(ScreenSquare * ss) { background = ss; }
+				void setBackground(ScreenSquare * ss)
+				{
+					background = ss;
+					background->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+				}
+
+				/** Set the dimensions of the Window. */
+				void setDimensions(float _left, float _top, float _right, float _bottom)
+				{
+					windowBox = tiny::vec4(_left, _top, _right, _bottom);
+					setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+				}
+
+				virtual void update(void) = 0;
 
 				tiny::draw::Colour getColour(void) const { return colour; }
+
+				/** Allow setting of arbitrary Lua-derived attributes through key-value pairs.
+				  * Classes deriving the Window must implement all their customizable attributes
+				  * through interpretation of the information passed through this function. */
+				virtual void setAttribute(std::string attribute, std::string value) = 0;
 		};
 	}
 } // end namespace strata

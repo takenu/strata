@@ -33,6 +33,8 @@ namespace strata
 		{
 			private:
 				intf::UIInterface * uiInterface;
+
+				double dt; /**< Time elapsed between last two updates. */
 			public:
 				ApplManager(void) :
 					intf::ApplInterface(),
@@ -63,6 +65,15 @@ namespace strata
 				virtual void keyUpCallback(const int &k)
 				{
 					uiInterface->keyEvent(static_cast<SDLKey>(k), false);
+				}
+
+				/** Calculate current fps count. */
+				virtual double getFPS(void) const { return dt; }
+
+				double update(void)
+				{
+					dt = pollEvents();
+					return dt;
 				}
 		};
 	}

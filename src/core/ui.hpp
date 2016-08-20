@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <map>
+
 #include <SDL.h>
 
 #include <tiny/draw/textbox.h>
@@ -71,9 +73,7 @@ namespace strata
 				UIWindowBase baseWindow;
 
 				tiny::draw::IconTexture2D * fontTexture;
-				std::vector<ui::Window*> windows;
-				ui::Monitor * monitor;
-				ui::MainMenu * mainMenu;
+				std::map<std::string, ui::Window*> windows;
 				float defaultFontSize;
 				float defaultAspectRatio;
 
@@ -86,7 +86,7 @@ namespace strata
 					applInterface(_appl), renderInterface(_renderer),
 					inputInterpreter(),
 					baseWindow(-0.5f,0.5f,0.5f,-0.5f,35,35,35,75,75,75,std::string("")),
-					fontTexture(0), monitor(0), mainMenu(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
+					fontTexture(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
 
@@ -99,16 +99,18 @@ namespace strata
 
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
+				void loadFlatTexture(std::string target, unsigned int size, unsigned int red,
+						unsigned int green, unsigned int blue, unsigned int alpha);
+
 				void loadWindowBase(float left, float top, float right, float bottom,
 						unsigned int red, unsigned int green, unsigned int blue,
 						unsigned int red2, unsigned int green2, unsigned int blue2, std::string text);
 
-//				void loadMonitorWindow(float left, float top, float right, float bottom,
-//						unsigned int red, unsigned int green, unsigned int blue, std::string text);
-				void loadMonitorWindow(void);
-				void loadMainMenuWindow(void);
+				void loadMonitorWindow(std::string id);
+				void loadMainMenuWindow(std::string id);
 
-				void loadMonitorWindowAttribute(std::string attribute, std::string value);
+				/** Load an attribute-value pair for the Window whose key in the 'windows' map is 'target'. */
+				void loadWindowAttribute(std::string target, std::string attribute, std::string value);
 
 				/** Redirect InputInterpreter subscription requests. */
 				virtual intf::InputSet * subscribe(intf::UIListener * l)

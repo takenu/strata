@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sstream>
 
+#include "../tools/convertstring.hpp"
+
 #include "../interface/ui.hpp"
+#include "../interface/appl.hpp"
 
 #include "ui/window.hpp"
 
@@ -34,13 +37,16 @@ namespace strata
 		class Monitor : public Window
 		{
 			private:
+				intf::ApplInterface * applInterface;
 				bool showFramesPerSecond;
 				bool showMemoryUsage;
 			public:
-				Monitor(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
+				Monitor(intf::UIInterface * _ui, intf::ApplInterface * _appl,
+						tiny::draw::IconTexture2D * _fontTexture,
 						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
 						tiny::draw::Colour _colour2, std::string _title = "") :
 					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour, _colour2, _title),
+					applInterface(_appl),
 					showFramesPerSecond(false),
 					showMemoryUsage(false)
 				{
@@ -56,7 +62,7 @@ namespace strata
 				  * here, we do not use setText(), which instead must be
 				  * done by whoever created the Monitor and has the ability
 				  * to add and remove renderable objects. */
-				void update(double dt)
+				virtual void update(void)
 				{
 					if(!isVisible()) return;
 					clear();
@@ -64,7 +70,7 @@ namespace strata
 					if(showFramesPerSecond)
 					{
 						std::stringstream ss;
-						ss << "Running at "<<1.0/dt<<" fps.";
+						ss << "Running at "<<1.0/applInterface->getFPS()<<" fps.";
 						addTextFragment(ss.str(), getColour());
 						addNewline();
 					}
@@ -79,11 +85,11 @@ namespace strata
 					}
 				}
 
-				/** Show/hide frames per second. */
-				void displayFPS(bool b) { showFramesPerSecond = b; }
-
-				/** Show/hide memory usage. */
-				void displayMemoryUsage(bool b) { showMemoryUsage = b; }
+				virtual void setAttribute(std::string attribute, std::string value)
+				{
+					if(attribute=="fps") showFramesPerSecond = tool::toBoolean(value);
+					if(attribute=="memusage") showMemoryUsage = tool::toBoolean(value);
+				}
 		};
 	} // end namespace ui
 } // end namespace strata
