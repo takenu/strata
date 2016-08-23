@@ -34,12 +34,6 @@ using namespace strata::core;
 void UIManager::keyEvent(const SDLKey & keyIndex, bool isDown)
 {
 	inputInterpreter.receiveInput(keyIndex, (isDown ? SDL_GetModState() : KMOD_NONE), isDown);
-
-/*	if(keyIndex == SDLK_ESCAPE)
-	{
-		std::cout << " Strata : Quitting... "<<std::endl;
-		applInterface->stop();
-	}*/
 }
 
 void UIManager::registerLuaFunctions(sel::State & luaState)
@@ -47,25 +41,12 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 	luaState["ui"].SetObj(*this,
 			"loadFont", &UIManager::loadFont,
 			"loadFlatTexture", &UIManager::loadFlatTexture,
-			"loadWindowBase", &UIManager::loadWindowBase,
 			"loadWindowAttribute", &UIManager::loadWindowAttribute,
+			"loadWindowFontColour", &UIManager::loadWindowFontColour,
+			"loadWindowDimensions", &UIManager::loadWindowDimensions,
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
 			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
 			);
-}
-
-void UIManager::loadWindowBase(float left, float top, float right, float bottom,
-		unsigned int r, unsigned int g, unsigned int b,
-		unsigned int r2, unsigned int g2, unsigned int b2, std::string title)
-{
-	if(left < -1.0f || left > 1.0f || top < -1.0f || top > 1.0f
-			|| right < -1.0f || right > 1.0f || bottom < -1.0f || bottom > 1.0f)
-	{
-		std::cerr << " UIManager::loadMainMenuWindow() : Window box "<<left<<","<<top<<","
-			<<right<<","<<bottom<<" is invalid! "<<std::endl;
-		return;
-	}
-	baseWindow = UIWindowBase(left,top,right,bottom,r,g,b,r2,g2,b2,title);
 }
 
 void UIManager::loadMainMenuWindow(std::string id)
@@ -74,29 +55,21 @@ void UIManager::loadMainMenuWindow(std::string id)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
 	}
-	UIWindowBase b = baseWindow;
 	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
-			fontTexture, defaultFontSize, defaultAspectRatio,
-			tiny::draw::Colour(static_cast<unsigned char>(b.red),
-				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
-			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
-				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
+			fontTexture);
 	windows.emplace(id, mainMenu);
-	mainMenu->setDimensions(b.left, b.top, b.right, b.bottom);
 	renderInterface->addScreenRenderable(mainMenu->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
 void UIManager::loadMonitorWindow(std::string id)
 {
-	UIWindowBase b = baseWindow;
+	if(windows.count(id) > 0)
+	{
+		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
+	}
 	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
-			fontTexture, defaultFontSize, defaultAspectRatio,
-			tiny::draw::Colour(static_cast<unsigned char>(b.red),
-				static_cast<unsigned char>(b.green),static_cast<unsigned char>(b.blue)),
-			tiny::draw::Colour(static_cast<unsigned char>(b.red2),
-				static_cast<unsigned char>(b.green2),static_cast<unsigned char>(b.blue2)), b.title);
+			fontTexture);
 	windows.emplace(id, monitor);
-	monitor->setDimensions(b.left, b.top, b.right, b.bottom);
 	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
@@ -118,6 +91,30 @@ void UIManager::loadFlatTexture(std::string target, unsigned int size, unsigned 
 		renderInterface->freeScreenRenderable(window->getRenderable());
 		renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
 	}
+}
+
+void UIManager::loadWindowFontColour(std::string target, std::string attribute,
+		unsigned int red, unsigned int green, unsigned int blue)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadMonitorWindowFontColour() : Can't load "<<attribute<<"=("
+			<<red<<","<<green<<","<<blue<<") for window "<<target<<"!"<<std::endl;
+	}
+	else window->setFontColour(attribute, tiny::draw::Colour(red,green,blue));
+}
+
+void UIManager::loadWindowDimensions(std::string target, std::string attribute,
+		float left, float top, float right, float bottom)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadMonitorWindowDimensions() : Can't load "<<attribute<<"=("
+			<<left<<","<<top<<","<<right<<","<<bottom<<") for window "<<target<<"!"<<std::endl;
+	}
+	else window->setDimensions(attribute, left, top, right, bottom);
 }
 
 void UIManager::loadWindowAttribute(std::string target, std::string attribute, std::string value)

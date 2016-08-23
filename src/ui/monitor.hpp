@@ -42,10 +42,8 @@ namespace strata
 				bool showMemoryUsage;
 			public:
 				Monitor(intf::UIInterface * _ui, intf::ApplInterface * _appl,
-						tiny::draw::IconTexture2D * _fontTexture,
-						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
-						tiny::draw::Colour _colour2, std::string _title = "") :
-					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour, _colour2, _title),
+						tiny::draw::IconTexture2D * _fontTexture) :
+					Window(_ui, _fontTexture),
 					applInterface(_appl),
 					showFramesPerSecond(false),
 					showMemoryUsage(false)
@@ -85,7 +83,7 @@ namespace strata
 					}
 				}
 
-				virtual void setAttribute(std::string attribute, std::string value)
+				virtual void setWindowAttribute(std::string attribute, std::string value)
 				{
 					if(attribute=="fps") showFramesPerSecond = tool::toBoolean(value);
 					if(attribute=="memusage") showMemoryUsage = tool::toBoolean(value);

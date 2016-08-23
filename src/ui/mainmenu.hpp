@@ -53,11 +53,8 @@ namespace strata
 				}
 			public:
 				MainMenu(intf::UIInterface * _ui, intf::ApplInterface * _appl,
-						tiny::draw::IconTexture2D * _fontTexture,
-						float _fontSize, float _aspectRatio, tiny::draw::Colour _colour,
-						tiny::draw::Colour _colour2, std::string _title = "") :
-					Window(_ui, _fontTexture, _fontSize, _aspectRatio, _colour, _colour2, _title),
-					applInterface(_appl)
+						tiny::draw::IconTexture2D * _fontTexture) :
+					Window(_ui, _fontTexture), applInterface(_appl)
 				{
 					registerTriggerKey(SDLK_ESCAPE);
 					registerActiveKey(SDLK_q);
@@ -83,7 +80,7 @@ namespace strata
 				}
 
 				/** Allow setting of attributes. */
-				virtual void setAttribute(std::string, std::string)
+				virtual void setWindowAttribute(std::string, std::string)
 				{
 				}
 		};

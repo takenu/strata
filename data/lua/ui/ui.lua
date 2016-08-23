@@ -13,10 +13,7 @@ function ui_ui(path)
 		fps = "true",
 		memusage = "true",
 	}
-	ui.loadWindowBase(w:collectArgs(path))
 	ui.loadMonitorWindow(w.id)
---	ui.loadMonitorWindowAttribute("fps", w.fps)
---	ui.loadMonitorWindowAttribute("memusage", w.memusage)
 	ui.loadWindowAttribute("Chathran Strata Monitor", "fps", w.fps)
 	ui.loadWindowAttribute("Chathran Strata Monitor", "memusage", w.memusage)
 	local wt = UIFlatTexture:new{
@@ -26,6 +23,8 @@ function ui_ui(path)
 		alpha = 60,
 	}
 	ui.loadFlatTexture(w.title, wt:collectArgs(path))
+	ui.loadWindowDimensions(w.title, "box", w:getWindowBox())
+	ui.loadWindowFontColour(w.title, "fontcolour", w:getFontColour())
 	local x = UIMainMenuWindow:new{
 		red2 = 40,
 		green2 = 200,
@@ -33,7 +32,6 @@ function ui_ui(path)
 		title = "Strata Main Menu",
 		id = "Strata Main Menu",
 	}
-	ui.loadWindowBase(x:collectArgs(path))
 	ui.loadMainMenuWindow(x.id)
 	local xt = UIFlatTexture:new{
 		red = 100,
@@ -42,5 +40,8 @@ function ui_ui(path)
 		alpha = 150,
 	}
 	ui.loadFlatTexture(x.title, xt:collectArgs(path))
+	ui.loadWindowDimensions(x.title, "box", x:getWindowBox())
+	ui.loadWindowFontColour(x.title, "fontcolour", x:getFontColour())
+	ui.loadWindowFontColour(x.title, "fontcolour2", x:getFontColour2())
 end
 

@@ -154,13 +154,11 @@ namespace strata
 				}
 			public:
 				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
-						float _fontSize, float _aspectRatio,
-						tiny::draw::Colour _colour = tiny::draw::Colour(255,255,255),
-						tiny::draw::Colour _colour2 = tiny::draw::Colour(55,55,55),
 						std::string _title = "") :
-					tiny::draw::TextBox(_fontTexture, _fontSize, _aspectRatio),
+					tiny::draw::TextBox(_fontTexture, 0.1f, 2.0f),
 					intf::UIListener(_ui),
-					colour(_colour), secondaryColour(_colour2), background(0), visible(false),
+					colour(0,0,0), secondaryColour(100,100,100),
+					background(0), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)
 				{
 					inputKeys = uiInterface->subscribe(this);
@@ -197,13 +195,6 @@ namespace strata
 					background->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
 				}
 
-				/** Set the dimensions of the Window. */
-				void setDimensions(float _left, float _top, float _right, float _bottom)
-				{
-					windowBox = tiny::vec4(_left, _top, _right, _bottom);
-					setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
-				}
-
 				virtual void update(void) = 0;
 
 				tiny::draw::Colour getColour(void) const { return colour; }
@@ -211,7 +202,52 @@ namespace strata
 				/** Allow setting of arbitrary Lua-derived attributes through key-value pairs.
 				  * Classes deriving the Window must implement all their customizable attributes
 				  * through interpretation of the information passed through this function. */
-				virtual void setAttribute(std::string attribute, std::string value) = 0;
+				void setAttribute(std::string attribute, std::string value)
+				{
+					if(attribute == "fontsize") {} // TODO: Add setFontSize to Textbox!
+					else if(attribute == "aspectratio") {} // TODO: add setAspectRatio to Textbox
+					else setWindowAttribute(attribute, value);
+				}
+
+				/** Set attributes not defined by the Window itself but by the derived class. */
+				virtual void setWindowAttribute(std::string attribute, std::string value) = 0;
+
+				/** Allow setting of font colours. */
+				virtual void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
+				{
+					if(attribute == "fontcolour") colour = _colour;
+					else if(attribute == "fontcolour2") secondaryColour = _colour;
+					else setWindowFontColour(attribute, _colour);
+				}
+
+				/** Set a window font colour not already implemented. Given that many windows won't
+				  * need more than one or two colours, this function is merely virtual (not purely
+				  * so) and one does not need to override it. */
+				virtual void setWindowFontColour(std::string, const tiny::draw::Colour &)
+				{
+				}
+
+				/** Allow modifying the dimensions of the Textbox. */
+				void setDimensions(std::string attribute, float left, float top, float right, float bottom)
+				{
+					if(attribute == "box")
+					{
+						windowBox = tiny::vec4(left, top, right, bottom);
+						setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+						if(background) background->setBoxDimensions(
+								windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+					}
+					else setWindowDimensions(attribute, left, top, right, bottom);
+				}
+
+				/** A function for child windows to receive instructions as to their dimensions.
+				  * The arguments are: a string specifying the recipient of the dimensions, and
+				  * a pair of 2D points representing the upper left and lower right of a square
+				  * on the screen (which runs from (-1, 1) to (1,-1)).
+				  */
+				virtual void setWindowDimensions(std::string, float, float, float, float)
+				{
+				}
 		};
 	}
 } // end namespace strata
