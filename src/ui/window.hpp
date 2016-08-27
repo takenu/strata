@@ -204,8 +204,8 @@ namespace strata
 				  * through interpretation of the information passed through this function. */
 				void setAttribute(std::string attribute, std::string value)
 				{
-					if(attribute == "fontsize") {} // TODO: Add setFontSize to Textbox!
-					else if(attribute == "aspectratio") {} // TODO: add setAspectRatio to Textbox
+					if(attribute == "fontsize") setFontSize( tool::toFloat(value) );
+					else if(attribute == "fontaspectratio") setAspectRatio( tool::toFloat(value) );
 					else setWindowAttribute(attribute, value);
 				}
 

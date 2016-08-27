@@ -14,6 +14,8 @@ function ui_ui(path)
 		memusage = "true",
 	}
 	ui.loadMonitorWindow(w.id)
+	ui.loadWindowAttribute("Chathran Strata Monitor", "fontsize", v.fontsize)
+	ui.loadWindowAttribute("Chathran Strata Monitor", "fontaspectratio", v.fontaspectratio)
 	ui.loadWindowAttribute("Chathran Strata Monitor", "fps", w.fps)
 	ui.loadWindowAttribute("Chathran Strata Monitor", "memusage", w.memusage)
 	local wt = UIFlatTexture:new{
@@ -33,6 +35,8 @@ function ui_ui(path)
 		id = "Strata Main Menu",
 	}
 	ui.loadMainMenuWindow(x.id)
+	ui.loadWindowAttribute("Strata Main Menu", "fontsize", v.fontsize)
+	ui.loadWindowAttribute("Strata Main Menu", "fontaspectratio", v.fontaspectratio)
 	local xt = UIFlatTexture:new{
 		red = 100,
 		green = 50,
