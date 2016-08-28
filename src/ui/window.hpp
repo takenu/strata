@@ -213,7 +213,7 @@ namespace strata
 				virtual void setWindowAttribute(std::string attribute, std::string value) = 0;
 
 				/** Allow setting of font colours. */
-				virtual void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
+				void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
 				{
 					if(attribute == "fontcolour") colour = _colour;
 					else if(attribute == "fontcolour2") secondaryColour = _colour;

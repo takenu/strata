@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "keys.hpp"
 
+namespace sel { class State; }
+
 namespace strata
 {
 	namespace intf
@@ -150,6 +152,8 @@ namespace strata
 				UIInformation getUIInfo(std::string _id);
 
 				virtual void keyEvent(const SDLKey & k, bool) = 0;
+
+				virtual void registerLuaFunctions(sel::State & luaState) = 0;
 
 				/** Subscribe the UIListener to input received by the application. The InputSet
 				  * must be filled by the UIListener, and specifies which input the UIListener

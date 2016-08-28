@@ -28,10 +28,11 @@ extern "C" {
 }
 
 #include "appl.hpp"
-#include "ui.hpp"
+#include "lua.hpp"
 #include "render.hpp"
 #include "sky.hpp"
 #include "terrain.hpp"
+#include "ui.hpp"
 
 namespace strata
 {
@@ -45,8 +46,7 @@ namespace strata
 				UIManager uiManager; /**< Manage user input and user interface. */
 				TerrainManager terrainManager; /**< Manage terrain. */
 				SkyManager skyManager; /**< Manage sky and weather. */
-
-				sel::State luaState; /**< A Lua state. */
+				LuaManager luaManager; /**< Manage sky and weather. */
 			public:
 				/** Construct the Game's primary components.
 				  * The order of construction is of paramount importance. The first
@@ -70,36 +70,19 @@ namespace strata
 					uiManager(static_cast<intf::ApplInterface*>(&applManager),static_cast<intf::RenderInterface*>(&renderManager)),
 					terrainManager(static_cast<intf::RenderInterface*>(&renderManager),static_cast<intf::UIInterface*>(&uiManager)),
 					skyManager(static_cast<intf::RenderInterface*>(&renderManager)),
-					luaState(true)
+					luaManager(static_cast<intf::RenderInterface*>(&renderManager),
+							static_cast<intf::UIInterface*>(&uiManager),
+							static_cast<intf::TerrainInterface*>(&terrainManager),
+							static_cast<intf::SkyInterface*>(&skyManager))
 				{
 					applManager.registerUIInterface(static_cast<intf::UIInterface*>(&uiManager));
-					registerLuaFunctions();
-					composeWorld();
+					luaManager.registerLuaFunctions();
+					luaManager.composeWorld();
 					mainLoop();
-				}
-
-				/** Register functions that Lua can call. Note that due to Chathran's O-O
-				  * nature the functions to be registered are not the usual static functions
-				  * but instead member functions of instantiated classes. This means that
-				  * during the lifetime of Lua these instantiations must not be deleted.
-				  * Therefore it's probably best to only register member functions of the
-				  * Manager instances of the Game class. */
-				void registerLuaFunctions(void)
-				{
-					skyManager.registerLuaFunctions(luaState);
-					uiManager.registerLuaFunctions(luaState);
-					terrainManager.registerLuaFunctions(luaState);
 				}
 
 				~Game(void)
 				{
-				}
-
-				/** Initialize the world using Lua scripts. */
-				void composeWorld(void)
-				{
-					luaState.Load(DATA_DIRECTORY + "lua/start.lua");
-					luaState["start"]();
 				}
 
 				void updateCamera(double dt)

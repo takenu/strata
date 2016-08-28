@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 
 #include "../interface/render.hpp"
+#include "../interface/sky.hpp"
 
 namespace sel { class State; }
 
@@ -29,7 +30,7 @@ namespace strata
 {
 	namespace core
 	{
-		class SkyManager
+		class SkyManager : public intf::SkyInterface
 		{
 			private:
 				intf::RenderInterface * renderer;
@@ -62,7 +63,7 @@ namespace strata
 					sunSky->setSun(tiny::vec3(sin(sunAngle), cos(sunAngle), 0.5f));
 				}
 
-				void registerLuaFunctions(sel::State & luaState);
+				virtual void registerLuaFunctions(sel::State & luaState);
 		};
 	}
 }

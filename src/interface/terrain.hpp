@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 #include <tiny/draw/texture2d.h>
 
+namespace sel { class State; }
+
 namespace strata
 {
 	namespace intf
@@ -46,6 +48,8 @@ namespace strata
 				~TerrainInterface(void) {}
 
 				float getHeight(tiny::vec3 pos) { return getVerticalHeight( pos ); }
+
+				virtual void registerLuaFunctions(sel::State & luaState) = 0;
 
 				std::function<float(tiny::vec3)> getHeightFunc(void);
 		};

@@ -54,7 +54,7 @@ namespace strata
 				}
 
 				/** Register Lua functions used for creating the Terrain. */
-				void registerLuaFunctions(sel::State & luaState);
+				virtual void registerLuaFunctions(sel::State & luaState);
 
 				void makeFlatLayer(float terrainSize, float maxMeshSize, unsigned int meshSubdivisions, float height);
 				void addLayer(float thickness);

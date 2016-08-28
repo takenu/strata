@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../ui/monitor.hpp"
 #include "../ui/mainmenu.hpp"
+#include "../ui/console.hpp"
 #include "../ui/input.hpp"
 
 #include "../interface/appl.hpp"
@@ -66,7 +67,7 @@ namespace strata
 				void update(double);
 
 				/** Register Lua functions used for composing the UI. */
-				void registerLuaFunctions(sel::State & luaState);
+				virtual void registerLuaFunctions(sel::State & luaState);
 
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
