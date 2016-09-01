@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../tools/convertstring.hpp"
 
-#include "../interface/ui.hpp"
-#include "../interface/keys.hpp"
 #include "../interface/appl.hpp"
+#include "../interface/keys.hpp"
+#include "../interface/lua.hpp"
+#include "../interface/ui.hpp"
 
 #include "ui/window.hpp"
 
@@ -34,7 +35,7 @@ namespace strata
 		class Console : public Window
 		{
 			private:
-				intf::ApplInterface * applInterface;
+				intf::LuaInterface * luaInterface;
 
 				/** This string can contain an arbitrary chunk of executable Lua code. */
 				std::string command;
@@ -42,7 +43,7 @@ namespace strata
 				/** Execute currently entered Lua code, and hide the Console. */
 				void executeAndHide(void)
 				{
-//					applInterface->executeLua(command);
+					if(luaInterface) luaInterface->executeLua(command);
 					command.clear();
 				}
 
@@ -56,10 +57,10 @@ namespace strata
 					else return static_cast<unsigned char>(k);
 				}
 			public:
-				Console(intf::UIInterface * _ui, intf::ApplInterface * _appl,
+				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
 					Window(_ui, _fontTexture),
-					applInterface(_appl)
+					luaInterface(_lua)
 				{
 					registerTriggerKey(SDLK_RETURN);
 					registerActiveKeySet( keySetAlphanumeric() );

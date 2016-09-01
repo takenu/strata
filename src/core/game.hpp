@@ -78,6 +78,7 @@ namespace strata
 					applManager.registerUIInterface(static_cast<intf::UIInterface*>(&uiManager));
 					luaManager.registerLuaFunctions();
 					luaManager.composeWorld();
+					uiManager.registerLuaInterface(static_cast<intf::LuaInterface*>(&luaManager));
 					mainLoop();
 				}
 

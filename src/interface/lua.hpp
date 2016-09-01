@@ -30,6 +30,7 @@ namespace strata
 				LuaInterface(void) {}
 				~LuaInterface(void) {}
 			public:
+				virtual void executeLua(std::string) = 0;
 		};
 	}
 }

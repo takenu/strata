@@ -79,6 +79,13 @@ namespace strata
 					uiInterface->registerLuaFunctions(luaState);
 					terrainInterface->registerLuaFunctions(luaState);
 				}
+
+				/** Execute an arbitrary chunk of Lua code. This code can reference anything that has
+				  * been previously registered to Lua. */
+				virtual void executeLua(std::string command)
+				{
+					luaState(command.c_str());
+				}
 		};
 	}
 }

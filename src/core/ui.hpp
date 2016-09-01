@@ -24,12 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/textbox.h>
 #include <tiny/img/io/image.h>
 
-#include "../ui/monitor.hpp"
-#include "../ui/mainmenu.hpp"
 #include "../ui/console.hpp"
 #include "../ui/input.hpp"
+#include "../ui/mainmenu.hpp"
+#include "../ui/monitor.hpp"
 
 #include "../interface/appl.hpp"
+#include "../interface/lua.hpp"
 #include "../interface/render.hpp"
 
 namespace strata
@@ -42,6 +43,7 @@ namespace strata
 			private:
 				intf::ApplInterface * applInterface;
 				intf::RenderInterface * renderInterface;
+				intf::LuaInterface * luaInterface;
 
 				ui::InputInterpreter inputInterpreter;
 
@@ -56,7 +58,7 @@ namespace strata
 			public:
 				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) :
 					intf::UIInterface(),
-					applInterface(_appl), renderInterface(_renderer),
+					applInterface(_appl), renderInterface(_renderer), luaInterface(0),
 					inputInterpreter(),
 					fontTexture(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
@@ -65,6 +67,12 @@ namespace strata
 				virtual void keyEvent(const SDLKey & k, bool isDown);
 
 				void update(double);
+
+				/** Register the Lua manager, such that the UI can be used to execute Lua code. */
+				void registerLuaInterface(intf::LuaInterface* _luaInterface)
+				{
+					luaInterface = _luaInterface;
+				}
 
 				/** Register Lua functions used for composing the UI. */
 				virtual void registerLuaFunctions(sel::State & luaState);
