@@ -43,19 +43,25 @@ namespace strata
 				/** Execute currently entered Lua code, and hide the Console. */
 				void executeAndHide(void)
 				{
-					if(luaInterface) luaInterface->executeLua(command);
+					std::cout << " lua interface = "<<luaInterface<<std::endl;
+					if(luaInterface && command.size() > 0)
+					{
+						std::cout << " Console: Execute Lua: "<<command<<std::endl;
+						luaInterface->executeLua(command);
+					}
 					command.clear();
+					setInvisible();
 				}
 
 				/** Convert SDL input into characters. */
-				unsigned char convertSDLinput(const SDLKey & k, const SDLMod & m)
+/*				unsigned char convertSDLinput(const SDLKey & k, const SDLMod & m)
 				{
 					if(static_cast<unsigned char>(k) >= 'a' && static_cast<unsigned char>(k) <= 'z'
 							&& (   ((m & KMOD_SHIFT) && !(m & KMOD_CAPS))
 								|| ((m & KMOD_CAPS) && !(m & KMOD_SHIFT)) ))
 						return static_cast<unsigned char>(k) + ('A' - 'a');
 					else return static_cast<unsigned char>(k);
-				}
+				}*/
 			public:
 				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
@@ -63,16 +69,18 @@ namespace strata
 					luaInterface(_lua)
 				{
 					registerTriggerKey(SDLK_RETURN);
-					registerActiveKeySet( keySetAlphanumeric() );
+					registerActiveKeySet( keySetTextComplete() );
 					registerActiveKey(SDLK_RETURN);
 				}
 
 				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown)
 				{
+					std::cout << " Console : receive "<<k<<std::endl;
 					if(isDown)
 					{
 						if(k == SDLK_RETURN) executeAndHide();
 						else command.push_back( convertSDLinput(k,m) );
+						std::cout << " Console : Command = '"<<command<<"'"<<std::endl;
 					}
 				}
 

@@ -24,10 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/textbox.h>
 #include <tiny/img/io/image.h>
 
-#include "../ui/console.hpp"
 #include "../ui/input.hpp"
-#include "../ui/mainmenu.hpp"
-#include "../ui/monitor.hpp"
+#include "../ui/window.hpp"
 
 #include "../interface/appl.hpp"
 #include "../interface/lua.hpp"
@@ -82,6 +80,7 @@ namespace strata
 				void loadFlatTexture(std::string target, unsigned int size, unsigned int red,
 						unsigned int green, unsigned int blue, unsigned int alpha);
 
+				void loadConsoleWindow(std::string id);
 				void loadMonitorWindow(std::string id);
 				void loadMainMenuWindow(std::string id);
 

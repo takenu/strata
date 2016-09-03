@@ -26,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../tools/convertstring.hpp"
 #include "../tools/texture.hpp"
 
+#include "../ui/console.hpp"
+#include "../ui/mainmenu.hpp"
+#include "../ui/monitor.hpp"
+
 #include "ui.hpp"
 
 using namespace strata::core;
@@ -44,9 +48,22 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 			"loadWindowAttribute", &UIManager::loadWindowAttribute,
 			"loadWindowFontColour", &UIManager::loadWindowFontColour,
 			"loadWindowDimensions", &UIManager::loadWindowDimensions,
+			"loadConsoleWindow", &UIManager::loadConsoleWindow,
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
 			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
 			);
+}
+
+void UIManager::loadConsoleWindow(std::string id)
+{
+	if(windows.count(id) > 0)
+	{
+		std::cout << " UIManager::loadConsoleWindow() : ID not unique - skipped! "<<std::endl;
+	}
+	ui::Window * console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface,
+			fontTexture);
+	windows.emplace(id, console);
+	renderInterface->addScreenRenderable(console->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
 void UIManager::loadMainMenuWindow(std::string id)

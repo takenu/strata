@@ -23,6 +23,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace strata
 {
+	/** This conversion to upper-level keys is extremely nonportable. Unfortunately, SDL 1.2 (which
+	  * the tiny-game-engine basically enforces) does not supply any better.
+	  * Different keyboard layouts than mine are thus very poorly supported. Ideally there would be
+	  * a way for some configuration (via Lua) to dynamically define the keyboard layout. However,
+	  * for now I'll just settle with the non-portability.
+	  * This function will return the lowercase SDLKey for a-z characters, or for that matter it will
+	  * return the key itself for any SDLKey not specifically redefined in the below statement.
+	  */
+	inline unsigned char convertSDLinput(const SDLKey & _k, const SDLMod & m)
+	{
+		unsigned char k = static_cast<unsigned char>(_k);
+		if(	   ((m & KMOD_SHIFT) && !(m & KMOD_CAPS))
+			|| ((m & KMOD_CAPS) && !(m & KMOD_SHIFT)) )
+		{
+			if(static_cast<unsigned char>(k) >= 'a' && static_cast<unsigned char>(k) <= 'z')
+				k = static_cast<unsigned char>(k) + ('A' - 'a');
+			else
+			{
+				switch(_k)
+				{
+					case SDLK_BACKQUOTE : k = '~'; break;
+					case SDLK_1 : k = '!'; break;
+					case SDLK_2 : k = '@'; break;
+					case SDLK_3 : k = '#'; break;
+					case SDLK_4 : k = '$'; break;
+					case SDLK_5 : k = '%'; break;
+					case SDLK_6 : k = '^'; break;
+					case SDLK_7 : k = '&'; break;
+					case SDLK_8 : k = '*'; break;
+					case SDLK_9 : k = '('; break;
+					case SDLK_0 : k = ')'; break;
+					case SDLK_MINUS : k = '_'; break;
+					case SDLK_EQUALS : k = '+'; break;
+					case SDLK_LEFTBRACKET : k = '{'; break;
+					case SDLK_RIGHTBRACKET : k = '}'; break;
+					case SDLK_BACKSLASH : k = '|'; break;
+					case SDLK_SEMICOLON : k = ':'; break;
+					case SDLK_QUOTE : k = '"'; break;
+					case SDLK_COMMA : k = '<'; break;
+					case SDLK_PERIOD : k = '>'; break;
+					case SDLK_SLASH : k = '?'; break;
+					default: break;
+				}
+			}
+		}
+		return k;
+	}
+
 	/** Unite two key sets, creating a set consisting of every key that is in either of the two sets. */
 	inline std::set<SDLKey> uniteKeySets(const std::set<SDLKey> &first, const std::set<SDLKey> &second)
 	{
@@ -181,6 +229,36 @@ namespace strata
 		return keys;
 	}
 
+	/** The key set of all alphanumeric characters and punctuation. */
+	inline std::set<SDLKey> keySetText(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetAlphanumeric(), keySetPunctuation());
+		return keys;
+	}
+
+	/** The key set of all alphanumeric characters, punctuation and symbolic characters.
+	  * Alternatively, the key set of all displayable (text-editing) keys. */
+	inline std::set<SDLKey> keySetTextSymbolic(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetText(), keySetSymbolic());
+		return keys;
+	}
+
+	/** The key set of all displayable symbols, joined with text manipulation keys. */
+	inline std::set<SDLKey> keySetTextCompleteWithEscape(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSymbolic());
+		return keys;
+	}
+
+	/** The key set of all displayable symbols, joined with text manipulation keys, but without the
+	  * Escape key that is used as a special input character that closes active UI elements. */
+	inline std::set<SDLKey> keySetTextComplete(void)
+	{
+		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSymbolic());
+		keys.erase(SDLK_ESCAPE);
+		return keys;
+	}
 	/** Arrow keys. */
 	inline std::set<SDLKey> keySetArrows(void)
 	{

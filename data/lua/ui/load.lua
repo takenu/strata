@@ -52,6 +52,13 @@ function UIWindow:new(o)
 	return o
 end
 
+UIConsoleWindow = UIWindow:new{
+	title = "",
+	right = 0.0,
+	top = -0.4,
+	id = "Default Console",
+}
+
 UIMonitorWindow = UIWindow:new{
 	title = "",
 	fps = false,

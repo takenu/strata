@@ -84,6 +84,7 @@ namespace strata
 				  * been previously registered to Lua. */
 				virtual void executeLua(std::string command)
 				{
+					std::cout << " LuaManager : Execute lua '"<<command<<"'."<<std::endl;
 					luaState(command.c_str());
 				}
 		};
