@@ -29,6 +29,8 @@ namespace strata
 {
 	namespace core
 	{
+		/** The ApplManager manages low-level application processes such as input/output
+		  * and (de)initialization of SDL. */
 		class ApplManager : public intf::ApplInterface, public tiny::os::SDLApplication
 		{
 			private:

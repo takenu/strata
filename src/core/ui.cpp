@@ -54,14 +54,22 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 			);
 }
 
+/** Load a Console window from Lua. Unlike other windows, the UIManager tracks the Console window
+  * specifically, since it will provide a service to other parts of the program to print messages.
+  * Note that the Console window cannot be loaded on UIManager creation, since it depends on Lua
+  * parameters and it also needs access to the Lua interface. */
 void UIManager::loadConsoleWindow(std::string id)
 {
 	if(windows.count(id) > 0)
 	{
 		std::cout << " UIManager::loadConsoleWindow() : ID not unique - skipped! "<<std::endl;
 	}
-	ui::Window * console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface,
-			fontTexture);
+	if(console)
+	{
+		std::cout << " UIManager::loadConsoleWindow() : Deleting existing console! "<<std::endl;
+		delete console; console = 0;
+	}
+	console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface, fontTexture);
 	windows.emplace(id, console);
 	renderInterface->addScreenRenderable(console->getRenderable(), false, false, tiny::draw::BlendMix);
 }

@@ -85,6 +85,11 @@ namespace strata
 				virtual void setWindowAttribute(std::string, std::string)
 				{
 				}
+
+				void logMessage(const intf::UIMessage & message)
+				{
+					// TODO: Add old-message window for external messages and executed Lua commands
+				}
 		};
 	} // end namespace ui
 } // end namespace strata

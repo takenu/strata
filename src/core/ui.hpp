@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../ui/input.hpp"
 #include "../ui/window.hpp"
+#include "../ui/console.hpp"
 
 #include "../interface/appl.hpp"
 #include "../interface/lua.hpp"
@@ -44,6 +45,7 @@ namespace strata
 				intf::LuaInterface * luaInterface;
 
 				ui::InputInterpreter inputInterpreter;
+				ui::Console * console; /**< A console window to be loaded from Lua. */
 
 				tiny::draw::IconTexture2D * fontTexture;
 				std::map<std::string, ui::Window*> windows;
@@ -57,7 +59,7 @@ namespace strata
 				UIManager(intf::ApplInterface * _appl, intf::RenderInterface * _renderer) :
 					intf::UIInterface(),
 					applInterface(_appl), renderInterface(_renderer), luaInterface(0),
-					inputInterpreter(),
+					inputInterpreter(), console(0),
 					fontTexture(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
 				{
 				}
@@ -94,6 +96,11 @@ namespace strata
 				/** Load the dimensions of (part of) a Window. */
 				void loadWindowDimensions(std::string target, std::string attribute,
 						float left, float top, float right, float bottom);
+
+				virtual void logConsoleMessage(const intf::UIMessage & message)
+				{
+					if(console) console->logMessage(message);
+				}
 
 				/** Redirect InputInterpreter subscription requests. */
 				virtual intf::InputSet * subscribe(intf::UIListener * l)
