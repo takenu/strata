@@ -52,16 +52,6 @@ namespace strata
 					command.clear();
 					setInvisible();
 				}
-
-				/** Convert SDL input into characters. */
-/*				unsigned char convertSDLinput(const SDLKey & k, const SDLMod & m)
-				{
-					if(static_cast<unsigned char>(k) >= 'a' && static_cast<unsigned char>(k) <= 'z'
-							&& (   ((m & KMOD_SHIFT) && !(m & KMOD_CAPS))
-								|| ((m & KMOD_CAPS) && !(m & KMOD_SHIFT)) ))
-						return static_cast<unsigned char>(k) + ('A' - 'a');
-					else return static_cast<unsigned char>(k);
-				}*/
 			public:
 				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
@@ -88,6 +78,8 @@ namespace strata
 				{
 					if(!isVisible()) return;
 					clear();
+					addTextFragment(command, getColour());
+					addNewline();
 				}
 
 				virtual void setWindowAttribute(std::string, std::string)

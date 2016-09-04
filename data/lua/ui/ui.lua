@@ -48,6 +48,9 @@ function ui_ui(path)
 	ui.loadWindowFontColour(x.id, "fontcolour", x:getFontColour())
 	ui.loadWindowFontColour(x.id, "fontcolour2", x:getFontColour2())
 	local y = UIConsoleWindow:new{
+		red = 210,
+		green = 210,
+		blue = 210,
 		id = "Strata Console",
 		title = "Strata Console",
 	}

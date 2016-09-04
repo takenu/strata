@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/effects/showimage.h>
 #include <tiny/img/io/image.h>
 
+#include "textbox.hpp"
+
 namespace strata
 {
 	namespace ui
@@ -60,16 +62,17 @@ namespace strata
 		  * contain two text colours, both a default colour and a secondary colour that can be
 		  * used for e.g. highlighting.
 		  */
-		class Window : public tiny::draw::TextBox, public intf::UIListener
+		class Window : public TextBox, public intf::UIListener
 		{
 			private:
-				tiny::draw::Colour colour; /**< Text colour. */
-				tiny::draw::Colour secondaryColour; /**< Secondary text colour. */
 				ScreenSquare * background; /**< Background texture object. */
 				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
 				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
 				bool visible;
 				tiny::vec4 windowBox; /**< The box that the window is inside of. */
+				intf::UIInterface * uiInterface;
+				intf::InputSet * inputKeys;
+				std::string title;
 
 				/** Reset the Window's input, such that it only responds to its trigger keys. */
 				void resetInputKeys(void)
@@ -135,12 +138,9 @@ namespace strata
 					}
 				}
 			protected:
-				intf::UIInterface * uiInterface;
-				intf::InputSet * inputKeys;
-				std::string title;
 				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
 				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
-				const tiny::draw::Colour & getSecondaryColour(void) const { return secondaryColour; }
+				intf::UIInterface * getUIInterface(void) { return uiInterface; }
 
 				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
 
@@ -155,9 +155,8 @@ namespace strata
 			public:
 				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						std::string _title = "") :
-					tiny::draw::TextBox(_fontTexture, 0.1f, 2.0f),
+					TextBox(_fontTexture, 0.1f, 2.0f),
 					intf::UIListener(_ui),
-					colour(0,0,0), secondaryColour(100,100,100),
 					background(0), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)
 				{
@@ -197,8 +196,6 @@ namespace strata
 
 				virtual void update(void) = 0;
 
-				tiny::draw::Colour getColour(void) const { return colour; }
-
 				/** Allow setting of arbitrary Lua-derived attributes through key-value pairs.
 				  * Classes deriving the Window must implement all their customizable attributes
 				  * through interpretation of the information passed through this function. */
@@ -206,7 +203,10 @@ namespace strata
 				{
 					if(attribute == "fontsize") setFontSize( tool::toFloat(value) );
 					else if(attribute == "fontaspectratio") setAspectRatio( tool::toFloat(value) );
-					else setWindowAttribute(attribute, value);
+					// Send all attributes, even those that already affect the Window's base parameters.
+					// The derived class may have textboxes too that also may want to adjust their font
+					// size and aspect ratio.
+					setWindowAttribute(attribute, value);
 				}
 
 				/** Set attributes not defined by the Window itself but by the derived class. */
@@ -215,9 +215,11 @@ namespace strata
 				/** Allow setting of font colours. */
 				void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
 				{
-					if(attribute == "fontcolour") colour = _colour;
-					else if(attribute == "fontcolour2") secondaryColour = _colour;
-					else setWindowFontColour(attribute, _colour);
+					if(attribute == "fontcolour") setColour(_colour);
+					else if(attribute == "fontcolour2") setSecondaryColour(_colour);
+					// Similar to attributes, send all font colours (including default ones)
+					// to derived windows.
+					setWindowFontColour(attribute, _colour);
 				}
 
 				/** Set a window font colour not already implemented. Given that many windows won't
@@ -227,17 +229,17 @@ namespace strata
 				{
 				}
 
-				/** Allow modifying the dimensions of the Textbox. */
+				/** Allow modifying the dimensions of Window elements. */
 				void setDimensions(std::string attribute, float left, float top, float right, float bottom)
 				{
 					if(attribute == "box")
 					{
-						windowBox = tiny::vec4(left, top, right, bottom);
-						setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+						setTextboxDimensions(left, top, right, bottom);
 						if(background) background->setBoxDimensions(
-								windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+								left, top, right, bottom);
 					}
-					else setWindowDimensions(attribute, left, top, right, bottom);
+					// Elements of the derived window may also need to be adjusted
+					setWindowDimensions(attribute, left, top, right, bottom);
 				}
 
 				/** A function for child windows to receive instructions as to their dimensions.

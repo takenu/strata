@@ -74,7 +74,7 @@ namespace strata
 					}
 					if(showMemoryUsage)
 					{
-						intf::UIInformation meminfo = uiInterface->getUIInfo("Terrain");
+						intf::UIInformation meminfo = getUIInterface()->getUIInfo("Terrain");
 						for(unsigned int i = 0; i < meminfo.pairs.size(); i++)
 						{
 							addTextFragment("Terrain: "+meminfo.pairs[i].first+" is "+meminfo.pairs[i].second, getColour());
