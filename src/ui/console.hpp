@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../interface/lua.hpp"
 #include "../interface/ui.hpp"
 
-#include "ui/window.hpp"
+#include "window.hpp"
 
 namespace strata
 {
@@ -36,6 +36,7 @@ namespace strata
 		{
 			private:
 				intf::LuaInterface * luaInterface;
+				TextBox log;
 
 				/** This string can contain an arbitrary chunk of executable Lua code. */
 				std::string command;
@@ -56,6 +57,7 @@ namespace strata
 				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
 					Window(_ui, _fontTexture),
+					log(_fontTexture),
 					luaInterface(_lua)
 				{
 					registerTriggerKey(SDLK_RETURN);
@@ -89,6 +91,8 @@ namespace strata
 				void logMessage(const intf::UIMessage & message)
 				{
 					// TODO: Add old-message window for external messages and executed Lua commands
+					// TODO: Add list structure using a single TextBox
+					// TODO: Add clickable button objects
 				}
 		};
 	} // end namespace ui

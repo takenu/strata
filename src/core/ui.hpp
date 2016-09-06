@@ -65,6 +65,7 @@ namespace strata
 				}
 
 				virtual void keyEvent(const SDLKey & k, bool isDown);
+				virtual void mouseEvent(float x, float y, unsigned int buttons);
 
 				void update(double);
 

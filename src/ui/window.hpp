@@ -155,7 +155,7 @@ namespace strata
 			public:
 				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						std::string _title = "") :
-					TextBox(_fontTexture, 0.1f, 2.0f),
+					TextBox(_fontTexture),
 					intf::UIListener(_ui),
 					background(0), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)

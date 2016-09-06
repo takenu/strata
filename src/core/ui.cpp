@@ -40,6 +40,12 @@ void UIManager::keyEvent(const SDLKey & keyIndex, bool isDown)
 	inputInterpreter.receiveInput(keyIndex, (isDown ? SDL_GetModState() : KMOD_NONE), isDown);
 }
 
+/** Interpret mouse events. */
+void UIManager::mouseEvent(float x, float y, unsigned int buttons)
+{
+	inputInterpreter.receiveInput(x, y, buttons);
+}
+
 void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,

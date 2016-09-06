@@ -35,6 +35,7 @@ namespace strata
 		{
 			private:
 				intf::UIInterface * uiInterface;
+				tiny::os::MouseState mouseState;
 
 				double dt; /**< Time elapsed between last two updates. */
 			public:
@@ -74,7 +75,11 @@ namespace strata
 
 				double update(void)
 				{
+					tiny::os::MouseState mouseNew = getMouseState(false); // Do not reposition mouse
+					if(mouseState.buttons != mouseNew.buttons || mouseState.x != mouseNew.x || mouseState.y != mouseNew.y)
+						uiInterface->mouseEvent( mouseNew.x, mouseNew.y, mouseNew.buttons );
 					dt = pollEvents();
+					mouseState = getMouseState(false); // Snapshot mouse state for comparison in next cycle
 					return dt;
 				}
 		};

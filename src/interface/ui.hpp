@@ -192,6 +192,7 @@ namespace strata
 				UIInformation getUIInfo(std::string _id);
 
 				virtual void keyEvent(const SDLKey & k, bool) = 0;
+				virtual void mouseEvent(float x, float y, unsigned int buttons) = 0;
 
 				virtual void registerLuaFunctions(sel::State & luaState) = 0;
 

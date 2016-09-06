@@ -37,7 +37,8 @@ namespace strata
 				const tiny::draw::Colour & getColour(void) const { return colour; }
 				const tiny::draw::Colour & getSecondaryColour(void) const { return secondaryColour; }
 			public:
-				TextBox(tiny::draw::IconTexture2D * _fontTexture, float _fontsize, float _aspectratio) :
+				TextBox(tiny::draw::IconTexture2D * _fontTexture, float _fontsize = 0.1f,
+						float _aspectratio = 2.0f) :
 					tiny::draw::TextBox(_fontTexture, _fontsize, _aspectratio),
 					colour(0,0,0), secondaryColour(100,100,100) {}
 

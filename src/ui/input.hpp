@@ -125,6 +125,14 @@ namespace strata
 							break;
 						}
 				}
+
+				/** Receive a mouse event and transmit it to the highest ranked listener.
+				  * Unlike key input, mouse input applies to whatever listener is visible at the current
+				  * location of the mouse pointer. The ranking of listeners used is the same as for
+				  * key events. */
+				void receiveInput(float x, float y, unsigned int buttons)
+				{
+				}
 		};
 	}
 } // end namespace strata
