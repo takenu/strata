@@ -32,10 +32,6 @@ namespace strata
 				tiny::draw::Colour secondaryColour; /**< Secondary text colour. */
 				tiny::vec4 textBox; /**< The box that the text is inside of. */
 			protected:
-				void setColour(const tiny::draw::Colour & _colour) { colour = _colour; }
-				void setSecondaryColour(const tiny::draw::Colour & _colour) { secondaryColour = _colour; }
-				const tiny::draw::Colour & getColour(void) const { return colour; }
-				const tiny::draw::Colour & getSecondaryColour(void) const { return secondaryColour; }
 			public:
 				TextBox(tiny::draw::IconTexture2D * _fontTexture, float _fontsize = 0.1f,
 						float _aspectratio = 2.0f) :
@@ -48,6 +44,11 @@ namespace strata
 					textBox = tiny::vec4(left, top, right, bottom);
 					setBoxDimensions(textBox.x, textBox.y, textBox.z, textBox.w);
 				}
+
+				void setColour(const tiny::draw::Colour & _colour) { colour = _colour; }
+				void setSecondaryColour(const tiny::draw::Colour & _colour) { secondaryColour = _colour; }
+				const tiny::draw::Colour & getColour(void) const { return colour; }
+				const tiny::draw::Colour & getSecondaryColour(void) const { return secondaryColour; }
 		};
 	} // end namespace ui
 } // end namespace strata

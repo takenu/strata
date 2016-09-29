@@ -96,6 +96,9 @@ namespace strata
 
 				/** Signal that a key is pressed down or no longer pressed down. */
 				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
+
+				/** Signal that a mouse event occurred at position (x,y). */
+				virtual bool receiveMouseEvent(float x, float y, unsigned int buttons) = 0;
 		};
 
 		/** The UIInformation holds information to be used by the UI (for displaying

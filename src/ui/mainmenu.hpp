@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../interface/ui.hpp"
 #include "../interface/appl.hpp"
 
-#include "ui/window.hpp"
+#include "window.hpp"
 
 namespace strata
 {
@@ -35,7 +35,6 @@ namespace strata
 		{
 			private:
 				intf::ApplInterface * applInterface;
-				std::string title;
 				virtual void receiveWindowInput(const SDLKey & k, const SDLMod &, bool isDown)
 				{
 					if(isDown)

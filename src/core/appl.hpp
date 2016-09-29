@@ -75,10 +75,14 @@ namespace strata
 
 				double update(void)
 				{
-					tiny::os::MouseState mouseNew = getMouseState(false); // Do not reposition mouse
-					if(mouseState.buttons != mouseNew.buttons || mouseState.x != mouseNew.x || mouseState.y != mouseNew.y)
-						uiInterface->mouseEvent( mouseNew.x, mouseNew.y, mouseNew.buttons );
 					dt = pollEvents();
+					tiny::os::MouseState mouseNew = getMouseState(false); // Do not reposition mouse
+//					std::cout << " mouse state = "<<mouseNew.x<<", "<<mouseNew.y<<", "<<mouseNew.buttons<<std::endl;
+					if(mouseState.buttons != mouseNew.buttons || mouseState.x != mouseNew.x || mouseState.y != mouseNew.y)
+					{
+//						std::cout << " ApplManager::update() : Mouse event at ("<<mouseNew.x<<","<<mouseNew.y<<")! "<<std::endl;
+						uiInterface->mouseEvent( mouseNew.x, -mouseNew.y, mouseNew.buttons ); // Note inversion across y-direction to make +1 the top of the screen and -1 the bottom
+					}
 					mouseState = getMouseState(false); // Snapshot mouse state for comparison in next cycle
 					return dt;
 				}

@@ -76,6 +76,7 @@ void UIManager::loadConsoleWindow(std::string id)
 		delete console; console = 0;
 	}
 	console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface, fontTexture);
+	console->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
 	windows.emplace(id, console);
 	renderInterface->addScreenRenderable(console->getRenderable(), false, false, tiny::draw::BlendMix);
 }
@@ -88,6 +89,7 @@ void UIManager::loadMainMenuWindow(std::string id)
 	}
 	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
+	mainMenu->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
 	windows.emplace(id, mainMenu);
 	renderInterface->addScreenRenderable(mainMenu->getRenderable(), false, false, tiny::draw::BlendMix);
 }
@@ -100,6 +102,7 @@ void UIManager::loadMonitorWindow(std::string id)
 	}
 	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
+	monitor->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
 	windows.emplace(id, monitor);
 	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }

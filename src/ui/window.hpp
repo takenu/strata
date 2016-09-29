@@ -17,40 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <tiny/draw/textbox.h>
-#include <tiny/draw/effects/showimage.h>
-#include <tiny/img/io/image.h>
-
 #include "textbox.hpp"
+#include "screensquare.hpp"
+#include "button.hpp"
 
 namespace strata
 {
 	namespace ui
 	{
-		/** An on-screen square object, e.g. the background of a Window. This is a separate Renderable
-		  * object, and as such it needs to be added to the Renderer apart from any object that it is
-		  * a part of (such as a Window) to be properly visible. */
-		class ScreenSquare : public tiny::draw::effects::ShowImage
-		{
-			private:
-				tiny::draw::RGBATexture2D * texture;
-			public:
-				ScreenSquare(tiny::draw::RGBATexture2D * _texture) :
-					tiny::draw::effects::ShowImage(), texture(_texture)
-				{
-					setImageTexture(*texture);
-					setAlpha(0);
-				}
-
-				void setBoxDimensions(float left, float top, float right, float bottom)
-				{
-					// call tiny::draw::ScreenFillingSquare's setSquareDimensions
-					setSquareDimensions(left, top, right, bottom);
-				}
-
-				~ScreenSquare(void) {}
-		};
-
 		/** The Window is a base class to all in-game window objects. It defines the size of the
 		  * window and manages the interaction with the renderable object used to visualize the
 		  * Window. The Window itself has little meaning as only derived classes implement actual
@@ -68,11 +42,14 @@ namespace strata
 				ScreenSquare * background; /**< Background texture object. */
 				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
 				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
+				std::map<std::string, Button> buttons; /**< Buttons on the Window. */
 				bool visible;
 				tiny::vec4 windowBox; /**< The box that the window is inside of. */
 				intf::UIInterface * uiInterface;
 				intf::InputSet * inputKeys;
 				std::string title;
+
+				typedef std::map<std::string, Button>::iterator ButtonIterator;
 
 				/** Reset the Window's input, such that it only responds to its trigger keys. */
 				void resetInputKeys(void)
@@ -121,6 +98,33 @@ namespace strata
 					}
 				}
 
+				/** Get a Button object. */
+				Button * getButton(std::string key)
+				{
+					if(buttons.count(key) > 0) return &(buttons.find(key)->second);
+					else return 0;
+				}
+
+				/** Receive mouse input on the Window.
+				  * There are two types of mouse input: clicks and movement. This function is only used
+				  * for clicks, as movement is managed through the ApplManager (and basically only
+				  * switches between static-centered and free).
+				  * The return value of the function should be whether or not the click was 'processed'.
+				  * Clicks can only be processed once, so it is important that a Window signals it when
+				  * it can interpret the mouse click. */
+				virtual bool receiveMouseEvent(float x, float y, unsigned int b)
+				{
+					//std::cout << " Window::receiveMouseEvent() : Window box = ("<<windowBox.x<<", "
+					//	<<windowBox.z<<") x ("<<windowBox.y<<", "<<windowBox.w<<")"<<std::endl;
+					if(x > windowBox.x && x < windowBox.z && y < windowBox.y && y > windowBox.w)
+					{
+						if(b > 0)
+							std::cout << " Window::receiveMouseEvent() : Click on "<<title<<"!"<<std::endl;
+						return true;
+					}
+					else return false;
+				}
+
 				void setVisible(bool v)
 				{
 					visible = v;
@@ -129,12 +133,16 @@ namespace strata
 					{
 						clear();
 						resetInputKeys();
+						for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+							it->second.setVisible(false);
 					}
 					else
 					{
 						activateInputKeys();
 						inputKeys->addKey(SDLK_ESCAPE); // to allow closing via Esc
 						uiInterface->bump(this);
+						for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+							it->second.setVisible(true);
 					}
 				}
 			protected:
@@ -201,7 +209,8 @@ namespace strata
 				  * through interpretation of the information passed through this function. */
 				void setAttribute(std::string attribute, std::string value)
 				{
-					if(attribute == "fontsize") setFontSize( tool::toFloat(value) );
+					if(attribute == "title") title = value;
+					else if(attribute == "fontsize") setFontSize( tool::toFloat(value) );
 					else if(attribute == "fontaspectratio") setAspectRatio( tool::toFloat(value) );
 					// Send all attributes, even those that already affect the Window's base parameters.
 					// The derived class may have textboxes too that also may want to adjust their font
@@ -234,6 +243,7 @@ namespace strata
 				{
 					if(attribute == "box")
 					{
+						windowBox = tiny::vec4(left, top, right, bottom);
 						setTextboxDimensions(left, top, right, bottom);
 						if(background) background->setBoxDimensions(
 								left, top, right, bottom);

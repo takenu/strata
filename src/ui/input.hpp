@@ -132,6 +132,8 @@ namespace strata
 				  * key events. */
 				void receiveInput(float x, float y, unsigned int buttons)
 				{
+					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
+						if((*it)->getListener()->receiveMouseEvent(x, y, buttons)) break;
 				}
 		};
 	}

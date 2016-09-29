@@ -57,13 +57,15 @@ namespace strata
 				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
 					Window(_ui, _fontTexture),
-					log(_fontTexture),
-					luaInterface(_lua)
+					luaInterface(_lua),
+					log(_fontTexture)
 				{
 					registerTriggerKey(SDLK_RETURN);
 					registerActiveKeySet( keySetTextComplete() );
 					registerActiveKey(SDLK_RETURN);
 				}
+
+				virtual ~Console(void) {}
 
 				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown)
 				{
