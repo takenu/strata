@@ -196,10 +196,18 @@ namespace strata
 					activeKeys = uniteKeySets(k, activeKeys);
 				}
 
-				void setBackground(ScreenSquare * ss)
+				void setBackground(std::string type, ScreenSquare * ss)
 				{
-					background = ss;
-					background->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+					if(type == "background")
+					{
+						background = ss;
+						background->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+					}
+					else if(buttons.count(type) > 0)
+					{
+						buttons.find(type)->second.setBackground(ss);
+					}
+					else std::cout << " Window::setBackground() : Type '"<<type<<"' not found!"<<std::endl;
 				}
 
 				virtual void update(void) = 0;

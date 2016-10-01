@@ -107,7 +107,7 @@ void UIManager::loadMonitorWindow(std::string id)
 	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
-void UIManager::loadFlatTexture(std::string target, unsigned int size, unsigned int red,
+void UIManager::loadFlatTexture(std::string target, std::string type, unsigned int size, unsigned int red,
 		unsigned int green, unsigned int blue, unsigned int alpha)
 {
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
@@ -116,7 +116,7 @@ void UIManager::loadFlatTexture(std::string target, unsigned int size, unsigned 
 	{
 		ui::ScreenSquare * background = new ui::ScreenSquare( tools::createTestTextureAlpha(
 					size, red, green, blue, alpha) );
-		window->setBackground(background);
+		window->setBackground(type, background);
 		renderInterface->addScreenRenderable(background, false, false, tiny::draw::BlendMix);
 		// Re-add renderable to ensure that the rest of the window goes before the background.
 		// NOTE: This often isn't necessary since reserve() tends to re-add the text screen renderable.

@@ -85,11 +85,6 @@ function UIFlatTexture:collectArgs(path)
 	return self.size, self.red, self.green, self.blue, self.alpha
 end
 
--- NOTE: Collecting all arguments at once is deprecated. Use get...() funcs one by one instead.
---function UIWindow:collectArgs(path)
---	return self.left, self.top, self.right, self.bottom, self.red, self.green, self.blue, self.red2, self.green2, self.blue2, self.title
---end
-
 function UIWindow:getWindowBox()
 	return self.left, self.top, self.right, self.bottom
 end

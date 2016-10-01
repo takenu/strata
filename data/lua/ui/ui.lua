@@ -24,7 +24,7 @@ function ui_ui(path)
 		blue = 150,
 		alpha = 60,
 	}
-	ui.loadFlatTexture(w.id, wt:collectArgs(path))
+	ui.loadFlatTexture(w.id, "background", wt:collectArgs(path))
 	ui.loadWindowDimensions(w.id, "box", w:getWindowBox())
 	ui.loadWindowFontColour(w.id, "fontcolour", w:getFontColour())
 	local x = UIMainMenuWindow:new{
@@ -43,7 +43,7 @@ function ui_ui(path)
 		blue = 50,
 		alpha = 150,
 	}
-	ui.loadFlatTexture(x.id, xt:collectArgs(path))
+	ui.loadFlatTexture(x.id, "background", xt:collectArgs(path))
 	ui.loadWindowDimensions(x.id, "box", x:getWindowBox())
 	ui.loadWindowFontColour(x.id, "fontcolour", x:getFontColour())
 	ui.loadWindowFontColour(x.id, "fontcolour2", x:getFontColour2())
@@ -63,7 +63,7 @@ function ui_ui(path)
 		blue = 50,
 		alpha = 200,
 	}
-	ui.loadFlatTexture(y.id, yt:collectArgs(path))
+	ui.loadFlatTexture(y.id, "background", yt:collectArgs(path))
 	ui.loadWindowDimensions(y.id, "box", y:getWindowBox())
 	ui.loadWindowFontColour(y.id, "fontcolour", y:getFontColour())
 end

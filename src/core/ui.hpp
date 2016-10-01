@@ -80,8 +80,8 @@ namespace strata
 
 				void loadFont(std::string fontTex, float fontSize, float fontAspectRatio, unsigned int fontPixels, unsigned int fontResolution);
 
-				void loadFlatTexture(std::string target, unsigned int size, unsigned int red,
-						unsigned int green, unsigned int blue, unsigned int alpha);
+				void loadFlatTexture(std::string target, std::string type, unsigned int size,
+						unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha);
 
 				void loadConsoleWindow(std::string id);
 				void loadMonitorWindow(std::string id);
