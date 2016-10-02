@@ -65,17 +65,11 @@ namespace strata
 				  * here, we do not use setText(), which instead must be
 				  * done by whoever created the Monitor and has the ability
 				  * to add and remove renderable objects. */
-				virtual void update(void)
+				virtual void updateWindow(void)
 				{
 					if(!isVisible()) return;
 					clear();
 					drawTitle();
-					addTextFragment("Q", getSecondaryColour());
-					addTextFragment("uit", getColour());
-					addNewline();
-					addTextFragment("R", getSecondaryColour());
-					addTextFragment("esume", getColour());
-					addNewline();
 				}
 
 				/** Allow setting of attributes. */

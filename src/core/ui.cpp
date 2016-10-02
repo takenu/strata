@@ -51,7 +51,9 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 	luaState["ui"].SetObj(*this,
 			"loadFont", &UIManager::loadFont,
 			"loadFlatTexture", &UIManager::loadFlatTexture,
+			"loadButton", &UIManager::loadButton,
 			"loadWindowAttribute", &UIManager::loadWindowAttribute,
+			"loadButtonAttribute", &UIManager::loadButtonAttribute,
 			"loadWindowFontColour", &UIManager::loadWindowFontColour,
 			"loadWindowDimensions", &UIManager::loadWindowDimensions,
 			"loadConsoleWindow", &UIManager::loadConsoleWindow,
@@ -156,10 +158,40 @@ void UIManager::loadWindowAttribute(std::string target, std::string attribute, s
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadMonitorWindowAttribute() : Can't load "<<attribute<<"="<<value
+		std::cout << " loadWindowAttribute() : Can't load "<<attribute<<"="<<value
 			<< " for window "<<target<<"!"<<std::endl;
 	}
 	else window->setAttribute(attribute, value);
+}
+
+void UIManager::loadButtonAttribute(std::string target, std::string button,
+		std::string attribute, std::string value)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadButtonAttribute() : Can't load "<<attribute<<"="<<value
+			<< " for window "<<target<<" button "<<button<<"!"<<std::endl;
+	}
+	else window->setButtonAttribute(button, attribute, value);
+}
+
+void UIManager::loadButton(std::string target, std::string buttonId)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadButton() : Can't load button "<<buttonId
+			<< " for target "<<target<<"!"<<std::endl;
+	}
+	else
+	{
+		window->loadButton(buttonId);
+		window->setButtonTextBox(buttonId, fontTexture);
+		tiny::draw::Renderable * buttonRenderable = window->getButtonRenderable(buttonId);
+		if(buttonRenderable) renderInterface->addScreenRenderable(buttonRenderable);
+		else std::cout << " UIManager::loadButton() : No renderable! "<<std::endl;
+	}
 }
 
 void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRatio,
@@ -185,14 +217,15 @@ void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRa
 
 void UIManager::reserve(ui::Window * window)
 {
-	tiny::draw::Renderable * oldTextBox = 0;
-	tiny::draw::Renderable * newTextBox = window->reserve(oldTextBox);
-	if(oldTextBox) renderInterface->freeScreenRenderable(oldTextBox);
-	if(newTextBox)
+	std::vector<tiny::draw::Renderable *> oldTextBoxes;
+	std::vector<tiny::draw::Renderable *> newTextBoxes;
+	window->reserveTextBoxes(oldTextBoxes, newTextBoxes);
+	for(unsigned int i = 0; i < oldTextBoxes.size(); i++)
+		renderInterface->freeScreenRenderable(oldTextBoxes[i]);
+	for(unsigned int i = 0; i < newTextBoxes.size(); i++)
 	{
-		renderInterface->addScreenRenderable(newTextBox, false, false, tiny::draw::BlendMix);
+		renderInterface->addScreenRenderable(newTextBoxes[i], false, false, tiny::draw::BlendMix);
 	}
-	else if(oldTextBox) std::cout << " UIManager::reserve() : ERROR: No new renderable! "<<std::endl;
 }
 
 void UIManager::update(double)
@@ -201,6 +234,6 @@ void UIManager::update(double)
 	{
 		it->second->update();
 		reserve(it->second);
-		it->second->setText();
+		it->second->setTexts();
 	}
 }

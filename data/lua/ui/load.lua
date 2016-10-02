@@ -76,6 +76,12 @@ UIMainMenuWindow = UIWindow:new{
 	id = "Default Main Menu",
 }
 
+UIButton = UIWindow:new{
+	buttonText = "Button",
+	parentWindow = "",
+	id = "Default Button",
+}
+
 function UIFont:collectArgs(path)
 	local prefix = findprefix(path)
 	return self.fonttex == "" and "" or prefix .. self.fonttex, self.fontsize, self.fontaspectratio,self.fontpixels, self.fontresolution
@@ -93,7 +99,7 @@ function UIWindow:getFontColour()
 	return self.red, self.green, self.blue
 end
 
-function UIWindow:getFontColour2()
+function UIWindow:getFontHighlight()
 	return self.red2, self.green2, self.blue2
 end
 

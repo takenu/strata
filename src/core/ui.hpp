@@ -90,6 +90,10 @@ namespace strata
 				/** Load an attribute-value pair for the Window whose key in the 'windows' map is 'target'. */
 				void loadWindowAttribute(std::string target, std::string attribute, std::string value);
 
+				/** Load an attribute-value pair for a Button. */
+				void loadButtonAttribute(std::string target, std::string button,
+						std::string attribute, std::string value);
+
 				/** Load a font colour for a target Window. */
 				void loadWindowFontColour(std::string target, std::string attribute,
 						unsigned int red, unsigned int green, unsigned int blue);
@@ -97,6 +101,9 @@ namespace strata
 				/** Load the dimensions of (part of) a Window. */
 				void loadWindowDimensions(std::string target, std::string attribute,
 						float left, float top, float right, float bottom);
+
+				/** Load a button for a target object. */
+				void loadButton(std::string target, std::string buttonId);
 
 				virtual void logConsoleMessage(const intf::UIMessage & message)
 				{

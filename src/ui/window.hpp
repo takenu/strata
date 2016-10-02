@@ -40,6 +40,7 @@ namespace strata
 		{
 			private:
 				ScreenSquare * background; /**< Background texture object. */
+				ScreenSquare * highlight; /**< Highlight object, for active (parts of the) Window. */
 				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
 				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
 				std::map<std::string, Button> buttons; /**< Buttons on the Window. */
@@ -98,10 +99,15 @@ namespace strata
 					}
 				}
 
+				inline bool hasButton(std::string key) const
+				{
+					return (buttons.count(key)>0);
+				}
+
 				/** Get a Button object. */
 				Button * getButton(std::string key)
 				{
-					if(buttons.count(key) > 0) return &(buttons.find(key)->second);
+					if(hasButton(key)) return &(buttons.find(key)->second);
 					else return 0;
 				}
 
@@ -171,6 +177,29 @@ namespace strata
 					inputKeys = uiInterface->subscribe(this);
 				}
 
+				void loadButton(std::string buttonId)
+				{
+					if(hasButton(buttonId))
+						std::cout << " Window::loadButton() : '"<<buttonId<<"' exists!"<<std::endl;
+					else buttons.emplace(buttonId, Button());
+				}
+
+				void setButtonTextBox(std::string buttonId, tiny::draw::IconTexture2D * _fontTexture)
+				{
+					if(hasButton(buttonId))
+						buttons[buttonId].setTextBox(_fontTexture);
+				}
+
+				tiny::draw::Renderable * getButtonRenderable(std::string buttonId)
+				{
+					if(hasButton(buttonId)) return getButton(buttonId)->getRenderable();
+					else
+					{
+						std::cout << " Window::getButtonRenderable() : No '"<<buttonId<<"'!"<<std::endl;
+						return 0;
+					}
+				}
+
 				/** Register a key as a trigger that opens this Window. This function also
 				  * pushes the trigger to the initial input key set. At a later stage, the
 				  * trigger keys can be re-set as the only keys whose input can trigger
@@ -203,6 +232,12 @@ namespace strata
 						background = ss;
 						background->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
 					}
+					else if(type == "highlight")
+					{
+						highlight = ss;
+						highlight->setBoxDimensions(windowBox.x, windowBox.y, windowBox.z, windowBox.w);
+						highlight->setAlpha(0);
+					}
 					else if(buttons.count(type) > 0)
 					{
 						buttons.find(type)->second.setBackground(ss);
@@ -210,7 +245,36 @@ namespace strata
 					else std::cout << " Window::setBackground() : Type '"<<type<<"' not found!"<<std::endl;
 				}
 
-				virtual void update(void) = 0;
+				// Not yet implemented - currently not necessary to retrieve background renderables
+/*				tiny::draw::Renderable * getBackgroundRenderable(std::string type)
+				{
+					if(type == "background") return getRenderable();
+					else if(hasButton(type)) return buttons[type].getBackgroundRenderable();
+				}*/
+
+				virtual void updateWindow(void) = 0;
+				void update(void)
+				{
+					updateWindow();
+					for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+						it->second.update();
+				}
+
+				/** Reserve text boxes for the Window and all its Buttons. */
+				void reserveTextBoxes(std::vector<tiny::draw::Renderable *> &oldTextBoxes,
+						std::vector<tiny::draw::Renderable *> &newTextBoxes)
+				{
+					reserveTextBox(oldTextBoxes, newTextBoxes);
+					for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+						it->second.getTextBox()->reserveTextBox(oldTextBoxes, newTextBoxes);
+				}
+
+				void setTexts(void)
+				{
+					setText();
+					for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+						it->second.getTextBox()->setText();
+				}
 
 				/** Allow setting of arbitrary Lua-derived attributes through key-value pairs.
 				  * Classes deriving the Window must implement all their customizable attributes
@@ -226,6 +290,17 @@ namespace strata
 					setWindowAttribute(attribute, value);
 				}
 
+				/** Allow setting of Button attributes. */
+				void setButtonAttribute(std::string button, std::string attribute, std::string value)
+				{
+					if(hasButton(button)) buttons[button].setAttribute(attribute, value);
+					else
+					{
+						std::cout << " Window::setButtonAttribute() : No button "<<button
+							<< " to set "<<attribute<<"="<<value<<"!"<<std::endl;
+					}
+				}
+
 				/** Set attributes not defined by the Window itself but by the derived class. */
 				virtual void setWindowAttribute(std::string attribute, std::string value) = 0;
 
@@ -233,7 +308,7 @@ namespace strata
 				void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
 				{
 					if(attribute == "fontcolour") setColour(_colour);
-					else if(attribute == "fontcolour2") setSecondaryColour(_colour);
+					else if(attribute == "fonthighlight") setSecondaryColour(_colour);
 					// Similar to attributes, send all font colours (including default ones)
 					// to derived windows.
 					setWindowFontColour(attribute, _colour);
@@ -256,6 +331,8 @@ namespace strata
 						if(background) background->setBoxDimensions(
 								left, top, right, bottom);
 					}
+					else if(hasButton(attribute))
+						getButton(attribute)->setDimensions(left, top, right, bottom);
 					// Elements of the derived window may also need to be adjusted
 					setWindowDimensions(attribute, left, top, right, bottom);
 				}

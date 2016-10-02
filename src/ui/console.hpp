@@ -78,7 +78,7 @@ namespace strata
 					}
 				}
 
-				virtual void update(void)
+				virtual void updateWindow(void)
 				{
 					if(!isVisible()) return;
 					clear();

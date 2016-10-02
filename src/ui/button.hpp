@@ -68,7 +68,7 @@ namespace strata
 					background->setAlpha(v);
 					if(!isVisible())
 					{
-						textbox->clear();
+						if(textbox) textbox->clear();
 					}
 					else
 					{
@@ -82,6 +82,19 @@ namespace strata
 				{
 				}
 
+				tiny::draw::Renderable * getRenderable(void)
+				{
+					if(textbox) return textbox->getRenderable();
+					else return 0;
+				}
+
+				// Not necessary yet
+/*				tiny::draw::Renderable * getBackgroundRenderable(void)
+				{
+					if(background) return background->getRenderable();
+					else return 0;
+				}*/
+
 				void setBackground(ScreenSquare * ss)
 				{
 					background = ss;
@@ -91,6 +104,11 @@ namespace strata
 				void setTextBox(tiny::draw::IconTexture2D * _fontTexture)
 				{
 					textbox = new TextBox(_fontTexture);
+				}
+
+				TextBox * getTextBox(void)
+				{
+					return textbox;
 				}
 
 				virtual void update(void)
@@ -108,7 +126,7 @@ namespace strata
 				{
 					if(!textbox) return;
 					if(attribute == "fontcolour") textbox->setColour(_colour);
-					else if(attribute == "fontcolour2") textbox->setSecondaryColour(_colour);
+					else if(attribute == "fonthighlight") textbox->setSecondaryColour(_colour);
 					else std::cout << " Button::setFontColour() : Attribute '"<<attribute<<"' not defined!"<<std::endl;
 				}
 
@@ -119,6 +137,20 @@ namespace strata
 					if(textbox) textbox->setTextboxDimensions(left, top, right, bottom);
 					if(background) background->setBoxDimensions(
 							left, top, right, bottom);
+				}
+
+				/** Allow setting of various attributes. */
+				void setAttribute(std::string attribute, std::string value)
+				{
+					if(textbox)
+					{
+						if(attribute == "text") text = value;
+						else if(attribute == "fontsize") textbox->setFontSize( tool::toFloat(value) );
+						else if(attribute == "fontaspectratio") textbox->setAspectRatio( tool::toFloat(value) );
+						// Send all attributes, even those that already affect the Window's base parameters.
+						// The derived class may have textboxes too that also may want to adjust their font
+					}
+					else std::cout << " Button::setAttribute() : No textbox, nothing done! "<<std::endl;
 				}
 		};
 	}

@@ -43,10 +43,49 @@ function ui_ui(path)
 		blue = 50,
 		alpha = 150,
 	}
+	local xHighlight = UIFlatTexture:new{
+		red = 160,
+		green = 90,
+		blue = 90,
+		alpha = 150,
+	}
 	ui.loadFlatTexture(x.id, "background", xt:collectArgs(path))
+	ui.loadFlatTexture(x.id, "highlight", xt:collectArgs(path))
 	ui.loadWindowDimensions(x.id, "box", x:getWindowBox())
 	ui.loadWindowFontColour(x.id, "fontcolour", x:getFontColour())
-	ui.loadWindowFontColour(x.id, "fontcolour2", x:getFontColour2())
+	ui.loadWindowFontColour(x.id, "fonthighlight", x:getFontHighlight())
+	local xQuit = UIButton:new{
+		buttonText = "Quit",
+		parentWindow = x.id,
+		id = "Quit",
+		left = x.left,
+		top = x.top - v.fontsize,
+		right = x.right,
+		bottom = x.top - 2*v.fontsize,
+	}
+	local xResume = UIButton:new{
+		buttonText = "Resume",
+		parentWindow = x.id,
+		id = "Resume",
+		left = x.left,
+		top = xQuit.bottom,
+		right = x.right,
+		bottom = xQuit.bottom - v.fontsize,
+	}
+	local xTex = UIFlatTexture:new{
+		red = 150,
+		green = 150,
+		blue = 150,
+		alpha = 180,
+	}
+	ui.loadButton(xQuit.parentWindow, xQuit.id)
+	ui.loadFlatTexture(x.id, xQuit.id, xTex:collectArgs(path))
+	ui.loadWindowDimensions(x.id, xQuit.id, xQuit:getWindowBox())
+	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "text", xQuit.buttonText)
+	ui.loadButton(xResume.parentWindow, xResume.id)
+	ui.loadFlatTexture(x.id, xResume.id, xTex:collectArgs(path))
+	ui.loadWindowDimensions(x.id, xResume.id, xResume:getWindowBox())
+	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "text", xResume.buttonText)
 	local y = UIConsoleWindow:new{
 		red = 210,
 		green = 210,

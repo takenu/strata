@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <sstream>
+#include <vector>
 
 #include <tiny/draw/textbox.h>
 
@@ -43,6 +44,21 @@ namespace strata
 				{
 					textBox = tiny::vec4(left, top, right, bottom);
 					setBoxDimensions(textBox.x, textBox.y, textBox.z, textBox.w);
+				}
+
+				/** Reserve a text box for a single textbox object. */
+				void reserveTextBox(std::vector<tiny::draw::Renderable *> &oldTextBoxes,
+						std::vector<tiny::draw::Renderable *> &newTextBoxes)
+				{
+					tiny::draw::Renderable * oldTextBox = 0;
+					tiny::draw::Renderable * newTextBox = 0;
+					newTextBox = reserve(oldTextBox); // call tiny::draw::TextBox::reserve()
+					if(oldTextBox)
+					{
+						oldTextBoxes.push_back(oldTextBox);
+						if(newTextBox) newTextBoxes.push_back(newTextBox);
+						else std::cout << " Window::reserveTextBoxes() : No new textbox! "<<std::endl;
+					}
 				}
 
 				void setColour(const tiny::draw::Colour & _colour) { colour = _colour; }
