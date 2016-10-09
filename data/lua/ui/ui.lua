@@ -82,10 +82,12 @@ function ui_ui(path)
 	ui.loadFlatTexture(x.id, xQuit.id, xTex:collectArgs(path))
 	ui.loadWindowDimensions(x.id, xQuit.id, xQuit:getWindowBox())
 	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "text", xQuit.buttonText)
+	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "receiver", x.id)
 	ui.loadButton(xResume.parentWindow, xResume.id)
 	ui.loadFlatTexture(x.id, xResume.id, xTex:collectArgs(path))
 	ui.loadWindowDimensions(x.id, xResume.id, xResume:getWindowBox())
 	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "text", xResume.buttonText)
+	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "receiver", x.id)
 	local y = UIConsoleWindow:new{
 		red = 210,
 		green = 210,

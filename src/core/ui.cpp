@@ -46,6 +46,16 @@ void UIManager::mouseEvent(float x, float y, unsigned int buttons)
 	inputInterpreter.receiveInput(x, y, buttons);
 }
 
+/** Call functions of non-UI classes through UI functionality. */
+void UIManager::callExternalFunction(std::string receiver, std::string args)
+{
+	if(receivers.count(receiver) > 0)
+		receivers[receiver]->receiveUIFunctionCall(args);
+	else if(windows.count(receiver) > 0)
+		windows[receiver]->receiveUIFunctionCall(args);
+	else std::cout << " UIManager::callExternalFunction() : No receiver '"<<receiver<<"'!"<<std::endl;
+}
+
 void UIManager::registerLuaFunctions(sel::State & luaState)
 {
 	luaState["ui"].SetObj(*this,
@@ -68,7 +78,7 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
   * parameters and it also needs access to the Lua interface. */
 void UIManager::loadConsoleWindow(std::string id)
 {
-	if(windows.count(id) > 0)
+	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadConsoleWindow() : ID not unique - skipped! "<<std::endl;
 	}
@@ -85,7 +95,7 @@ void UIManager::loadConsoleWindow(std::string id)
 
 void UIManager::loadMainMenuWindow(std::string id)
 {
-	if(windows.count(id) > 0)
+	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
 	}
@@ -98,7 +108,7 @@ void UIManager::loadMainMenuWindow(std::string id)
 
 void UIManager::loadMonitorWindow(std::string id)
 {
-	if(windows.count(id) > 0)
+	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
 	}

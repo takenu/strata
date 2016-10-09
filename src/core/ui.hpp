@@ -49,6 +49,7 @@ namespace strata
 
 				tiny::draw::IconTexture2D * fontTexture;
 				std::map<std::string, ui::Window*> windows;
+				std::map<std::string, intf::UIReceiver*> receivers;
 				float defaultFontSize;
 				float defaultAspectRatio;
 
@@ -66,6 +67,7 @@ namespace strata
 
 				virtual void keyEvent(const SDLKey & k, bool isDown);
 				virtual void mouseEvent(float x, float y, unsigned int buttons);
+				virtual void callExternalFunction(std::string receiver, std::string args);
 
 				void update(double);
 

@@ -30,7 +30,7 @@ namespace strata
 	namespace ui
 	{
 		/** The Button is a clickable object. It can be linked to an arbitrary function. */
-		class Button // : public intf::UIListener
+		class Button
 		{
 			private:
 				ScreenSquare * background; /**< Background texture object. */
@@ -39,7 +39,9 @@ namespace strata
 				std::string text; /**< Text to be displayed on the button. */
 				TextBox * textbox; /**< A textbox to hold text. */
 				tiny::draw::RGBATexture2D * texture; /**< A texture for the button. */
+				std::string receiver; /**< The identifier for the receiver of the click. */
 
+			public:
 				/** Receive mouse input (clicks) on the Button.
 				  * The return value of the function should be whether or not the click was 'processed'.
 				  * Clicks can only be processed once, so it is important that a Button signals it when
@@ -61,7 +63,6 @@ namespace strata
 					else return false;
 				}
 
-			public:
 				void setVisible(bool v)
 				{
 					visible = v;
@@ -81,6 +82,10 @@ namespace strata
 					text(""), textbox(0)
 				{
 				}
+
+				/** Get the receiver's name. Used to make function calls to the UIReceiver that is
+				  * linked to this Button. */
+				std::string getReceiver(void) const { return receiver; }
 
 				tiny::draw::Renderable * getRenderable(void)
 				{
@@ -147,6 +152,7 @@ namespace strata
 						if(attribute == "text") text = value;
 						else if(attribute == "fontsize") textbox->setFontSize( tool::toFloat(value) );
 						else if(attribute == "fontaspectratio") textbox->setAspectRatio( tool::toFloat(value) );
+						else if(attribute == "receiver") receiver = value;
 						// Send all attributes, even those that already affect the Window's base parameters.
 						// The derived class may have textboxes too that also may want to adjust their font
 					}

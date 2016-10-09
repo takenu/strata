@@ -36,7 +36,7 @@ namespace strata
 		  * contain two text colours, both a default colour and a secondary colour that can be
 		  * used for e.g. highlighting.
 		  */
-		class Window : public TextBox, public intf::UIListener
+		class Window : public TextBox, public intf::UIListener, public intf::UIReceiver
 		{
 			private:
 				ScreenSquare * background; /**< Background texture object. */
@@ -125,7 +125,15 @@ namespace strata
 					if(x > windowBox.x && x < windowBox.z && y < windowBox.y && y > windowBox.w)
 					{
 						if(b > 0)
+						{
 							std::cout << " Window::receiveMouseEvent() : Click on "<<title<<"!"<<std::endl;
+							for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+							{
+								if(it->second.receiveMouseTrigger(x,y))
+									uiInterface->callExternalFunction(
+											it->second.getReceiver(), getFunctionArgs(it->first, b) );
+							}
+						}
 						return true;
 					}
 					else return false;
@@ -171,6 +179,7 @@ namespace strata
 						std::string _title = "") :
 					TextBox(_fontTexture),
 					intf::UIListener(_ui),
+					intf::UIReceiver(_ui),
 					background(0), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)
 				{
@@ -225,6 +234,12 @@ namespace strata
 					activeKeys = uniteKeySets(k, activeKeys);
 				}
 
+				/** Inherited from UIReceiver. UIReceivers can receive button clicks. However, since the
+				  * Window itself cannot know what its deriving classes create buttons for, this function
+				  * does nothing, and the deriving class will need to override it to generate a response.
+				  */
+				virtual void receiveUIFunctionCall(std::string /*args*/) {}
+
 				void setBackground(std::string type, ScreenSquare * ss)
 				{
 					if(type == "background")
@@ -258,6 +273,17 @@ namespace strata
 					updateWindow();
 					for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
 						it->second.update();
+				}
+
+				/** A function that may be overridden by deriving classes if they need to provide
+				  * arguments to function calls from the UI to non-UI UIReceivers.
+				  * Such function calls are dependent on the properties of the deriving class and
+				  * therefore the signature of this function contains arguments for all context
+				  * values that may be of importance for determining the function call's arguments.
+				  */
+				virtual std::string getFunctionArgs(std::string /*buttonName*/, unsigned int /*buttons*/)
+				{
+					return std::string("");
 				}
 
 				/** Reserve text boxes for the Window and all its Buttons. */

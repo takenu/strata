@@ -45,8 +45,7 @@ namespace strata
 						}
 						else if(k == SDLK_q)
 						{
-							std::cout << " MainMenu::receiveKeyInput() : Exiting! "<<std::endl;
-							applInterface->stop(); // Will set flag, exit takes place after returning
+							quit();
 						}
 					}
 				}
@@ -58,6 +57,12 @@ namespace strata
 					registerTriggerKey(SDLK_ESCAPE);
 					registerActiveKey(SDLK_q);
 					registerActiveKey(SDLK_r);
+				}
+
+				void quit(void)
+				{
+					std::cout << " MainMenu::receiveKeyInput() : Exiting! "<<std::endl;
+					applInterface->stop(); // Will set flag, exit takes place after returning
 				}
 
 				/** Update the text displayed by the monitor window.
@@ -75,6 +80,22 @@ namespace strata
 				/** Allow setting of attributes. */
 				virtual void setWindowAttribute(std::string, std::string)
 				{
+				}
+
+				virtual std::string getFunctionArgs(std::string buttonName, unsigned int _buttons)
+				{
+					if(!(_buttons & 1)) return "";
+					else if(buttonName == "Quit") return "quit";
+					else if(buttonName == "Resume") return "resume";
+					else return "";
+				}
+
+				/** Receive UI input (e.g. through button clicks). */
+				virtual void receiveUIFunctionCall(std::string args)
+				{
+					if(args == "quit") quit();
+					else if(args == "resume") setInvisible();
+					else std::cout << " MainMenu::receiveUIFunctionCall() : Unknown parameter '"<<args<<"'!"<<std::endl;
 				}
 		};
 	} // end namespace ui

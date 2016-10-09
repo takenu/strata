@@ -77,9 +77,9 @@ namespace strata
 				}
 		};
 
-		/** The UIListener is a base class to every object that can react to user input.
-		  * Such listeners can subscribe to certain inputs, which are only applicable in
-		  * specific contexts.
+		/** The UIListener is a base class to every object that can react to low level user input.
+		  * Such listeners can subscribe to certain inputs (namely keyboard and mouse events), which
+		  * are only applicable in specific contexts.
 		  * Subscription is done through its link to the UI that governs it. The UI contains
 		  * an InputInterpreter that processes the input and tracks who is subscribed to what.
 		  */
@@ -92,13 +92,31 @@ namespace strata
 				{
 				}
 
-				~UIListener(void) {}
+				virtual ~UIListener(void) {}
 
 				/** Signal that a key is pressed down or no longer pressed down. */
 				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
 
 				/** Signal that a mouse event occurred at position (x,y). */
 				virtual bool receiveMouseEvent(float x, float y, unsigned int buttons) = 0;
+		};
+
+		/** The UIReceiver is a base class to non-UI classes that can receive function calls through
+		  * user interaction. They cannot process raw UI input such as button and key presses, which
+		  * must first be handled by standard UI elements (e.g. windows). */
+		class UIReceiver
+		{
+			private:
+				UIInterface * ui; /**< A link to the UI that governs the listener. */
+			public:
+				UIReceiver(UIInterface * _ui) : ui(_ui)
+				{
+				}
+
+				virtual ~UIReceiver(void) {}
+
+				/** Receive a function call through the UI. Arguments, if any, are provided in 'args'. */
+				virtual void receiveUIFunctionCall(std::string args) = 0;
 		};
 
 		/** The UIInformation holds information to be used by the UI (for displaying
@@ -196,6 +214,7 @@ namespace strata
 
 				virtual void keyEvent(const SDLKey & k, bool) = 0;
 				virtual void mouseEvent(float x, float y, unsigned int buttons) = 0;
+				virtual void callExternalFunction(std::string receiver, std::string args) = 0;
 
 				virtual void registerLuaFunctions(sel::State & luaState) = 0;
 
