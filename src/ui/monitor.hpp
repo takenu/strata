@@ -48,6 +48,7 @@ namespace strata
 					showFramesPerSecond(false),
 					showMemoryUsage(false)
 				{
+					// TODO: Replace by Lua-set key
 					registerTriggerKey(SDLK_m);
 				}
 

@@ -1,4 +1,5 @@
 function ui_ui(path)
+	ui.loadAttribute("closeKey", "ESCAPE")
 	local v = UIFont:new{
 		name = "UserInterface",
 		fonttex = "OpenBaskerville-0.0.75.ttf",
@@ -32,11 +33,15 @@ function ui_ui(path)
 		green2 = 200,
 		blue2 = 200,
 		title = "Strata Main Menu",
+		triggerKey = "ESCAPE",
 		id = "Strata Main Menu",
 	}
 	ui.loadMainMenuWindow(x.id)
 	ui.loadWindowAttribute(x.id, "fontsize", v.fontsize)
 	ui.loadWindowAttribute(x.id, "fontaspectratio", v.fontaspectratio)
+	ui.loadWindowAttribute(x.id, "triggerKey", x.triggerKey)
+	ui.loadWindowFunction(x.id, "q", "quit")
+	ui.loadWindowFunction(x.id, "r", "resume")
 	local xt = UIFlatTexture:new{
 		red = 100,
 		green = 50,
@@ -57,6 +62,8 @@ function ui_ui(path)
 	local xQuit = UIButton:new{
 		buttonText = "Quit",
 		parentWindow = x.id,
+		functionTarget = x.id,
+		functionArgs = "quit",
 		id = "Quit",
 		left = x.left,
 		top = x.top - v.fontsize,
@@ -66,6 +73,8 @@ function ui_ui(path)
 	local xResume = UIButton:new{
 		buttonText = "Resume",
 		parentWindow = x.id,
+		functionTarget = x.id,
+		functionArgs = "resume",
 		id = "Resume",
 		left = x.left,
 		top = xQuit.bottom,
@@ -82,12 +91,14 @@ function ui_ui(path)
 	ui.loadFlatTexture(x.id, xQuit.id, xTex:collectArgs(path))
 	ui.loadWindowDimensions(x.id, xQuit.id, xQuit:getWindowBox())
 	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "text", xQuit.buttonText)
-	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "receiver", x.id)
+	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "receiver", xQuit.functionTarget)
+	ui.loadButtonAttribute(xQuit.parentWindow, xQuit.id, "args", xQuit.functionArgs)
 	ui.loadButton(xResume.parentWindow, xResume.id)
 	ui.loadFlatTexture(x.id, xResume.id, xTex:collectArgs(path))
 	ui.loadWindowDimensions(x.id, xResume.id, xResume:getWindowBox())
 	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "text", xResume.buttonText)
-	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "receiver", x.id)
+	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "receiver", xResume.functionTarget)
+	ui.loadButtonAttribute(xResume.parentWindow, xResume.id, "args", xResume.functionArgs)
 	local y = UIConsoleWindow:new{
 		red = 210,
 		green = 210,

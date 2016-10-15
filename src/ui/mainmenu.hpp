@@ -35,28 +35,11 @@ namespace strata
 		{
 			private:
 				intf::ApplInterface * applInterface;
-				virtual void receiveWindowInput(const SDLKey & k, const SDLMod &, bool isDown)
-				{
-					if(isDown)
-					{
-						if(k == SDLK_r)
-						{
-							setInvisible();
-						}
-						else if(k == SDLK_q)
-						{
-							quit();
-						}
-					}
-				}
 			public:
 				MainMenu(intf::UIInterface * _ui, intf::ApplInterface * _appl,
 						tiny::draw::IconTexture2D * _fontTexture) :
 					Window(_ui, _fontTexture), applInterface(_appl)
 				{
-					registerTriggerKey(SDLK_ESCAPE);
-					registerActiveKey(SDLK_q);
-					registerActiveKey(SDLK_r);
 				}
 
 				void quit(void)
@@ -82,15 +65,8 @@ namespace strata
 				{
 				}
 
-				virtual std::string getFunctionArgs(std::string buttonName, unsigned int _buttons)
-				{
-					if(!(_buttons & 1)) return "";
-					else if(buttonName == "Quit") return "quit";
-					else if(buttonName == "Resume") return "resume";
-					else return "";
-				}
-
-				/** Receive UI input (e.g. through button clicks). */
+				/** Receive UI input (e.g. through button clicks). This function implements behavior
+				 * that can be bound to certain inputs using Lua. */
 				virtual void receiveUIFunctionCall(std::string args)
 				{
 					if(args == "quit") quit();

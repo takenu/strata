@@ -30,6 +30,7 @@ UIWindow = {
 	red2 = 100, -- Text colour 2 (RGB)
 	green2 = 40,
 	blue2 = 40,
+	triggerKey = "",
 	id = "Default"
 }
 
@@ -79,6 +80,8 @@ UIMainMenuWindow = UIWindow:new{
 UIButton = UIWindow:new{
 	buttonText = "Button",
 	parentWindow = "",
+	functionTarget = "",
+	functionArgs = "",
 	id = "Default Button",
 }
 

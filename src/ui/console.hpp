@@ -60,9 +60,11 @@ namespace strata
 					luaInterface(_lua),
 					log(_fontTexture)
 				{
-					registerTriggerKey(SDLK_RETURN);
+					// TODO: Register keys from Lua
+/*					registerTriggerKey(SDLK_RETURN);
 					registerActiveKeySet( keySetTextComplete() );
 					registerActiveKey(SDLK_RETURN);
+					*/
 				}
 
 				virtual ~Console(void) {}

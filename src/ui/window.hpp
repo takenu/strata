@@ -41,9 +41,10 @@ namespace strata
 			private:
 				ScreenSquare * background; /**< Background texture object. */
 				ScreenSquare * highlight; /**< Highlight object, for active (parts of the) Window. */
-				std::set<SDLKey> triggerKeys; /**< Keys that activate/close the Window. */
-				std::set<SDLKey> activeKeys; /**< Keys the Window listens to while active. */
+				SDLKey closeKey; /**< The (often universal) close key that closes any active window. */
+				std::set<SDLKey> triggerKeys; /**< Keys that open and close the Window. */
 				std::map<std::string, Button> buttons; /**< Buttons on the Window. */
+				std::map<SDLKey, std::string> keyFunctions; /**< Keyboard functions of the Window. */
 				bool visible;
 				tiny::vec4 windowBox; /**< The box that the window is inside of. */
 				intf::UIInterface * uiInterface;
@@ -58,36 +59,34 @@ namespace strata
 					inputKeys->resetKeySet(triggerKeys);
 				}
 
-				/** Activate the entire 'activeKeys' key set as applicable window input. */
+				/** Activate keys for the Window as it becomes active. */
 				void activateInputKeys(void)
 				{
-					inputKeys->resetKeySet(activeKeys);
 					inputKeys->addKeySet(triggerKeys); // for de-activation of window
+					for(std::map<SDLKey, std::string>::iterator it = keyFunctions.begin();
+							it != keyFunctions.end(); it++)
+						inputKeys->addKey(it->first);
 				}
 
 				/** Receive key input on the Window. First the Window gets to do its generic
-				  * operations. If the Window is in visible mode and SDLK_ESCAPE is not
-				  * explicitly registered as an input key, then SDLK_ESCAPE will trigger a
-				  * window close. If SDLK_ESCAPE is registered, the only way for the window to
-				  * close is for the window itself to call setVisible(false). However, this
-				  * registration should be avoided whenever possible, in order to keep the
-				  * Window's close key as universal as possible.
-				  * Similar to SDLK_ESCAPE, every trigger key that activates a window can also
-				  * deactivate it. However, if the trigger key is part of the active keys, it
-				  * will not deactivate the window (unless the derived class explicitly defines
-				  * it to do so).
+				  * operations (i.e. open and close, using the trigger keys). However, if the
+				  * trigger key is part of the active keys, it will not deactivate the window
+				  * (unless the derived class explicitly defines it to do so).
 				  */
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & /*m*/, bool isDown)
 				{
 					if(isVisible())
 					{
-						if(isDown &&
-							   ((k == SDLK_ESCAPE && activeKeys.count(SDLK_ESCAPE)==0 ) ||
-								(triggerKeys.count(k) > activeKeys.count(k))))
+						if(isDown && keyFunctions.count(k) > 0)
+						{
+							receiveUIFunctionCall(keyFunctions[k]);
+						}
+						else if(isDown && (k == closeKey || triggerKeys.count(k) > 0))
 						{
 							setVisible(false);
 						}
-						else receiveWindowInput(k, m, isDown);
+						else if(isDown) std::cout << " Window::receiveKeyInput() : Unmapped key input '"
+							<< static_cast<unsigned char>(k)<<"' on '"<<title<<"'!"<<std::endl;
 					}
 					else if(isDown && !isVisible() && triggerKeys.count(k) > 0)
 					{
@@ -131,7 +130,7 @@ namespace strata
 							{
 								if(it->second.receiveMouseTrigger(x,y))
 									uiInterface->callExternalFunction(
-											it->second.getReceiver(), getFunctionArgs(it->first, b) );
+											it->second.getReceiver(), it->second.getArgs() );
 							}
 						}
 						return true;
@@ -164,8 +163,6 @@ namespace strata
 				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
 				intf::UIInterface * getUIInterface(void) { return uiInterface; }
 
-				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
-
 				void drawTitle(void)
 				{
 					if(title.length() > 0)
@@ -180,7 +177,7 @@ namespace strata
 					TextBox(_fontTexture),
 					intf::UIListener(_ui),
 					intf::UIReceiver(_ui),
-					background(0), visible(false),
+					background(0), highlight(0), closeKey(SDLK_UNKNOWN), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)
 				{
 					inputKeys = uiInterface->subscribe(this);
@@ -209,6 +206,18 @@ namespace strata
 					}
 				}
 
+				/** Set the (unique) key that closes the active window. */
+				void setCloseKey(const SDLKey & k)
+				{
+					closeKey = k;
+				}
+
+				/** Map a specific key to a specific function. */
+				void setFunctionMapping(const SDLKey & k, std::string args)
+				{
+					keyFunctions.emplace(k, args);
+				}
+
 				/** Register a key as a trigger that opens this Window. This function also
 				  * pushes the trigger to the initial input key set. At a later stage, the
 				  * trigger keys can be re-set as the only keys whose input can trigger
@@ -219,25 +228,11 @@ namespace strata
 					inputKeys->addKey(k); // Always add to input keys (also for deactivation)
 				}
 
-				/** Register a key as a trigger to be received by the Window when it is active.
-				  * The deriving Window must implement every registered active key in its
-				  * virtual receiveWindowInput() function.
-				  */
-				void registerActiveKey(const SDLKey &k)
-				{
-					activeKeys.emplace(k);
-					if(isVisible()) inputKeys->addKey(k);
-				}
-
-				void registerActiveKeySet(const std::set<SDLKey> &k)
-				{
-					activeKeys = uniteKeySets(k, activeKeys);
-				}
-
 				/** Inherited from UIReceiver. UIReceivers can receive button clicks. However, since the
 				  * Window itself cannot know what its deriving classes create buttons for, this function
 				  * does nothing, and the deriving class will need to override it to generate a response.
 				  */
+				// TODO: Extend with SDLMod, to allow e.g. Shift+click, or generally SDLMod's on user input
 				virtual void receiveUIFunctionCall(std::string /*args*/) {}
 
 				void setBackground(std::string type, ScreenSquare * ss)
@@ -280,6 +275,7 @@ namespace strata
 				  * Such function calls are dependent on the properties of the deriving class and
 				  * therefore the signature of this function contains arguments for all context
 				  * values that may be of importance for determining the function call's arguments.
+				  * TODO: Was used for button clicks but that is no longer necessary. May be obsolete.
 				  */
 				virtual std::string getFunctionArgs(std::string /*buttonName*/, unsigned int /*buttons*/)
 				{
@@ -310,6 +306,8 @@ namespace strata
 					if(attribute == "title") title = value;
 					else if(attribute == "fontsize") setFontSize( tool::toFloat(value) );
 					else if(attribute == "fontaspectratio") setAspectRatio( tool::toFloat(value) );
+					else if(attribute == "closekey") closeKey = toSDLKey(value);
+					else if(attribute == "triggerKey") registerTriggerKey(toSDLKey(value));
 					// Send all attributes, even those that already affect the Window's base parameters.
 					// The derived class may have textboxes too that also may want to adjust their font
 					// size and aspect ratio.

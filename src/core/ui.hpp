@@ -52,6 +52,7 @@ namespace strata
 				std::map<std::string, intf::UIReceiver*> receivers;
 				float defaultFontSize;
 				float defaultAspectRatio;
+				SDLKey closeKey; /**< A key that closes the active window when pressed. */
 
 				/** Reserve enough space for the Window to draw all of its text, using the
 				  * Window's reserve() function. */
@@ -89,12 +90,19 @@ namespace strata
 				void loadMonitorWindow(std::string id);
 				void loadMainMenuWindow(std::string id);
 
+				/** Load an attribute-value pair for the UI. */
+				void loadAttribute(std::string attribute, std::string value);
+
 				/** Load an attribute-value pair for the Window whose key in the 'windows' map is 'target'. */
 				void loadWindowAttribute(std::string target, std::string attribute, std::string value);
 
 				/** Load an attribute-value pair for a Button. */
 				void loadButtonAttribute(std::string target, std::string button,
 						std::string attribute, std::string value);
+
+				/** Load a function mapping for a Window. This maps a key press to a specific Window
+				  * function, when the Window is active. */
+				void loadWindowFunction(std::string target, std::string key, std::string function);
 
 				/** Load a font colour for a target Window. */
 				void loadWindowFontColour(std::string target, std::string attribute,
@@ -111,6 +119,12 @@ namespace strata
 				{
 					if(console) console->logMessage(message);
 				}
+
+				/** Set a key that closes all the UI's windows. */
+				void setCloseKey(const SDLKey & k);
+
+				/** Initialize basic properties of a newly created Window. */
+				void initializeWindow(ui::Window * window, std::string id);
 
 				/** Redirect InputInterpreter subscription requests. */
 				virtual intf::InputSet * subscribe(intf::UIListener * l)

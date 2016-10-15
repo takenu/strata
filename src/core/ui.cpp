@@ -62,6 +62,8 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 			"loadFont", &UIManager::loadFont,
 			"loadFlatTexture", &UIManager::loadFlatTexture,
 			"loadButton", &UIManager::loadButton,
+			"loadAttribute", &UIManager::loadAttribute,
+			"loadWindowFunction", &UIManager::loadWindowFunction,
 			"loadWindowAttribute", &UIManager::loadWindowAttribute,
 			"loadButtonAttribute", &UIManager::loadButtonAttribute,
 			"loadWindowFontColour", &UIManager::loadWindowFontColour,
@@ -70,6 +72,14 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
 			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
 			);
+}
+
+void UIManager::initializeWindow(ui::Window * window, std::string id)
+{
+	window->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
+	window->setCloseKey(closeKey);
+	windows.emplace(id, window);
+	renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
 /** Load a Console window from Lua. Unlike other windows, the UIManager tracks the Console window
@@ -88,9 +98,7 @@ void UIManager::loadConsoleWindow(std::string id)
 		delete console; console = 0;
 	}
 	console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface, fontTexture);
-	console->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
-	windows.emplace(id, console);
-	renderInterface->addScreenRenderable(console->getRenderable(), false, false, tiny::draw::BlendMix);
+	initializeWindow(console, id);
 }
 
 void UIManager::loadMainMenuWindow(std::string id)
@@ -101,9 +109,7 @@ void UIManager::loadMainMenuWindow(std::string id)
 	}
 	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
-	mainMenu->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
-	windows.emplace(id, mainMenu);
-	renderInterface->addScreenRenderable(mainMenu->getRenderable(), false, false, tiny::draw::BlendMix);
+	initializeWindow(mainMenu, id);
 }
 
 void UIManager::loadMonitorWindow(std::string id)
@@ -114,9 +120,7 @@ void UIManager::loadMonitorWindow(std::string id)
 	}
 	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
-	monitor->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
-	windows.emplace(id, monitor);
-	renderInterface->addScreenRenderable(monitor->getRenderable(), false, false, tiny::draw::BlendMix);
+	initializeWindow(monitor, id);
 }
 
 void UIManager::loadFlatTexture(std::string target, std::string type, unsigned int size, unsigned int red,
@@ -145,7 +149,7 @@ void UIManager::loadWindowFontColour(std::string target, std::string attribute,
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadMonitorWindowFontColour() : Can't load "<<attribute<<"=("
+		std::cout << " loadWindowFontColour() : Can't load "<<attribute<<"=("
 			<<red<<","<<green<<","<<blue<<") for window "<<target<<"!"<<std::endl;
 	}
 	else window->setFontColour(attribute, tiny::draw::Colour(red,green,blue));
@@ -157,10 +161,37 @@ void UIManager::loadWindowDimensions(std::string target, std::string attribute,
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadMonitorWindowDimensions() : Can't load "<<attribute<<"=("
+		std::cout << " loadWindowDimensions() : Can't load "<<attribute<<"=("
 			<<left<<","<<top<<","<<right<<","<<bottom<<") for window "<<target<<"!"<<std::endl;
 	}
 	else window->setDimensions(attribute, left, top, right, bottom);
+}
+
+void UIManager::loadWindowFunction(std::string target, std::string key, std::string function)
+{
+	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
+	if(!window)
+	{
+		std::cout << " loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
+			<<"' for non-existing window "<<target<<"!"<<std::endl;
+	}
+	else if(toSDLKey(key) == SDLK_UNKNOWN)
+	{
+		std::cout << " loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
+			<<"' for window "<<target<<" because key is unknown!"<<std::endl;
+	}
+	else window->setFunctionMapping(toSDLKey(key), function);
+}
+
+void UIManager::setCloseKey(const SDLKey & k)
+{
+	closeKey = k;
+}
+
+void UIManager::loadAttribute(std::string attribute, std::string value)
+{
+	if(attribute == "closeKey") setCloseKey(toSDLKey(value));
+	else std::cout << " UIManager::loadAttribute() : No mapping for attr = '"<<attribute<<"'!"<<std::endl;
 }
 
 void UIManager::loadWindowAttribute(std::string target, std::string attribute, std::string value)

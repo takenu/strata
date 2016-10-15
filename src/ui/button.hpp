@@ -40,7 +40,7 @@ namespace strata
 				TextBox * textbox; /**< A textbox to hold text. */
 				tiny::draw::RGBATexture2D * texture; /**< A texture for the button. */
 				std::string receiver; /**< The identifier for the receiver of the click. */
-
+				std::string args; /**< The argument(s) sent to the receiver on a click. */
 			public:
 				/** Receive mouse input (clicks) on the Button.
 				  * The return value of the function should be whether or not the click was 'processed'.
@@ -87,6 +87,10 @@ namespace strata
 				  * linked to this Button. */
 				std::string getReceiver(void) const { return receiver; }
 
+				/** Get the function arguments sent to the Receiver on a call. */
+				std::string getArgs(void) const { return args; }
+
+				/** Get the Renderable of the Button, i.e. the textbox's renderable. */
 				tiny::draw::Renderable * getRenderable(void)
 				{
 					if(textbox) return textbox->getRenderable();
@@ -153,8 +157,8 @@ namespace strata
 						else if(attribute == "fontsize") textbox->setFontSize( tool::toFloat(value) );
 						else if(attribute == "fontaspectratio") textbox->setAspectRatio( tool::toFloat(value) );
 						else if(attribute == "receiver") receiver = value;
-						// Send all attributes, even those that already affect the Window's base parameters.
-						// The derived class may have textboxes too that also may want to adjust their font
+						else if(attribute == "args") args = value;
+						else std::cout << " Button::setAttribute() : No attr '"<<attribute<<"'!"<<std::endl;
 					}
 					else std::cout << " Button::setAttribute() : No textbox, nothing done! "<<std::endl;
 				}
