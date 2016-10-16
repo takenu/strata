@@ -5,13 +5,13 @@ function loadscr(fname)
 	f()
 end
 
-function loadobj(path)
+function loadobj(path, ...)
 	loadscr(path)
 --	print("function will be: ","function getfunc() return " .. string.gsub(string.sub(path,1,string.find(path,'.lua')-1),'/','_') .. " end")
 	local h = assert(load("function getfunc() return " .. string.gsub(string.sub(path,1,string.find(path,'.lua')-1),'/','_') .. " end"))
 	h()
 	local func = getfunc()
-	func(path)
+	func(path, ...)
 	getfunc = nil
 end
 

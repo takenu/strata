@@ -9,6 +9,7 @@ UIFont = {
 	fontaspectratio = 2,
 	fontpixels = 160,
 	fontresolution = 2048,
+	id = "Default",
 }
 
 UIFlatTexture = {

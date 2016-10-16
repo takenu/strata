@@ -79,6 +79,8 @@ void UIManager::initializeWindow(ui::Window * window, std::string id)
 	window->setAttribute("title",id); // Initialise 'title' as 'id' - Windows may or may not render this
 	window->setCloseKey(closeKey);
 	windows.emplace(id, window);
+	loadWindowAttribute(id, "fontsize", tool::convertToString(defaultFontSize));
+	loadWindowAttribute(id, "fontaspectratio", tool::convertToString(defaultAspectRatio));
 	renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
@@ -127,7 +129,7 @@ void UIManager::loadFlatTexture(std::string target, std::string type, unsigned i
 		unsigned int green, unsigned int blue, unsigned int alpha)
 {
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
-	if(!window) std::cout << " loadFlatTexture() : Can't load texture for window "<<target<<"!"<<std::endl;
+	if(!window) std::cout << " UIManager::loadFlatTexture() : Can't load texture for window "<<target<<"!"<<std::endl;
 	else
 	{
 		ui::ScreenSquare * background = new ui::ScreenSquare( tools::createTestTextureAlpha(
@@ -149,7 +151,7 @@ void UIManager::loadWindowFontColour(std::string target, std::string attribute,
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadWindowFontColour() : Can't load "<<attribute<<"=("
+		std::cout << " UIManager::loadWindowFontColour() : Can't load "<<attribute<<"=("
 			<<red<<","<<green<<","<<blue<<") for window "<<target<<"!"<<std::endl;
 	}
 	else window->setFontColour(attribute, tiny::draw::Colour(red,green,blue));
@@ -161,7 +163,7 @@ void UIManager::loadWindowDimensions(std::string target, std::string attribute,
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadWindowDimensions() : Can't load "<<attribute<<"=("
+		std::cout << " UIManager::loadWindowDimensions() : Can't load "<<attribute<<"=("
 			<<left<<","<<top<<","<<right<<","<<bottom<<") for window "<<target<<"!"<<std::endl;
 	}
 	else window->setDimensions(attribute, left, top, right, bottom);
@@ -172,12 +174,12 @@ void UIManager::loadWindowFunction(std::string target, std::string key, std::str
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
+		std::cout << " UIManager::loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
 			<<"' for non-existing window "<<target<<"!"<<std::endl;
 	}
 	else if(toSDLKey(key) == SDLK_UNKNOWN)
 	{
-		std::cout << " loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
+		std::cout << " UIManager::loadWindowFunction() : Can't map key '"<<key<<"' -> function '"<<function
 			<<"' for window "<<target<<" because key is unknown!"<<std::endl;
 	}
 	else window->setFunctionMapping(toSDLKey(key), function);
@@ -199,7 +201,7 @@ void UIManager::loadWindowAttribute(std::string target, std::string attribute, s
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadWindowAttribute() : Can't load "<<attribute<<"="<<value
+		std::cout << " UIManager::loadWindowAttribute() : Can't load "<<attribute<<"="<<value
 			<< " for window "<<target<<"!"<<std::endl;
 	}
 	else window->setAttribute(attribute, value);
@@ -211,7 +213,7 @@ void UIManager::loadButtonAttribute(std::string target, std::string button,
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadButtonAttribute() : Can't load "<<attribute<<"="<<value
+		std::cout << " UIManager::loadButtonAttribute() : Can't load "<<attribute<<"="<<value
 			<< " for window "<<target<<" button "<<button<<"!"<<std::endl;
 	}
 	else window->setButtonAttribute(button, attribute, value);
@@ -222,13 +224,15 @@ void UIManager::loadButton(std::string target, std::string buttonId)
 	ui::Window * window = (windows.count(target) > 0 ? windows[target] : 0);
 	if(!window)
 	{
-		std::cout << " loadButton() : Can't load button "<<buttonId
+		std::cout << " UIManager::loadButton() : Can't load button "<<buttonId
 			<< " for target "<<target<<"!"<<std::endl;
 	}
 	else
 	{
 		window->loadButton(buttonId);
 		window->setButtonTextBox(buttonId, fontTexture);
+		loadButtonAttribute(target, buttonId, "fontsize", tool::convertToString(defaultFontSize));
+		loadButtonAttribute(target, buttonId, "fontaspectratio", tool::convertToString(defaultAspectRatio));
 		tiny::draw::Renderable * buttonRenderable = window->getButtonRenderable(buttonId);
 		if(buttonRenderable) renderInterface->addScreenRenderable(buttonRenderable);
 		else std::cout << " UIManager::loadButton() : No renderable! "<<std::endl;
