@@ -133,6 +133,7 @@ namespace strata
 									uiInterface->callExternalFunction(
 											it->second.getReceiver(), it->second.getArgs() );
 							}
+							// TODO: Send clicks to windows for non-button effects (e.g. for text input)
 						}
 						return true;
 					}

@@ -35,6 +35,12 @@ UIWindow = {
 	id = "Default"
 }
 
+UIColour = {
+	red = 150,
+	green = 150,
+	blue = 150,
+}
+
 function UIFont:new(o)
 	o = o or {}
 	setmetatable(o,self)
@@ -53,12 +59,19 @@ function UIWindow:new(o)
 	self.__index = self
 	return o
 end
+function UIColour:new(o)
+	o = o or {}
+	setmetatable(o,self)
+	self.__index = self
+	return o
+end
 
 UIConsoleWindow = UIWindow:new{
 	title = "",
 	right = 0.0,
 	top = -0.4,
 	id = "Default Console",
+	logFontColour = UIColour:new{}
 }
 
 UIMonitorWindow = UIWindow:new{
@@ -105,5 +118,9 @@ end
 
 function UIWindow:getFontHighlight()
 	return self.red2, self.green2, self.blue2
+end
+
+function UIColour:collectArgs()
+	return self.red, self.green, self.blue
 end
 

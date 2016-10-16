@@ -36,7 +36,10 @@ namespace strata
 		{
 			private:
 				intf::LuaInterface * luaInterface;
-				TextBox log;
+				std::deque<std::string> log;
+				tiny::draw::Colour logFontColour;
+				unsigned int maxLogLines;
+				bool textIsAlwaysVisible;
 
 				/** This string can contain an arbitrary chunk of executable Lua code. */
 				std::string command;
@@ -50,7 +53,12 @@ namespace strata
 						std::cout << " Console: Execute Lua: "<<command<<std::endl;
 						luaInterface->executeLua(command);
 					}
-					command.clear();
+					if(command.size() > 0)
+					{
+						log.push_front(command);
+						if(log.size() > maxLogLines) log.pop_back();
+						command.clear();
+					}
 					setInvisible();
 				}
 			public:
@@ -58,7 +66,10 @@ namespace strata
 						tiny::draw::IconTexture2D * _fontTexture) :
 					Window(_ui, _fontTexture),
 					luaInterface(_lua),
-					log(_fontTexture)
+					log(),
+					logFontColour(0.0f,0.0f,0.0f),
+					maxLogLines(3),
+					textIsAlwaysVisible(true)
 				{
 				}
 
@@ -66,14 +77,35 @@ namespace strata
 
 				virtual void updateWindow(void)
 				{
-					if(!isVisible()) return;
+					if(!isVisible() && !textIsAlwaysVisible) return;
 					clear();
-					addTextFragment(command, getColour());
+					if(command.size()>0)
+					{
+						addTextFragment(command, getColour());
+					}
 					addNewline();
+					for(unsigned int i = 0; i < log.size(); i++)
+					{
+						addTextFragment(log[i], logFontColour);
+						addNewline();
+					}
 				}
 
-				virtual void setWindowAttribute(std::string, std::string)
+				virtual void setWindowAttribute(std::string attribute, std::string value)
 				{
+					if(attribute == "maxLogLines") maxLogLines = tool::toUnsignedInteger(value);
+					if(attribute == "textAlwaysVisible") textIsAlwaysVisible = tool::toBoolean(value);
+				}
+
+				// Not necessary (yet), log lines are part of Console textbox
+/*				virtual void setWindowDimensions(std::string attribute,
+						float left, float top, float right, float bottom)
+				{
+				}*/
+
+				virtual void setWindowFontColour(std::string attribute, const tiny::draw::Colour & _c)
+				{
+					if(attribute == "logFontColour") logFontColour = _c;
 				}
 
 				/** Receive functions. This is used to receive key input, and basically does the following:
@@ -85,6 +117,7 @@ namespace strata
 				{
 					// TODO: Implement backspace, implement multi-line, and implement cursor movement
 					if(args == "Execute") executeAndHide();
+					else if(args == "BACKSPACE" && command.size() > 0 ) command.pop_back();
 					else if(toSDLKey(args) != SDLK_UNKNOWN)
 						command.push_back( convertSDLinput(toSDLKey(args), getUIInterface()->getKeyMods()) );
 					else std::cout << " Console : Skipping non-text key press '"<<args<<"'!"<<std::endl;
