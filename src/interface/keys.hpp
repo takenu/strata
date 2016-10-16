@@ -247,7 +247,7 @@ namespace strata
 	/** The key set of all displayable symbols, joined with text manipulation keys. */
 	inline std::set<SDLKey> keySetTextCompleteWithEscape(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSymbolic());
+		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSpecial());
 		return keys;
 	}
 
@@ -255,7 +255,7 @@ namespace strata
 	  * Escape key that is used as a special input character that closes active UI elements. */
 	inline std::set<SDLKey> keySetTextComplete(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSymbolic());
+		std::set<SDLKey> keys = keySetTextCompleteWithEscape();
 		keys.erase(SDLK_ESCAPE);
 		return keys;
 	}

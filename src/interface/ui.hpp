@@ -213,6 +213,7 @@ namespace strata
 				UIInformation getUIInfo(std::string _id);
 
 				virtual void keyEvent(const SDLKey & k, bool) = 0;
+				virtual SDLMod getKeyMods(void) const = 0;
 				virtual void mouseEvent(float x, float y, unsigned int buttons) = 0;
 				virtual void callExternalFunction(std::string receiver, std::string args) = 0;
 

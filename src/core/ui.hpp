@@ -67,6 +67,7 @@ namespace strata
 				}
 
 				virtual void keyEvent(const SDLKey & k, bool isDown);
+				virtual SDLMod getKeyMods(void) const { return SDL_GetModState(); }
 				virtual void mouseEvent(float x, float y, unsigned int buttons);
 				virtual void callExternalFunction(std::string receiver, std::string args);
 

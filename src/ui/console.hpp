@@ -60,25 +60,9 @@ namespace strata
 					luaInterface(_lua),
 					log(_fontTexture)
 				{
-					// TODO: Register keys from Lua
-/*					registerTriggerKey(SDLK_RETURN);
-					registerActiveKeySet( keySetTextComplete() );
-					registerActiveKey(SDLK_RETURN);
-					*/
 				}
 
 				virtual ~Console(void) {}
-
-				virtual void receiveWindowInput(const SDLKey & k, const SDLMod & m, bool isDown)
-				{
-					std::cout << " Console : receive "<<k<<std::endl;
-					if(isDown)
-					{
-						if(k == SDLK_RETURN) executeAndHide();
-						else command.push_back( convertSDLinput(k,m) );
-						std::cout << " Console : Command = '"<<command<<"'"<<std::endl;
-					}
-				}
 
 				virtual void updateWindow(void)
 				{
@@ -90,6 +74,20 @@ namespace strata
 
 				virtual void setWindowAttribute(std::string, std::string)
 				{
+				}
+
+				/** Receive functions. This is used to receive key input, and basically does the following:
+				  * - if the executeKey is pressed, without modifiers, execute the text;
+				  * - if the input is valid text (or valid text navigation), perform the associated action;
+				  * - if the input is not valid text, do nothing.
+				  */
+				virtual void receiveUIFunctionCall(std::string args)
+				{
+					// TODO: Implement backspace, implement multi-line, and implement cursor movement
+					if(args == "Execute") executeAndHide();
+					else if(toSDLKey(args) != SDLK_UNKNOWN)
+						command.push_back( convertSDLinput(toSDLKey(args), getUIInterface()->getKeyMods()) );
+					else std::cout << " Console : Skipping non-text key press '"<<args<<"'!"<<std::endl;
 				}
 
 				void logMessage(const intf::UIMessage & message)

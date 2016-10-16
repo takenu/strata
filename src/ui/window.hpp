@@ -77,6 +77,7 @@ namespace strata
 				{
 					if(isVisible())
 					{
+						// If derived class implements a trigger key or the close key, it 'steals' its input
 						if(isDown && keyFunctions.count(k) > 0)
 						{
 							receiveUIFunctionCall(keyFunctions[k]);
@@ -162,6 +163,7 @@ namespace strata
 				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
 				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
 				intf::UIInterface * getUIInterface(void) { return uiInterface; }
+				bool isTriggerKey(const SDLKey & k) const { return triggerKeys.count(k) > 0; }
 
 				void drawTitle(void)
 				{

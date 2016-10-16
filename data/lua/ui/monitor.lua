@@ -4,11 +4,13 @@ function ui_monitor(path)
 		green = 100,
 		blue = 40,
 		title = "Chathran Strata Monitor",
+		triggerKey = "m",
 		id = "Chathran Strata Monitor",
 		fps = "true",
 		memusage = "true",
 	}
 	ui.loadMonitorWindow(w.id)
+	ui.loadWindowAttribute(w.id, "triggerKey", w.triggerKey)
 	ui.loadWindowAttribute(w.id, "fps", w.fps)
 	ui.loadWindowAttribute(w.id, "memusage", w.memusage)
 	local wt = UIFlatTexture:new{
