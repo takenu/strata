@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <set>
 
-#include <SDL.h> // for SDLKey enum only
+#include <SDL.h> // for SDL_Keycode enum only
 
 namespace strata
 {
@@ -28,10 +28,10 @@ namespace strata
 	  * Different keyboard layouts than mine are thus very poorly supported. Ideally there would be
 	  * a way for some configuration (via Lua) to dynamically define the keyboard layout. However,
 	  * for now I'll just settle with the non-portability.
-	  * This function will return the lowercase SDLKey for a-z characters, or for that matter it will
-	  * return the key itself for any SDLKey not specifically redefined in the below statement.
+	  * This function will return the lowercase SDL_Keycode for a-z characters, or for that matter it will
+	  * return the key itself for any SDL_Keycode not specifically redefined in the below statement.
 	  */
-	inline unsigned char convertSDLinput(const SDLKey & _k, const SDLMod & m)
+	inline unsigned char convertSDLinput(const SDL_Keycode & _k, const SDL_Keymod & m)
 	{
 		unsigned char k = static_cast<unsigned char>(_k);
 		if(	   ((m & KMOD_SHIFT) && !(m & KMOD_CAPS))
@@ -72,17 +72,18 @@ namespace strata
 	}
 
 	/** Unite two key sets, creating a set consisting of every key that is in either of the two sets. */
-	inline std::set<SDLKey> uniteKeySets(const std::set<SDLKey> &first, const std::set<SDLKey> &second)
+	inline std::set<SDL_Keycode> uniteKeySets(const std::set<SDL_Keycode> &first,
+			const std::set<SDL_Keycode> &second)
 	{
-		std::set<SDLKey> keys = first;
+		std::set<SDL_Keycode> keys = first;
 		keys.insert(second.begin(), second.end());
 		return keys;
 	}
 
 	/** A key set of all alphabetical keys. Does not include the space character (' ') or numbers. */
-	inline std::set<SDLKey> keySetAlphabetWithoutSpace(void)
+	inline std::set<SDL_Keycode> keySetAlphabetWithoutSpace(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_a);
 		keys.emplace(SDLK_b);
 		keys.emplace(SDLK_c);
@@ -114,16 +115,16 @@ namespace strata
 
 	/** The key set of all alphabetical keys. Includes a space by default, if spaces are not allowed,
 	  * use keySetAllphabetWithoutSpace instead. */
-	inline std::set<SDLKey> keySetAlphabet(void)
+	inline std::set<SDL_Keycode> keySetAlphabet(void)
 	{
-		std::set<SDLKey> keys = keySetAlphabetWithoutSpace();
+		std::set<SDL_Keycode> keys = keySetAlphabetWithoutSpace();
 		keys.emplace(SDLK_SPACE);
 		return keys;
 	}
 
-	inline std::set<SDLKey> keySetNumbers(void)
+	inline std::set<SDL_Keycode> keySetNumbers(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_0);
 		keys.emplace(SDLK_1);
 		keys.emplace(SDLK_2);
@@ -138,23 +139,23 @@ namespace strata
 	}
 
 	/** The key set of all alphabetical and numerical keys, without spaces. */
-	inline std::set<SDLKey> keySetAlphanumericWithoutSpace(void)
+	inline std::set<SDL_Keycode> keySetAlphanumericWithoutSpace(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetAlphabetWithoutSpace(),keySetNumbers());
+		std::set<SDL_Keycode> keys = uniteKeySets(keySetAlphabetWithoutSpace(),keySetNumbers());
 		return keys;
 	}
 
 	/** The key set of all alphabetical keys. Includes a space by default, if spaces are not allowed,
 	  * use keySetAllphabetWithoutSpace instead. */
-	inline std::set<SDLKey> keySetAlphanumeric(void)
+	inline std::set<SDL_Keycode> keySetAlphanumeric(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetAlphabet(),keySetNumbers());
+		std::set<SDL_Keycode> keys = uniteKeySets(keySetAlphabet(),keySetNumbers());
 		return keys;
 	}
 
-	inline std::set<SDLKey> keySetFunctionKeys(void)
+	inline std::set<SDL_Keycode> keySetFunctionKeys(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_F1);
 		keys.emplace(SDLK_F2);
 		keys.emplace(SDLK_F3);
@@ -171,9 +172,9 @@ namespace strata
 	}
 
 	/** Punctuation characters, seen in normal text usage. */
-	inline std::set<SDLKey> keySetPunctuation(void)
+	inline std::set<SDL_Keycode> keySetPunctuation(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_EXCLAIM);
 		keys.emplace(SDLK_QUOTEDBL);
 		keys.emplace(SDLK_QUOTE);
@@ -190,9 +191,9 @@ namespace strata
 
 	/** Symbolic stuff, i.e. keys that are not punctuation or alphanumeric,
 	  * but that do have a typical written form. */
-	inline std::set<SDLKey> keySetSymbolic(void)
+	inline std::set<SDL_Keycode> keySetSymbolic(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_HASH);
 		keys.emplace(SDLK_DOLLAR);
 		keys.emplace(SDLK_AMPERSAND);
@@ -213,9 +214,9 @@ namespace strata
 	}
 
 	/** Special input that is used when inputting text but in unusual ways. */
-	inline std::set<SDLKey> keySetSpecial(void)
+	inline std::set<SDL_Keycode> keySetSpecial(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_BACKSPACE);
 		keys.emplace(SDLK_TAB);
 		keys.emplace(SDLK_RETURN);
@@ -230,39 +231,39 @@ namespace strata
 	}
 
 	/** The key set of all alphanumeric characters and punctuation. */
-	inline std::set<SDLKey> keySetText(void)
+	inline std::set<SDL_Keycode> keySetText(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetAlphanumeric(), keySetPunctuation());
+		std::set<SDL_Keycode> keys = uniteKeySets(keySetAlphanumeric(), keySetPunctuation());
 		return keys;
 	}
 
 	/** The key set of all alphanumeric characters, punctuation and symbolic characters.
 	  * Alternatively, the key set of all displayable (text-editing) keys. */
-	inline std::set<SDLKey> keySetTextSymbolic(void)
+	inline std::set<SDL_Keycode> keySetTextSymbolic(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetText(), keySetSymbolic());
+		std::set<SDL_Keycode> keys = uniteKeySets(keySetText(), keySetSymbolic());
 		return keys;
 	}
 
 	/** The key set of all displayable symbols, joined with text manipulation keys. */
-	inline std::set<SDLKey> keySetTextCompleteWithEscape(void)
+	inline std::set<SDL_Keycode> keySetTextCompleteWithEscape(void)
 	{
-		std::set<SDLKey> keys = uniteKeySets(keySetTextSymbolic(), keySetSpecial());
+		std::set<SDL_Keycode> keys = uniteKeySets(keySetTextSymbolic(), keySetSpecial());
 		return keys;
 	}
 
 	/** The key set of all displayable symbols, joined with text manipulation keys, but without the
 	  * Escape key that is used as a special input character that closes active UI elements. */
-	inline std::set<SDLKey> keySetTextComplete(void)
+	inline std::set<SDL_Keycode> keySetTextComplete(void)
 	{
-		std::set<SDLKey> keys = keySetTextCompleteWithEscape();
+		std::set<SDL_Keycode> keys = keySetTextCompleteWithEscape();
 		keys.erase(SDLK_ESCAPE);
 		return keys;
 	}
 	/** Arrow keys. */
-	inline std::set<SDLKey> keySetArrows(void)
+	inline std::set<SDL_Keycode> keySetArrows(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_UP);
 		keys.emplace(SDLK_DOWN);
 		keys.emplace(SDLK_LEFT);
@@ -271,9 +272,9 @@ namespace strata
 	}
 
 	/** Modifier keys. */
-	inline std::set<SDLKey> keySetModifier(void)
+	inline std::set<SDL_Keycode> keySetModifier(void)
 	{
-		std::set<SDLKey> keys;
+		std::set<SDL_Keycode> keys;
 		keys.emplace(SDLK_RSHIFT);
 		keys.emplace(SDLK_LSHIFT);
 		keys.emplace(SDLK_RCTRL);
@@ -283,10 +284,10 @@ namespace strata
 		return keys;
 	}
 
-	/** Conversion from chars to SDLKey's. */
-	inline SDLKey toSDLKey(std::string k)
+	/** Conversion from chars to SDL_Keycode's. */
+	inline SDL_Keycode toSDLKey(std::string k)
 	{
-		SDLKey key = SDLK_UNKNOWN;
+		SDL_Keycode key = SDLK_UNKNOWN;
 		if(k == "a") key = SDLK_a;
 		else if(k == "b") key = SDLK_b;
 		else if(k == "c") key = SDLK_c;

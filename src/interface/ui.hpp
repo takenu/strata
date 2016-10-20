@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <set>
-#include <SDL.h> // for SDLKey enum only
+#include <SDL.h> // for SDL_Keycode enum only
 
 #include <tiny/algo/typecluster.h>
 
@@ -34,12 +34,12 @@ namespace strata
 		class UIListener;
 
 		/** The InputSet is an object where a set of (keyboard/mouse) input commands can be defined,
-		  * via their respective SDLKey symbols. */
+		  * via their respective SDL_Keycode symbols. */
 		class InputSet
 		{
 			private:
 				UIListener * listener; /**< A pointer to the class that will respond to key input. */
-				std::set<SDLKey> keys; /**< The keys that are registered by the listener. */
+				std::set<SDL_Keycode> keys; /**< The keys that are registered by the listener. */
 			public:
 				InputSet(UIListener * _listener) : listener(_listener) {}
 				~InputSet(void) {}
@@ -50,12 +50,12 @@ namespace strata
 					return listener;
 				}
 
-				void addKey(SDLKey k)
+				void addKey(SDL_Keycode k)
 				{
 					keys.emplace(k);
 				}
 
-				void addKeySet(std::set<SDLKey> ks)
+				void addKeySet(std::set<SDL_Keycode> ks)
 				{
 					keys.insert(ks.begin(), ks.end());
 				}
@@ -65,13 +65,13 @@ namespace strata
 					keys.clear();
 				}
 
-				void resetKeySet(std::set<SDLKey> ks)
+				void resetKeySet(std::set<SDL_Keycode> ks)
 				{
 					clearKeySet();
 					addKeySet(ks);
 				}
 
-				inline bool isSubscribed(const SDLKey &k)
+				inline bool isSubscribed(const SDL_Keycode &k)
 				{
 					return (keys.count(k) > 0);
 				}
@@ -95,7 +95,7 @@ namespace strata
 				virtual ~UIListener(void) {}
 
 				/** Signal that a key is pressed down or no longer pressed down. */
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & m, bool isDown) = 0;
+				virtual void receiveKeyInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown) = 0;
 
 				/** Signal that a mouse event occurred at position (x,y). */
 				virtual bool receiveMouseEvent(float x, float y, unsigned int buttons) = 0;
@@ -212,8 +212,8 @@ namespace strata
 				/** Get UI info from the UISource with identifier '_id'. */
 				UIInformation getUIInfo(std::string _id);
 
-				virtual void keyEvent(const SDLKey & k, bool) = 0;
-				virtual SDLMod getKeyMods(void) const = 0;
+				virtual void keyEvent(const SDL_Keycode & k, bool) = 0;
+				virtual SDL_Keymod getKeyMods(void) const = 0;
 				virtual void mouseEvent(float x, float y, unsigned int buttons) = 0;
 				virtual void callExternalFunction(std::string receiver, std::string args) = 0;
 

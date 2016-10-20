@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace strata::core;
 
 /** Interpret key press events. */
-void UIManager::keyEvent(const SDLKey & keyIndex, bool isDown)
+void UIManager::keyEvent(const SDL_Keycode & keyIndex, bool isDown)
 {
 	inputInterpreter.receiveInput(keyIndex, (isDown ? SDL_GetModState() : KMOD_NONE), isDown);
 }
@@ -185,7 +185,7 @@ void UIManager::loadWindowFunction(std::string target, std::string key, std::str
 	else window->setFunctionMapping(toSDLKey(key), function);
 }
 
-void UIManager::setCloseKey(const SDLKey & k)
+void UIManager::setCloseKey(const SDL_Keycode & k)
 {
 	closeKey = k;
 }

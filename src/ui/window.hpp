@@ -41,10 +41,10 @@ namespace strata
 			private:
 				ScreenSquare * background; /**< Background texture object. */
 				ScreenSquare * highlight; /**< Highlight object, for active (parts of the) Window. */
-				SDLKey closeKey; /**< The (often universal) close key that closes any active window. */
-				std::set<SDLKey> triggerKeys; /**< Keys that open and close the Window. */
+				SDL_Keycode closeKey; /**< The (often universal) close key that closes any active window. */
+				std::set<SDL_Keycode> triggerKeys; /**< Keys that open and close the Window. */
 				std::map<std::string, Button> buttons; /**< Buttons on the Window. */
-				std::map<SDLKey, std::string> keyFunctions; /**< Keyboard functions of the Window. */
+				std::map<SDL_Keycode, std::string> keyFunctions; /**< Keyboard functions of the Window. */
 				bool visible;
 				tiny::vec4 windowBox; /**< The box that the window is inside of. */
 				intf::UIInterface * uiInterface;
@@ -63,7 +63,7 @@ namespace strata
 				void activateInputKeys(void)
 				{
 					inputKeys->addKeySet(triggerKeys); // for de-activation of window
-					for(std::map<SDLKey, std::string>::iterator it = keyFunctions.begin();
+					for(std::map<SDL_Keycode, std::string>::iterator it = keyFunctions.begin();
 							it != keyFunctions.end(); it++)
 						inputKeys->addKey(it->first);
 				}
@@ -73,7 +73,7 @@ namespace strata
 				  * trigger key is part of the active keys, it will not deactivate the window
 				  * (unless the derived class explicitly defines it to do so).
 				  */
-				virtual void receiveKeyInput(const SDLKey & k, const SDLMod & /*m*/, bool isDown)
+				virtual void receiveKeyInput(const SDL_Keycode & k, const SDL_Keymod & /*m*/, bool isDown)
 				{
 					if(isVisible())
 					{
@@ -164,7 +164,7 @@ namespace strata
 				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
 				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
 				intf::UIInterface * getUIInterface(void) { return uiInterface; }
-				bool isTriggerKey(const SDLKey & k) const { return triggerKeys.count(k) > 0; }
+				bool isTriggerKey(const SDL_Keycode & k) const { return triggerKeys.count(k) > 0; }
 
 				void drawTitle(void)
 				{
@@ -210,13 +210,13 @@ namespace strata
 				}
 
 				/** Set the (unique) key that closes the active window. */
-				void setCloseKey(const SDLKey & k)
+				void setCloseKey(const SDL_Keycode & k)
 				{
 					closeKey = k;
 				}
 
 				/** Map a specific key to a specific function. */
-				void setFunctionMapping(const SDLKey & k, std::string args)
+				void setFunctionMapping(const SDL_Keycode & k, std::string args)
 				{
 					keyFunctions.emplace(k, args);
 				}
@@ -225,7 +225,7 @@ namespace strata
 				  * pushes the trigger to the initial input key set. At a later stage, the
 				  * trigger keys can be re-set as the only keys whose input can trigger
 				  * activation of the Window, using resetInputKeys(). */
-				void registerTriggerKey(const SDLKey & k)
+				void registerTriggerKey(const SDL_Keycode & k)
 				{
 					triggerKeys.emplace(k);
 					inputKeys->addKey(k); // Always add to input keys (also for deactivation)
@@ -235,7 +235,8 @@ namespace strata
 				  * Window itself cannot know what its deriving classes create buttons for, this function
 				  * does nothing, and the deriving class will need to override it to generate a response.
 				  */
-				// TODO: Extend with SDLMod, to allow e.g. Shift+click, or generally SDLMod's on user input
+				// TODO: Extend with SDL_Keymod, to allow e.g. Shift+click,
+				// or generally SDL_Keymod's on user input
 				virtual void receiveUIFunctionCall(std::string /*args*/) {}
 
 				void setBackground(std::string type, ScreenSquare * ss)

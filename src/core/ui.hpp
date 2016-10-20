@@ -52,7 +52,7 @@ namespace strata
 				std::map<std::string, intf::UIReceiver*> receivers;
 				float defaultFontSize;
 				float defaultAspectRatio;
-				SDLKey closeKey; /**< A key that closes the active window when pressed. */
+				SDL_Keycode closeKey; /**< A key that closes the active window when pressed. */
 
 				/** Reserve enough space for the Window to draw all of its text, using the
 				  * Window's reserve() function. */
@@ -66,8 +66,8 @@ namespace strata
 				{
 				}
 
-				virtual void keyEvent(const SDLKey & k, bool isDown);
-				virtual SDLMod getKeyMods(void) const { return SDL_GetModState(); }
+				virtual void keyEvent(const SDL_Keycode & k, bool isDown);
+				virtual SDL_Keymod getKeyMods(void) const { return SDL_GetModState(); }
 				virtual void mouseEvent(float x, float y, unsigned int buttons);
 				virtual void callExternalFunction(std::string receiver, std::string args);
 
@@ -122,7 +122,7 @@ namespace strata
 				}
 
 				/** Set a key that closes all the UI's windows. */
-				void setCloseKey(const SDLKey & k);
+				void setCloseKey(const SDL_Keycode & k);
 
 				/** Initialize basic properties of a newly created Window. */
 				void initializeWindow(ui::Window * window, std::string id);

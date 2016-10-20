@@ -61,13 +61,13 @@ namespace strata
 				/** Inherit function from tiny::os::SDLApplication to send key up/down events to UI. */
 				virtual void keyDownCallback(const int &k)
 				{
-					uiInterface->keyEvent(static_cast<SDLKey>(k), true);
+					uiInterface->keyEvent(static_cast<SDL_Keycode>(k), true);
 				}
 
 				/** Inherit function from tiny::os::SDLApplication to send key up/down events to UI. */
 				virtual void keyUpCallback(const int &k)
 				{
-					uiInterface->keyEvent(static_cast<SDLKey>(k), false);
+					uiInterface->keyEvent(static_cast<SDL_Keycode>(k), false);
 				}
 
 				/** Calculate current fps count. */

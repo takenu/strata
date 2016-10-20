@@ -116,7 +116,7 @@ namespace strata
 				  * input once more to a lower ranked listener.
 				  * Obviously one could try to work around this but for now single-input single-result
 				  * doesn't look like a harsh restriction. */
-				void receiveInput(const SDLKey & k, const SDLMod & m, bool isDown)
+				void receiveInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown)
 				{
 					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
 						if((*it)->isSubscribed(k))

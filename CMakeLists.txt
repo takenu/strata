@@ -21,19 +21,22 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${STRATA_SOURCE_DIR})
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
-find_package(SDL REQUIRED)
-find_package(SDL_image REQUIRED)
-find_package(SDL_ttf REQUIRED)
-find_package(SDL_net REQUIRED)
 find_package(Lua REQUIRED)
 find_package(Selene REQUIRED)
 find_package(Tinygame REQUIRED)
+
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+PKG_SEARCH_MODULE(SDL2TTF REQUIRED SDL2_ttf>=2.0.0)
+PKG_SEARCH_MODULE(SDL2NET REQUIRED SDL2_net>=2.0.0)
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic -std=c++11 -ldl") # ldl for lua loadlib.c which uses it; c++11 for Selene
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
-set(CMAKE_EXE_LINKER_FLAGS "-lrt")
+#set(CMAKE_EXE_LINKER_FLAGS "-lrt")
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
 include_directories(${OPENGL_INCLUDE_DIR})
@@ -41,14 +44,14 @@ link_directories(${OPENGL_LIBRARY_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 link_directories(${GLEW_LIBRARY_DIR})
 include_directories(${OPENAL_INCLUDE_DIR})
-include_directories(${SDL_INCLUDE_DIR})
-link_directories(${SDL_LIBRARY_DIR})
-include_directories(${SDL_IMAGE_INCLUDE_DIR})
-link_directories(${SDL_IMAGE_LIBRARY_DIR})
-include_directories(${SDL_TTF_INCLUDE_DIR})
-link_directories(${SDL_TTF_LIBRARY_DIR})
-include_directories(${SDL_NET_INCLUDE_DIR})
-link_directories(${SDL_NET_LIBRARY_DIR})
+include_directories(${SDL2_INCLUDE_DIRS})
+link_directories(${SDL2_LIBRARY_DIRS})
+include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+link_directories(${SDL2_IMAGE_LIBRARY_DIRS})
+include_directories(${SDL2_TTF_INCLUDE_DIRS})
+link_directories(${SDL2_TTF_LIBRARY_DIRS})
+include_directories(${SDL2_NET_INCLUDE_DIRS})
+link_directories(${SDL2_NET_LIBRARY_DIRS})
 include_directories(${LUA_INCLUDE_DIR})
 link_directories(${LUA_LIBRARY_DIR})
 include_directories(${TINYGAME_INCLUDE_DIR})
@@ -64,10 +67,10 @@ set(USED_LIBS
               ${OPENGL_LIBRARY}
               ${GLEW_LIBRARY}
               ${OPENAL_LIBRARY}
-              ${SDL_LIBRARY}
-              ${SDLIMAGE_LIBRARY}
-              ${SDLTTF_LIBRARY}
-              ${SDLNET_LIBRARY})
+              ${SDL2_LIBRARIES}
+              ${SDL2IMAGE_LIBRARIES}
+              ${SDL2TTF_LIBRARIES}
+              ${SDL2NET_LIBRARIES})
 
 file(GLOB STRATA_SOURCES RELATIVE ${STRATA_SOURCE_DIR}
 	src/core/*.cpp
