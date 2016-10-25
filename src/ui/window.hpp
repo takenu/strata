@@ -120,8 +120,10 @@ namespace strata
 				  * it can interpret the mouse click. */
 				virtual bool receiveMouseEvent(float x, float y, unsigned int b)
 				{
-					//std::cout << " Window::receiveMouseEvent() : Window box = ("<<windowBox.x<<", "
-					//	<<windowBox.z<<") x ("<<windowBox.y<<", "<<windowBox.w<<")"<<std::endl;
+//					std::cout << " Window::receiveMouseEvent() : Window box = ("<<windowBox.x<<", "
+//						<<windowBox.z<<") x ("<<windowBox.y<<", "<<windowBox.w<<") vs mouse = ("<<x
+//						<<","<<y<<")"<<std::endl;
+					if(!isVisible()) return false;
 					if(x > windowBox.x && x < windowBox.z && y < windowBox.y && y > windowBox.w)
 					{
 						if(b > 0)
