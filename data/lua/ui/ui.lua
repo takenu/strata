@@ -8,5 +8,6 @@ function ui_ui(path)
 	loadobj("ui/monitor.lua")
 	loadobj("ui/mainmenu.lua", v)
 	loadobj("ui/console.lua")
+	loadobj("ui/tergen.lua", v)
 end
 

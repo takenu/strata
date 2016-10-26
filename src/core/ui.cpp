@@ -68,6 +68,7 @@ void UIManager::registerLuaFunctions(sel::State & luaState)
 			"loadButtonAttribute", &UIManager::loadButtonAttribute,
 			"loadWindowFontColour", &UIManager::loadWindowFontColour,
 			"loadWindowDimensions", &UIManager::loadWindowDimensions,
+			"loadBaseWindow", &UIManager::loadBaseWindow,
 			"loadConsoleWindow", &UIManager::loadConsoleWindow,
 			"loadMonitorWindow", &UIManager::loadMonitorWindow,
 			"loadMainMenuWindow", &UIManager::loadMainMenuWindow
@@ -84,6 +85,19 @@ void UIManager::initializeWindow(ui::Window * window, std::string id)
 	renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
 }
 
+/** Load a custom window from Lua. This makes merely a standard Window, where all functionality
+  * has to come from Lua-loaded buttons and functions. */
+void UIManager::loadBaseWindow(std::string id)
+{
+	if(windows.count(id) > 0 || receivers.count(id) > 0)
+	{
+		std::cout << " UIManager::loadCustomWindow() : ID not unique - skipped! "<<std::endl;
+		return;
+	}
+	ui::Window * window = new ui::Window(static_cast<intf::UIInterface*>(this), fontTexture);
+	initializeWindow(window, id);
+}
+
 /** Load a Console window from Lua. Unlike other windows, the UIManager tracks the Console window
   * specifically, since it will provide a service to other parts of the program to print messages.
   * Note that the Console window cannot be loaded on UIManager creation, since it depends on Lua
@@ -93,6 +107,7 @@ void UIManager::loadConsoleWindow(std::string id)
 	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadConsoleWindow() : ID not unique - skipped! "<<std::endl;
+		return;
 	}
 	if(console)
 	{
@@ -108,6 +123,7 @@ void UIManager::loadMainMenuWindow(std::string id)
 	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
+		return;
 	}
 	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
@@ -119,6 +135,7 @@ void UIManager::loadMonitorWindow(std::string id)
 	if(windows.count(id) > 0 || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
+		return;
 	}
 	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);

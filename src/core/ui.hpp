@@ -87,6 +87,7 @@ namespace strata
 				void loadFlatTexture(std::string target, std::string type, unsigned int size,
 						unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha);
 
+				void loadBaseWindow(std::string id);
 				void loadConsoleWindow(std::string id);
 				void loadMonitorWindow(std::string id);
 				void loadMainMenuWindow(std::string id);

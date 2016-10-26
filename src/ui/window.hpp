@@ -268,7 +268,10 @@ namespace strata
 					else if(hasButton(type)) return buttons[type].getBackgroundRenderable();
 				}*/
 
-				virtual void updateWindow(void) = 0;
+				virtual void updateWindow(void)
+				{
+				}
+
 				void update(void)
 				{
 					updateWindow();
@@ -332,7 +335,9 @@ namespace strata
 				}
 
 				/** Set attributes not defined by the Window itself but by the derived class. */
-				virtual void setWindowAttribute(std::string attribute, std::string value) = 0;
+				virtual void setWindowAttribute(std::string /*attribute*/, std::string /*value*/)// = 0;
+				{
+				}
 
 				/** Allow setting of font colours. */
 				void setFontColour(std::string attribute, const tiny::draw::Colour & _colour)
