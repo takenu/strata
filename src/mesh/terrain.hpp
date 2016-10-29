@@ -41,7 +41,7 @@ namespace strata
 		  * mesh fragments, and Layers, which are stratigraphical components of the terrain. The Bundles are joined into
 		  * Layers using Strip objects, which define the polygons required to join distinct meshes but which do not contain
 		  * vertices of their own. Then, the Layers are glued on top of each other using Stitches. */
-		class Terrain : public intf::UISource
+		class Terrain : public intf::UISource, public intf::UIReceiver
 		{
 			private:
 				MasterLayer * masterLayer;
@@ -177,6 +177,7 @@ namespace strata
 			public:
 				Terrain(intf::RenderInterface * _renderer, intf::UIInterface * _uiInterface) :
 					intf::UISource("Terrain",_uiInterface),
+					intf::UIReceiver("Terrain", _uiInterface),
 					masterLayer(0),
 					maxMeshSize(400.0f),
 					renderer(_renderer),
@@ -279,6 +280,12 @@ namespace strata
 					intf::UIInformation info;
 					info.addPair("Memory usage",tool::convertToStringDelimited<long unsigned int>(usedCapacity())+" bytes");
 					return info;
+				}
+
+				virtual void receiveUIFunctionCall(std::string args)
+				{
+					if(args == "compress") std::cout << " Terrain::receiveUIFunctionCall() : Compressing! "<<std::endl;
+					else std::cout << " Terrain::receiveUIFunctionCall() : Unknown argument '"<<args<<"'!"<<std::endl;
 				}
 		};
 	}

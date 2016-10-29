@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::intf;
 
-UISource::UISource(std::string _id, UIInterface * _ui) : tiny::algo::TypeClusterObject<std::string, UISource>(_id, this, _ui->getSourceTypeCluster())
+UISource::UISource(std::string _id, UIInterface * _ui) :
+	tiny::algo::TypeClusterObject<std::string, UISource>(_id, this, _ui->getSourceTypeCluster())
 {
 }
 
@@ -28,7 +29,16 @@ UISource::~UISource(void)
 {
 }
 
-UIInterface::UIInterface(void) : sources("", "UISourceTC")
+UIReceiver::UIReceiver(std::string _id, UIInterface * _ui) :
+	tiny::algo::TypeClusterObject<std::string, UIReceiver>(_id, this, _ui->getReceiverTypeCluster())
+{
+}
+
+UIReceiver::~UIReceiver(void)
+{
+}
+
+UIInterface::UIInterface(void) : sources("", "UISourceTC"), receivers("", "UIReceiverTC")
 {
 }
 
@@ -37,4 +47,11 @@ UIInformation UIInterface::getUIInfo(std::string _id)
 	UISource * source = sources.find(_id);
 	if(!source) return UIInformation();
 	else return source->getUIInfo();
+}
+
+UIReceiver * UIInterface::getUIReceiver(std::string _id)
+{
+	UIReceiver * receiver = receivers.find(_id);
+	if(!receiver) return 0;
+	else return receiver;
 }

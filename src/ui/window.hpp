@@ -99,15 +99,15 @@ namespace strata
 					}
 				}
 
-				inline bool hasButton(std::string key) const
+				inline bool hasButton(std::string _key) const
 				{
-					return (buttons.count(key)>0);
+					return (buttons.count(_key)>0);
 				}
 
 				/** Get a Button object. */
-				Button * getButton(std::string key)
+				Button * getButton(std::string _key)
 				{
-					if(hasButton(key)) return &(buttons.find(key)->second);
+					if(hasButton(_key)) return &(buttons.find(_key)->second);
 					else return 0;
 				}
 
@@ -176,11 +176,11 @@ namespace strata
 					}
 				}
 			public:
-				Window(intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
+				Window(std::string _id, intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						std::string _title = "") :
 					TextBox(_fontTexture),
 					intf::UIListener(_ui),
-					intf::UIReceiver(_ui),
+					intf::UIReceiver(_id, _ui),
 					background(0), highlight(0), closeKey(SDLK_UNKNOWN), visible(false),
 					uiInterface(_ui), inputKeys(0), title(_title)
 				{

@@ -104,16 +104,16 @@ namespace strata
 		/** The UIReceiver is a base class to non-UI classes that can receive function calls through
 		  * user interaction. They cannot process raw UI input such as button and key presses, which
 		  * must first be handled by standard UI elements (e.g. windows). */
-		class UIReceiver
+		class UIReceiver : public tiny::algo::TypeClusterObject<std::string, UIReceiver>
 		{
 			private:
 				UIInterface * ui; /**< A link to the UI that governs the listener. */
 			public:
-				UIReceiver(UIInterface * _ui) : ui(_ui)
-				{
-				}
+				UIReceiver(std::string _id, UIInterface * _ui);// : ui(_ui)
+//				{
+//				}
 
-				virtual ~UIReceiver(void) {}
+				virtual ~UIReceiver(void);// {}
 
 				/** Receive a function call through the UI. Arguments, if any, are provided in 'args'. */
 				virtual void receiveUIFunctionCall(std::string args) = 0;
@@ -195,22 +195,27 @@ namespace strata
 		};
 
 		typedef tiny::algo::TypeCluster<std::string, UISource> UISourceTC;
+		typedef tiny::algo::TypeCluster<std::string, UIReceiver> UIReceiverTC;
 
 		/** The UIInterface allows non-UI objects to register themselves with the UI,
 		  * after which the UI can retrieve the information it needs directly from them. */
 		class UIInterface
 		{
 			private:
-				friend class UISource;
+				friend class UISource; // to allow using getSourceTypeCluster()
+				friend class UIReceiver; // to allow using getReceiverTypeCluster()
 				UISourceTC & getSourceTypeCluster(void) { return sources; }
+				UIReceiverTC & getReceiverTypeCluster(void) { return receivers; }
 			protected:
 				UISourceTC sources;
+				UIReceiverTC receivers;
 
 				UIInterface(void);
 				~UIInterface(void) {}
 			public:
 				/** Get UI info from the UISource with identifier '_id'. */
 				UIInformation getUIInfo(std::string _id);
+				UIReceiver * getUIReceiver(std::string _id);
 
 				virtual void keyEvent(const SDL_Keycode & k, bool) = 0;
 				virtual SDL_Keymod getKeyMods(void) const = 0;

@@ -49,10 +49,8 @@ void UIManager::mouseEvent(float x, float y, unsigned int buttons)
 /** Call functions of non-UI classes through UI functionality. */
 void UIManager::callExternalFunction(std::string receiver, std::string args)
 {
-	if(receivers.count(receiver) > 0)
-		receivers[receiver]->receiveUIFunctionCall(args);
-	else if(windows.count(receiver) > 0)
-		windows[receiver]->receiveUIFunctionCall(args);
+	intf::UIReceiver * target = getUIReceiver(receiver);
+	if(target) target->receiveUIFunctionCall(args);
 	else std::cout << " UIManager::callExternalFunction() : No receiver '"<<receiver<<"'!"<<std::endl;
 }
 
@@ -89,12 +87,12 @@ void UIManager::initializeWindow(ui::Window * window, std::string id)
   * has to come from Lua-loaded buttons and functions. */
 void UIManager::loadBaseWindow(std::string id)
 {
-	if(windows.count(id) > 0 || receivers.count(id) > 0)
+	if(windows.count(id) > 0)// || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadCustomWindow() : ID not unique - skipped! "<<std::endl;
 		return;
 	}
-	ui::Window * window = new ui::Window(static_cast<intf::UIInterface*>(this), fontTexture);
+	ui::Window * window = new ui::Window(id, static_cast<intf::UIInterface*>(this), fontTexture);
 	initializeWindow(window, id);
 }
 
@@ -104,7 +102,7 @@ void UIManager::loadBaseWindow(std::string id)
   * parameters and it also needs access to the Lua interface. */
 void UIManager::loadConsoleWindow(std::string id)
 {
-	if(windows.count(id) > 0 || receivers.count(id) > 0)
+	if(windows.count(id) > 0)// || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadConsoleWindow() : ID not unique - skipped! "<<std::endl;
 		return;
@@ -114,30 +112,30 @@ void UIManager::loadConsoleWindow(std::string id)
 		std::cout << " UIManager::loadConsoleWindow() : Deleting existing console! "<<std::endl;
 		delete console; console = 0;
 	}
-	console = new ui::Console(static_cast<intf::UIInterface*>(this), luaInterface, fontTexture);
+	console = new ui::Console(id, static_cast<intf::UIInterface*>(this), luaInterface, fontTexture);
 	initializeWindow(console, id);
 }
 
 void UIManager::loadMainMenuWindow(std::string id)
 {
-	if(windows.count(id) > 0 || receivers.count(id) > 0)
+	if(windows.count(id) > 0)// || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
 		return;
 	}
-	ui::Window * mainMenu = new ui::MainMenu(static_cast<intf::UIInterface*>(this), applInterface,
+	ui::Window * mainMenu = new ui::MainMenu(id, static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
 	initializeWindow(mainMenu, id);
 }
 
 void UIManager::loadMonitorWindow(std::string id)
 {
-	if(windows.count(id) > 0 || receivers.count(id) > 0)
+	if(windows.count(id) > 0)// || receivers.count(id) > 0)
 	{
 		std::cout << " UIManager::loadMainMenuWindow() : ID not unique - skipped! "<<std::endl;
 		return;
 	}
-	ui::Window * monitor = new ui::Monitor(static_cast<intf::UIInterface*>(this), applInterface,
+	ui::Window * monitor = new ui::Monitor(id, static_cast<intf::UIInterface*>(this), applInterface,
 			fontTexture);
 	initializeWindow(monitor, id);
 }

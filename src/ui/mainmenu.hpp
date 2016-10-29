@@ -36,9 +36,9 @@ namespace strata
 			private:
 				intf::ApplInterface * applInterface;
 			public:
-				MainMenu(intf::UIInterface * _ui, intf::ApplInterface * _appl,
+				MainMenu(std::string _id, intf::UIInterface * _ui, intf::ApplInterface * _appl,
 						tiny::draw::IconTexture2D * _fontTexture) :
-					Window(_ui, _fontTexture), applInterface(_appl)
+					Window(_id, _ui, _fontTexture), applInterface(_appl)
 				{
 				}
 

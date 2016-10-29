@@ -62,9 +62,9 @@ namespace strata
 					setInvisible();
 				}
 			public:
-				Console(intf::UIInterface * _ui, intf::LuaInterface * _lua,
+				Console(std::string _id, intf::UIInterface * _ui, intf::LuaInterface * _lua,
 						tiny::draw::IconTexture2D * _fontTexture) :
-					Window(_ui, _fontTexture),
+					Window(_id, _ui, _fontTexture),
 					luaInterface(_lua),
 					log(),
 					logFontColour(0.0f,0.0f,0.0f),

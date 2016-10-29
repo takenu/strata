@@ -41,9 +41,9 @@ namespace strata
 				bool showFramesPerSecond;
 				bool showMemoryUsage;
 			public:
-				Monitor(intf::UIInterface * _ui, intf::ApplInterface * _appl,
+				Monitor(std::string _id, intf::UIInterface * _ui, intf::ApplInterface * _appl,
 						tiny::draw::IconTexture2D * _fontTexture) :
-					Window(_ui, _fontTexture),
+					Window(_id, _ui, _fontTexture),
 					applInterface(_appl),
 					showFramesPerSecond(false),
 					showMemoryUsage(false)

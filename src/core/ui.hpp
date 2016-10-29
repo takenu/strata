@@ -49,7 +49,6 @@ namespace strata
 
 				tiny::draw::IconTexture2D * fontTexture;
 				std::map<std::string, ui::Window*> windows;
-				std::map<std::string, intf::UIReceiver*> receivers;
 				float defaultFontSize;
 				float defaultAspectRatio;
 				SDL_Keycode closeKey; /**< A key that closes the active window when pressed. */
