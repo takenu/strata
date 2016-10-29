@@ -163,7 +163,6 @@ namespace strata
 					}
 				}
 			protected:
-				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
 				void setInvisible(void) { setVisible(false); } /**< Derived window can close itself. */
 				intf::UIInterface * getUIInterface(void) { return uiInterface; }
 				bool isTriggerKey(const SDL_Keycode & k) const { return triggerKeys.count(k) > 0; }
@@ -187,6 +186,8 @@ namespace strata
 				{
 					inputKeys = uiInterface->subscribe(this);
 				}
+
+				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
 
 				void loadButton(std::string buttonId)
 				{

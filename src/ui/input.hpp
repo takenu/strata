@@ -116,24 +116,26 @@ namespace strata
 				  * input once more to a lower ranked listener.
 				  * Obviously one could try to work around this but for now single-input single-result
 				  * doesn't look like a harsh restriction. */
-				void receiveInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown)
+				bool receiveInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown)
 				{
 					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
 						if((*it)->isSubscribed(k))
 						{
 							(*it)->getListener()->receiveKeyInput(k, m, isDown);
-							break;
+							return true;
 						}
+					return false;
 				}
 
 				/** Receive a mouse event and transmit it to the highest ranked listener.
 				  * Unlike key input, mouse input applies to whatever listener is visible at the current
 				  * location of the mouse pointer. The ranking of listeners used is the same as for
 				  * key events. */
-				void receiveInput(float x, float y, unsigned int buttons)
+				bool receiveInput(float x, float y, unsigned int buttons)
 				{
 					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->getListener()->receiveMouseEvent(x, y, buttons)) break;
+						if((*it)->getListener()->receiveMouseEvent(x, y, buttons)) return true;
+					return false;
 				}
 		};
 	}

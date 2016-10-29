@@ -86,21 +86,11 @@ namespace strata
 				{
 				}
 
-				void updateCamera(double dt)
-				{
-					tiny::vec3 cameraPosition = renderManager.getCameraPosition();
-					tiny::vec4 cameraOrientation = renderManager.getCameraOrientation();
-					applManager.updateSimpleCamera(0.3*dt, cameraPosition, cameraOrientation);
-					renderManager.setCameraPosition(cameraPosition);
-					renderManager.setCameraOrientation(cameraOrientation);
-				}
-
 				void mainLoop(void)
 				{
 					while(applManager.isRunning())
 					{
 						double dt = applManager.update();
-						updateCamera(dt);
 						renderManager.update(dt);
 						uiManager.update(dt);
 						terrainManager.update(dt);

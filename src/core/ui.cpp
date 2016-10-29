@@ -290,7 +290,7 @@ void UIManager::reserve(ui::Window * window)
 	}
 }
 
-void UIManager::update(double)
+void UIManager::update(double dt)
 {
 	for(std::map<std::string, ui::Window*>::iterator it = windows.begin(); it != windows.end(); it++)
 	{
@@ -298,4 +298,35 @@ void UIManager::update(double)
 		reserve(it->second);
 		it->second->setTexts();
 	}
+	if(!console->isVisible()) updateCamera(dt);
+}
+
+void UIManager::updateCamera(double dt)
+{
+	// TODO: This is a temporary piece of functionality. In the future, especially for game-like functionality
+	// (which includes moving around and stuff), this kind of behavior should move to a dedicated place.
+	tiny::vec3 cameraPosition = renderInterface->getCameraPosition();
+	tiny::vec4 cameraOrientation = renderInterface->getCameraOrientation();
+
+	const Uint8 * state = SDL_GetKeyboardState(NULL);
+	const float ds = (state[SDL_GetScancodeFromKey(SDLK_f)] ? 100.0f : 2.0f)*dt;
+	const float dr = 2.1f*dt;
+
+	if( state[SDL_GetScancodeFromKey(SDLK_i)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);
+	if( state[SDL_GetScancodeFromKey(SDLK_k)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3( 1.0f, 0.0f, 0.0f)), cameraOrientation);
+	if( state[SDL_GetScancodeFromKey(SDLK_j)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3( 0.0f,-1.0f, 0.0f)), cameraOrientation);
+	if( state[SDL_GetScancodeFromKey(SDLK_l)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3( 0.0f, 1.0f, 0.0f)), cameraOrientation);
+	if( state[SDL_GetScancodeFromKey(SDLK_u)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
+	if( state[SDL_GetScancodeFromKey(SDLK_o)] ) cameraOrientation = quatmul(tiny::quatrot(dr, tiny::vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
+
+	cameraOrientation = normalize(cameraOrientation);
+
+	tiny::vec3 vel = tiny::mat4(cameraOrientation)*tiny::vec3(
+			state[SDL_GetScancodeFromKey(SDLK_d)] - state[SDL_GetScancodeFromKey(SDLK_a)],
+			state[SDL_GetScancodeFromKey(SDLK_q)] - state[SDL_GetScancodeFromKey(SDLK_e)],
+			state[SDL_GetScancodeFromKey(SDLK_s)] - state[SDL_GetScancodeFromKey(SDLK_w)]);
+
+	cameraPosition += ds*normalize(vel);
+	renderInterface->setCameraPosition(cameraPosition);
+	renderInterface->setCameraOrientation(cameraOrientation);
 }

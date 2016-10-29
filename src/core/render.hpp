@@ -140,13 +140,13 @@ namespace strata
 				virtual bool lodUpdates(void) const { return lodFollowsCamera; }
 				virtual tiny::vec3 getCameraPosition(void) const { return cameraPosition; }
 				virtual tiny::vec4 getCameraOrientation(void) const { return cameraOrientation; }
-				void setCameraPosition(tiny::vec3 pos)
+				virtual void setCameraPosition(tiny::vec3 pos)
 				{
 					cameraPosition = pos;
 					worldRenderer->setCamera(cameraPosition, cameraOrientation);
 				}
 
-				void setCameraOrientation(tiny::vec4 orient)
+				virtual void setCameraOrientation(tiny::vec4 orient)
 				{
 					cameraOrientation = orient;
 					worldRenderer->setCamera(cameraPosition, cameraOrientation);

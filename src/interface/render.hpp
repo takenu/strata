@@ -36,6 +36,8 @@ namespace strata
 				virtual bool lodUpdates(void) const = 0;
 				virtual tiny::vec3 getCameraPosition(void) const = 0;
 				virtual tiny::vec4 getCameraOrientation(void) const = 0;
+				virtual void setCameraPosition(tiny::vec3 v) = 0;
+				virtual void setCameraOrientation(tiny::vec4 v) = 0;
 
 				virtual void addWorldRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;

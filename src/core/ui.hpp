@@ -128,6 +128,9 @@ namespace strata
 				/** Initialize basic properties of a newly created Window. */
 				void initializeWindow(ui::Window * window, std::string id);
 
+				/** Update the Camera. */
+				void updateCamera(double dt);
+
 				/** Redirect InputInterpreter subscription requests. */
 				virtual intf::InputSet * subscribe(intf::UIListener * l)
 				{
