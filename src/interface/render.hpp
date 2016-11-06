@@ -25,7 +25,8 @@ namespace strata
 {
 	namespace intf
 	{
-		/** The RenderInterface is a base class via which distinct parts of Chathran can communicate with the RenderManager. In this way they can add and remove objects to be rendered. */
+		/** The RenderInterface is a base class via which distinct parts of Chathran can communicate
+		  * with the RenderManager. In this way they can add and remove objects to be rendered. */
 		class RenderInterface 
 		{
 			private:
@@ -39,14 +40,46 @@ namespace strata
 				virtual void setCameraPosition(tiny::vec3 v) = 0;
 				virtual void setCameraOrientation(tiny::vec4 v) = 0;
 
-				virtual void addWorldRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
-						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
-
-				virtual void addScreenRenderable(tiny::draw::Renderable * renderable, const bool & readDepthTex = true, const bool & writeDepthTex = true,
-						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
-
+				/** Free a previously added WorldRenderable. */
 				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable) = 0;
+
+				/** Free a previously added ScreenRenderable. */
 				virtual void freeScreenRenderable(tiny::draw::Renderable * renderable) = 0;
+
+				/** Add a new WorldRenderable (a Renderable drawn as a World object, with a particular
+				  * position in 3D space). */
+				inline void addWorldRenderable(tiny::draw::Renderable * renderable,
+						const bool & readDepthTex = true, const bool & writeDepthTex = true,
+						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
+				{
+					addWorldRenderableWithIndex(renderable, 0, readDepthTex, writeDepthTex, blendMode);
+				}
+
+				/** Add a new ScreenRenderable (a Renderable that is merely a UI element, visible to
+				  * the user but without a real meaning in the 3D world, and whose location on screen
+				  * is in the form of 2D screen coordinates). */
+				inline void addScreenRenderable(tiny::draw::Renderable * renderable,
+						const bool & readDepthTex = true, const bool & writeDepthTex = true,
+						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
+				{
+					addScreenRenderableWithIndex(renderable, 0, readDepthTex, writeDepthTex, blendMode);
+				}
+
+				/** Add a WorldRenderer WorldRenderable object with its index. Renderable indices, used
+				  * by the tiny-game-engine's Renderer, determine the order of rendering, with lower
+				  * indices being rendered first and higher indices being rendered on top of lower ones. */
+				virtual void addWorldRenderableWithIndex(tiny::draw::Renderable * renderable,
+						unsigned int renderableIndex,
+						const bool & readDepthTex = true, const bool & writeDepthTex = true,
+						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
+
+				/** Add a WorldRenderer ScreenRenderable object with its index. Renderable indices, used
+				  * by the tiny-game-engine's Renderer, determine the order of rendering, with lower
+				  * indices being rendered first and higher indices being rendered on top of lower ones. */
+				virtual void addScreenRenderableWithIndex(tiny::draw::Renderable * renderable,
+						unsigned int renderableIndex,
+						const bool & readDepthTex = true, const bool & writeDepthTex = true,
+						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
 		};
 	} // end namespace intf
 }

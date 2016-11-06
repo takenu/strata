@@ -74,7 +74,8 @@ namespace strata
 					worldRenderer->render();
 				}
 
-				virtual void addWorldRenderable(tiny::draw::Renderable * renderable,
+				virtual void addWorldRenderableWithIndex(tiny::draw::Renderable * renderable,
+						unsigned int renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
@@ -85,12 +86,22 @@ namespace strata
 							<<" already exists! Cannot add! "<<std::endl;
 						return;
 					}
-					worldRenderableKeyMap.insert( std::make_pair(renderable, ++worldRenderableKeyCounter) );
-					worldRenderer->addWorldRenderable(worldRenderableKeyCounter, renderable,
-							readDepthTex, writeDepthTex, blendMode);
+					if(renderableIndex == 0) renderableIndex = ++worldRenderableKeyCounter;
+					try
+					{
+						worldRenderer->addWorldRenderable(renderableIndex, renderable,
+								readDepthTex, writeDepthTex, blendMode);
+						worldRenderableKeyMap.insert( std::make_pair(renderable, renderableIndex) );
+					}
+					catch(std::exception &)
+					{
+						// Exceptions are thrown (without filling 'what()') on duplicate renderable indices.
+						std::cout << " RenderManager::addWorldRenderableWithIndex() : Skipped! "<<std::endl;
+					}
 				}
 
-				virtual void addScreenRenderable(tiny::draw::Renderable * renderable,
+				virtual void addScreenRenderableWithIndex(tiny::draw::Renderable * renderable,
+						unsigned int renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
@@ -101,9 +112,17 @@ namespace strata
 							<<" already exists! Cannot add! "<<std::endl;
 						return;
 					}
-					screenRenderableKeyMap.insert( std::make_pair(renderable, ++screenRenderableKeyCounter) );
-					worldRenderer->addScreenRenderable(screenRenderableKeyCounter, renderable,
-							readDepthTex, writeDepthTex, blendMode);
+					if(renderableIndex == 0) renderableIndex = ++screenRenderableKeyCounter;
+					try
+					{
+						worldRenderer->addScreenRenderable(renderableIndex, renderable,
+								readDepthTex, writeDepthTex, blendMode);
+						screenRenderableKeyMap.insert( std::make_pair(renderable, renderableIndex) );
+					}
+					catch(std::exception &)
+					{
+						std::cout << " RenderManager::addScreenRenderableWithIndex() : Skipped! "<<std::endl;
+					}
 				}
 
 				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable)
