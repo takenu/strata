@@ -75,18 +75,29 @@ namespace strata
 				}
 
 				virtual void addWorldRenderableWithIndex(tiny::draw::Renderable * renderable,
-						unsigned int renderableIndex,
+						unsigned int & renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
 					if(worldRenderableKeyMap.find(renderable) != worldRenderableKeyMap.end())
 					{
-						std::cout << " RenderManager::addWorldRenderable() : ERROR: Renderable "
+						std::cout << " RenderManager::addWorldRenderableWithIndex() : ERROR: Renderable "
 							<<renderable<<" with key "<<worldRenderableKeyMap.at(renderable)
 							<<" already exists! Cannot add! "<<std::endl;
 						return;
 					}
 					if(renderableIndex == 0) renderableIndex = ++worldRenderableKeyCounter;
+					unsigned int num_attempts = 0;
+					while(++num_attempts < 1000 && worldRenderer->worldRenderableIndexExists(renderableIndex))
+					{
+						if(renderableIndex == worldRenderableKeyCounter) ++worldRenderableKeyCounter;
+						++renderableIndex;
+					}
+					if(worldRenderer->worldRenderableIndexExists(renderableIndex))
+					{
+						std::cout << " RenderManager::addWorldRenderableWithIndex() : No index!"<<std::endl;
+						return;
+					}
 					try
 					{
 						worldRenderer->addWorldRenderable(renderableIndex, renderable,
@@ -101,7 +112,7 @@ namespace strata
 				}
 
 				virtual void addScreenRenderableWithIndex(tiny::draw::Renderable * renderable,
-						unsigned int renderableIndex,
+						unsigned int & renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
@@ -113,6 +124,17 @@ namespace strata
 						return;
 					}
 					if(renderableIndex == 0) renderableIndex = ++screenRenderableKeyCounter;
+					unsigned int num_attempts = 0;
+					while(++num_attempts < 1000 && worldRenderer->screenRenderableIndexExists(renderableIndex))
+					{
+						if(renderableIndex == screenRenderableKeyCounter) ++screenRenderableKeyCounter;
+						++renderableIndex;
+					}
+					if(worldRenderer->screenRenderableIndexExists(renderableIndex))
+					{
+						std::cout << " RenderManager::addScreenenderableWithIndex() : No index!"<<std::endl;
+						return;
+					}
 					try
 					{
 						worldRenderer->addScreenRenderable(renderableIndex, renderable,

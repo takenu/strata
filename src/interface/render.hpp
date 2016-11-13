@@ -52,7 +52,8 @@ namespace strata
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
-					addWorldRenderableWithIndex(renderable, 0, readDepthTex, writeDepthTex, blendMode);
+					unsigned int dummy = 0;
+					addWorldRenderableWithIndex(renderable, dummy, readDepthTex, writeDepthTex, blendMode);
 				}
 
 				/** Add a new ScreenRenderable (a Renderable that is merely a UI element, visible to
@@ -62,14 +63,15 @@ namespace strata
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace)
 				{
-					addScreenRenderableWithIndex(renderable, 0, readDepthTex, writeDepthTex, blendMode);
+					unsigned int dummy = 0;
+					addScreenRenderableWithIndex(renderable, dummy, readDepthTex, writeDepthTex, blendMode);
 				}
 
 				/** Add a WorldRenderer WorldRenderable object with its index. Renderable indices, used
 				  * by the tiny-game-engine's Renderer, determine the order of rendering, with lower
 				  * indices being rendered first and higher indices being rendered on top of lower ones. */
 				virtual void addWorldRenderableWithIndex(tiny::draw::Renderable * renderable,
-						unsigned int renderableIndex,
+						unsigned int & renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
 
@@ -77,7 +79,7 @@ namespace strata
 				  * by the tiny-game-engine's Renderer, determine the order of rendering, with lower
 				  * indices being rendered first and higher indices being rendered on top of lower ones. */
 				virtual void addScreenRenderableWithIndex(tiny::draw::Renderable * renderable,
-						unsigned int renderableIndex,
+						unsigned int & renderableIndex,
 						const bool & readDepthTex = true, const bool & writeDepthTex = true,
 						const tiny::draw::BlendMode & blendMode = tiny::draw::BlendReplace) = 0;
 		};
