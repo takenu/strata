@@ -92,6 +92,7 @@ namespace strata
 					else if(isDown && !isVisible() && triggerKeys.count(k) > 0)
 					{
 						setVisible(true);
+						bringToFront();
 					}
 					else if(isDown)
 					{
@@ -109,6 +110,19 @@ namespace strata
 				{
 					if(hasButton(_key)) return &(buttons.find(_key)->second);
 					else return 0;
+				}
+
+				/** Bring the Window to the front. */
+				void bringToFront(void)
+				{
+					uiInterface->bump(this);
+					uiInterface->bringToFront(background);
+					uiInterface->bringToFront(getRenderable());
+					for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
+					{
+						uiInterface->bringToFront(it->second.getBackgroundRenderable());
+						uiInterface->bringToFront(it->second.getRenderable());
+					}
 				}
 
 				/** Receive mouse input on the Window.
@@ -135,6 +149,7 @@ namespace strata
 									uiInterface->callExternalFunction(
 											it->second.getReceiver(), it->second.getArgs() );
 							}
+							bringToFront();
 							// TODO: Send clicks to windows for non-button effects (e.g. for text input)
 						}
 						return true;

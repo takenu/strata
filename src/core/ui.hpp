@@ -51,6 +51,7 @@ namespace strata
 				std::map<std::string, ui::Window*> windows;
 				float defaultFontSize;
 				float defaultAspectRatio;
+				unsigned int maxRenderableIndex; /**< The highest existing renderable index for UI elements. */
 				SDL_Keycode closeKey; /**< A key that closes the active window when pressed. */
 
 				/** Reserve enough space for the Window to draw all of its text, using the
@@ -61,7 +62,8 @@ namespace strata
 					intf::UIInterface(),
 					applInterface(_appl), renderInterface(_renderer), luaInterface(0),
 					inputInterpreter(), console(0),
-					fontTexture(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f)
+					fontTexture(0), defaultFontSize(0.01f), defaultAspectRatio(1.0f),
+					maxRenderableIndex(0), closeKey(SDLK_ESCAPE)
 				{
 				}
 
@@ -129,6 +131,9 @@ namespace strata
 
 				/** Update the Camera. */
 				void updateCamera(double dt);
+
+				/** Bring a Window to front. */
+				virtual void bringToFront(tiny::draw::Renderable * renderable);
 
 				/** Redirect InputInterpreter subscription requests. */
 				virtual intf::InputSet * subscribe(intf::UIListener * l)

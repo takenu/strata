@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <SDL.h> // for SDL_Keycode enum only
 
+#include <tiny/draw/renderable.h>
 #include <tiny/algo/typecluster.h>
 
 #include "keys.hpp"
@@ -232,6 +233,7 @@ namespace strata
 				virtual InputSet * subscribe(UIListener *) = 0;
 				virtual void unsubscribe(UIListener *) = 0;
 				virtual void bump(UIListener *) = 0;
+				virtual void bringToFront(tiny::draw::Renderable *) = 0;
 		};
 	}
 }

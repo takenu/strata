@@ -159,6 +159,18 @@ namespace strata
 					screenRenderableKeyMap.erase(renderable);
 				}
 
+				virtual unsigned int getWorldRenderableIndex(tiny::draw::Renderable * renderable) const
+				{
+					return (worldRenderableKeyMap.count(renderable) > 0 ?
+							worldRenderableKeyMap.find(renderable)->second : 0);
+				}
+
+				virtual unsigned int getScreenRenderableIndex(tiny::draw::Renderable * renderable) const
+				{
+					return (screenRenderableKeyMap.count(renderable) > 0 ?
+							screenRenderableKeyMap.find(renderable)->second : 0);
+				}
+
 			public:
 				RenderManager(intf::ApplInterface * _interface) :
 					intf::RenderInterface(),

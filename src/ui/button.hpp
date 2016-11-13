@@ -98,11 +98,11 @@ namespace strata
 				}
 
 				// Not necessary yet
-/*				tiny::draw::Renderable * getBackgroundRenderable(void)
+				tiny::draw::Renderable * getBackgroundRenderable(void)
 				{
-					if(background) return background->getRenderable();
+					if(background) return background;
 					else return 0;
-				}*/
+				}
 
 				void setBackground(ScreenSquare * ss)
 				{

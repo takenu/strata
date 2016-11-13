@@ -81,6 +81,7 @@ void UIManager::initializeWindow(ui::Window * window, std::string id)
 	loadWindowAttribute(id, "fontsize", tool::convertToString(defaultFontSize));
 	loadWindowAttribute(id, "fontaspectratio", tool::convertToString(defaultAspectRatio));
 	renderInterface->addScreenRenderable(window->getRenderable(), false, false, tiny::draw::BlendMix);
+	maxRenderableIndex = std::max(maxRenderableIndex, renderInterface->getScreenRenderableIndex(window->getRenderable()));
 }
 
 /** Load a custom window from Lua. This makes merely a standard Window, where all functionality
@@ -273,6 +274,16 @@ void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRa
 		defaultFontSize = fontSize;
 		defaultAspectRatio = fontAspectRatio;
 	}
+}
+
+void UIManager::bringToFront(tiny::draw::Renderable * renderable)
+{
+	if(renderable == 0) return;
+	std::cout << " UIManager::bringToFront() : Bump renderable... "<<std::endl;
+	renderInterface->freeScreenRenderable(renderable);
+	unsigned int newIndex = maxRenderableIndex;
+	renderInterface->addScreenRenderableWithIndex(renderable, newIndex, false, false, tiny::draw::BlendMix);
+	maxRenderableIndex = newIndex;
 }
 
 void UIManager::reserve(ui::Window * window)

@@ -40,6 +40,12 @@ namespace strata
 				virtual void setCameraPosition(tiny::vec3 v) = 0;
 				virtual void setCameraOrientation(tiny::vec4 v) = 0;
 
+				/** Find the index of a WorldRenderable. */
+				virtual unsigned int getWorldRenderableIndex(tiny::draw::Renderable * renderable) const = 0;
+
+				/** Find the index of a ScreenRenderable. */
+				virtual unsigned int getScreenRenderableIndex(tiny::draw::Renderable * renderable) const = 0;
+
 				/** Free a previously added WorldRenderable. */
 				virtual void freeWorldRenderable(tiny::draw::Renderable * renderable) = 0;
 
