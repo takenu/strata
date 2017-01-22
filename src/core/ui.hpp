@@ -67,6 +67,9 @@ namespace strata
 				{
 				}
 
+				/** Deallocate all UI resources. */
+				virtual ~UIManager(void);
+
 				virtual void keyEvent(const SDL_Keycode & k, bool isDown);
 				virtual SDL_Keymod getKeyMods(void) const { return SDL_GetModState(); }
 				virtual void mouseEvent(float x, float y, unsigned int buttons);
@@ -126,6 +129,9 @@ namespace strata
 				/** Set a key that closes all the UI's windows. */
 				void setCloseKey(const SDL_Keycode & k);
 
+				/** Get the key that closes all the UI's windows. */
+				inline const SDL_Keycode & getCloseKey(void) { return closeKey; }
+
 				/** Initialize basic properties of a newly created Window. */
 				void initializeWindow(ui::Window * window, std::string id);
 
@@ -136,7 +142,7 @@ namespace strata
 				virtual void bringToFront(tiny::draw::Renderable * renderable);
 
 				/** Redirect InputInterpreter subscription requests. */
-				virtual intf::InputSet * subscribe(intf::UIListener * l)
+				virtual void subscribe(intf::UIListener * l)
 				{
 					return inputInterpreter.subscribe(l);
 				}

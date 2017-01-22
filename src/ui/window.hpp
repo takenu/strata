@@ -48,7 +48,6 @@ namespace strata
 				bool visible;
 				tiny::vec4 windowBox; /**< The box that the window is inside of. */
 				intf::UIInterface * uiInterface;
-				intf::InputSet * inputKeys;
 				std::string title;
 
 				typedef std::map<std::string, Button>::iterator ButtonIterator;
@@ -56,16 +55,16 @@ namespace strata
 				/** Reset the Window's input, such that it only responds to its trigger keys. */
 				void resetInputKeys(void)
 				{
-					inputKeys->resetKeySet(triggerKeys);
+					inputSet.resetKeySet(triggerKeys);
 				}
 
 				/** Activate keys for the Window as it becomes active. */
 				void activateInputKeys(void)
 				{
-					inputKeys->addKeySet(triggerKeys); // for de-activation of window
+					inputSet.addKeySet(triggerKeys);
 					for(std::map<SDL_Keycode, std::string>::iterator it = keyFunctions.begin();
 							it != keyFunctions.end(); it++)
-						inputKeys->addKey(it->first);
+						inputSet.addKey(it->first);
 				}
 
 				/** Receive key input on the Window. First the Window gets to do its generic
@@ -171,7 +170,7 @@ namespace strata
 					else
 					{
 						activateInputKeys();
-						inputKeys->addKey(SDLK_ESCAPE); // to allow closing via Esc
+						inputSet.addKey(closeKey);
 						uiInterface->bump(this);
 						for(ButtonIterator it = buttons.begin(); it != buttons.end(); it++)
 							it->second.setVisible(true);
@@ -194,12 +193,12 @@ namespace strata
 				Window(std::string _id, intf::UIInterface * _ui, tiny::draw::IconTexture2D * _fontTexture,
 						std::string _title = "") :
 					TextBox(_fontTexture),
-					intf::UIListener(_ui),
+					intf::UIListener(_id, _ui),
 					intf::UIReceiver(_id, _ui),
 					background(0), highlight(0), closeKey(SDLK_UNKNOWN), visible(false),
-					uiInterface(_ui), inputKeys(0), title(_title)
+					uiInterface(_ui), title(_title)
 				{
-					inputKeys = uiInterface->subscribe(this);
+					uiInterface->subscribe(this);
 				}
 
 				bool isVisible(void) const { return visible; } /**< Check whether window is visible. */
@@ -246,7 +245,7 @@ namespace strata
 				void registerTriggerKey(const SDL_Keycode & k)
 				{
 					triggerKeys.emplace(k);
-					inputKeys->addKey(k); // Always add to input keys (also for deactivation)
+					inputSet.addKey(k);
 				}
 
 				/** Inherited from UIReceiver. UIReceivers can receive button clicks. However, since the

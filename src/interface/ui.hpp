@@ -39,17 +39,10 @@ namespace strata
 		class InputSet
 		{
 			private:
-				UIListener * listener; /**< A pointer to the class that will respond to key input. */
 				std::set<SDL_Keycode> keys; /**< The keys that are registered by the listener. */
 			public:
-				InputSet(UIListener * _listener) : listener(_listener) {}
+				InputSet(void) {}
 				~InputSet(void) {}
-
-				/** Get the UIListener that the InputSet is defined for. */
-				UIListener * getListener(void)
-				{
-					return listener;
-				}
 
 				void addKey(SDL_Keycode k)
 				{
@@ -84,22 +77,24 @@ namespace strata
 		  * Subscription is done through its link to the UI that governs it. The UI contains
 		  * an InputInterpreter that processes the input and tracks who is subscribed to what.
 		  */
-		class UIListener
+		class UIListener : public tiny::algo::TypeClusterObject<std::string, UIListener>
 		{
 			private:
 				UIInterface * ui; /**< A link to the UI that governs the listener. */
+			protected:
+				InputSet inputSet; /**< An input set for the UIListener. */
 			public:
-				UIListener(UIInterface * _ui) : ui(_ui)
-				{
-				}
+				UIListener(std::string id, UIInterface * _ui);
 
-				virtual ~UIListener(void) {}
+				virtual ~UIListener(void);
 
 				/** Signal that a key is pressed down or no longer pressed down. */
 				virtual void receiveKeyInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown) = 0;
 
 				/** Signal that a mouse event occurred at position (x,y). */
 				virtual bool receiveMouseEvent(float x, float y, unsigned int buttons) = 0;
+
+				inline bool keyIsSubscribed(const SDL_Keycode &k) { return inputSet.isSubscribed(k); }
 		};
 
 		/** The UIReceiver is a base class to non-UI classes that can receive function calls through
@@ -110,11 +105,9 @@ namespace strata
 			private:
 				UIInterface * ui; /**< A link to the UI that governs the listener. */
 			public:
-				UIReceiver(std::string _id, UIInterface * _ui);// : ui(_ui)
-//				{
-//				}
+				UIReceiver(std::string _id, UIInterface * _ui);
 
-				virtual ~UIReceiver(void);// {}
+				virtual ~UIReceiver(void);
 
 				/** Receive a function call through the UI. Arguments, if any, are provided in 'args'. */
 				virtual void receiveUIFunctionCall(std::string args) = 0;
@@ -197,6 +190,7 @@ namespace strata
 
 		typedef tiny::algo::TypeCluster<std::string, UISource> UISourceTC;
 		typedef tiny::algo::TypeCluster<std::string, UIReceiver> UIReceiverTC;
+		typedef tiny::algo::TypeCluster<std::string, UIListener> UIListenerTC;
 
 		/** The UIInterface allows non-UI objects to register themselves with the UI,
 		  * after which the UI can retrieve the information it needs directly from them. */
@@ -205,11 +199,14 @@ namespace strata
 			private:
 				friend class UISource; // to allow using getSourceTypeCluster()
 				friend class UIReceiver; // to allow using getReceiverTypeCluster()
+				friend class UIListener; // to allow using getListenerTypeCluster()
 				UISourceTC & getSourceTypeCluster(void) { return sources; }
 				UIReceiverTC & getReceiverTypeCluster(void) { return receivers; }
+				UIListenerTC & getListenerTypeCluster(void) { return listeners; }
 			protected:
 				UISourceTC sources;
 				UIReceiverTC receivers;
+				UIListenerTC listeners;
 
 				UIInterface(void);
 				~UIInterface(void) {}
@@ -227,10 +224,7 @@ namespace strata
 
 				virtual void logConsoleMessage(const UIMessage & message) = 0;
 
-				/** Subscribe the UIListener to input received by the application. The InputSet
-				  * must be filled by the UIListener, and specifies which input the UIListener
-				  * will result in the UI sending the UIListener an input event. */
-				virtual InputSet * subscribe(UIListener *) = 0;
+				virtual void subscribe(UIListener *) = 0;
 				virtual void unsubscribe(UIListener *) = 0;
 				virtual void bump(UIListener *) = 0;
 				virtual void bringToFront(tiny::draw::Renderable *) = 0;

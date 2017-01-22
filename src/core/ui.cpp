@@ -34,6 +34,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace strata::core;
 
+/** Deconstruct all UI objects. */
+UIManager::~UIManager(void)
+{
+	for(std::map<std::string, ui::Window*>::iterator it = windows.begin(); it != windows.end(); it++)
+		delete it->second;
+	windows.clear();
+}
+
 /** Interpret key press events. */
 void UIManager::keyEvent(const SDL_Keycode & keyIndex, bool isDown)
 {
@@ -279,7 +287,7 @@ void UIManager::loadFont(std::string fontTex, float fontSize, float fontAspectRa
 void UIManager::bringToFront(tiny::draw::Renderable * renderable)
 {
 	if(renderable == 0) return;
-	std::cout << " UIManager::bringToFront() : Bump renderable... "<<std::endl;
+//	std::cout << " UIManager::bringToFront() : Bump renderable... "<<std::endl;
 	renderInterface->freeScreenRenderable(renderable);
 	unsigned int newIndex = maxRenderableIndex;
 	renderInterface->addScreenRenderableWithIndex(renderable, newIndex, false, false, tiny::draw::BlendMix);

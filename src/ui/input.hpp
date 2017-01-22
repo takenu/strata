@@ -27,20 +27,14 @@ namespace strata
 		class InputInterpreter
 		{
 			private:
-				/** A list of registered input sets. Listeners register key sets when they want to
-				  * implement certain behavior in response to specific input. If the same input is
-				  * registered multiple times, the first occurrence in the list of key sets will be
-				  * executed, but any others will not (for now). This way, input sets can temporarily
-				  * overrule other input sets.
-				  * The InputSet objects are not stored by the list but kept as pointers. This is because
-				  * the InputSet is intended to be permanently bound to its UIListener, and to enforce
-				  * that it takes its UIListener as an argument to its only constructor. Consequently,
-				  * InputSet objects cannot be copied by the std::list and must be created separately.
-				  */
-				std::list<intf::InputSet*> keySets;
+				/** An ordered list of UI listeners. This defines the order in which they have a
+				  * chance to interpret the input. In principle, we use a one-input one-response
+				  * approach, and therefore only the highest ranked listener that subscribed a given
+				  * input will be able to act on it. */
+				std::list<intf::UIListener*> listeners;
 
-				/** Typedef the iterator type for keySets, to avoid lengthy loop initializers. */
-				typedef std::list<intf::InputSet*>::iterator KeySetIterator;
+				/** Typedef the iterator type for listeners, to avoid lengthy loop initializers. */
+				typedef std::list<intf::UIListener*>::iterator ListenerIterator;
 			public:
 				InputInterpreter(void)
 				{
@@ -50,42 +44,37 @@ namespace strata
 				{
 				}
 
-				/** Add an InputSet for a new UIListener. This should only be used once per UIListener,
-				  * after which one should merely adjust the InputSet (not request a new one). Adding
-				  * twice should not break anything, but is considered incorrect and will spawn a warning. */
-				intf::InputSet * subscribe(intf::UIListener * listener)
+				/** Subscribe a new Listener. The InputInterpreter ensures every UIListener is subscribed
+				  * only once, but will spawn a warning to signal incorrect usage. */
+				void subscribe(intf::UIListener * listener)
 				{
-					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->getListener() == listener)
+					for(ListenerIterator it = listeners.begin(); it != listeners.end(); it++)
+						if(*it == listener)
 						{
 							std::cout << " InputInterpreter::subscribe() :";
 							std::cout << " WARNING: Listener already exists!"<<std::endl;
-							return *it;
+							return;
 						}
-					keySets.push_front(new intf::InputSet(listener));
-					return keySets.front();
+					listeners.push_front(listener);
 				}
 
-				/** Remove an InputSet related to a certain UIListener. This will delete the associated
-				  * InputSet and ensure that the InputInterpreter will not forward any input to it
-				  * anymore.
+				/** Remove a certain UIListener. This will delete its reference from the list of listeners
+				  * and ensures that the InputInterpreter will not forward any input to it anymore.
 				  * A warning will be issued if an attempt is done to delete a listener that is already
 				  * deleted or that has never been added. */
 				void unsubscribe(intf::UIListener * listener)
 				{
-					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->getListener() == listener)
+					for(ListenerIterator it = listeners.begin(); it != listeners.end(); it++)
+						if(*it == listener)
 						{
-							delete (*it);
-							keySets.erase(it);
+							listeners.erase(it);
 							return;
 						}
 					std::cout << " InputInterpreter::unsubscribe() :";
-					std::cout << " WARNING: Listener not found in keySets!"<<std::endl;
+					std::cout << " WARNING: Listener not found!"<<std::endl;
 				}
 
-				/** Bump an InputSet associated with a certain UIListener, such that it becomes the
-				  * first in the line of all listeners.
+				/** Bump a certain UIListener, such that it becomes the first in the line of all listeners.
 				  * This may be required in situations where UIListeners need to (temporarily) ensure
 				  * that they receive all input defined in their InputSet with absolute priority.
 				  * Since it is not possible to return the InputSet to its original position, the only
@@ -98,11 +87,11 @@ namespace strata
 				  */
 				void bump(intf::UIListener * listener)
 				{
-					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->getListener() == listener)
+					for(ListenerIterator it = listeners.begin(); it != listeners.end(); it++)
+						if(*it == listener)
 						{
 							// Move the listener to the front of the list.
-							keySets.splice(keySets.begin(), keySets, it);
+							listeners.splice(listeners.begin(), listeners, it);
 							return;
 						}
 					std::cout << " InputInterpreter::bump() :";
@@ -118,10 +107,10 @@ namespace strata
 				  * doesn't look like a harsh restriction. */
 				bool receiveInput(const SDL_Keycode & k, const SDL_Keymod & m, bool isDown)
 				{
-					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->isSubscribed(k))
+					for(ListenerIterator it = listeners.begin(); it != listeners.end(); it++)
+						if((*it)->keyIsSubscribed(k))
 						{
-							(*it)->getListener()->receiveKeyInput(k, m, isDown);
+							(*it)->receiveKeyInput(k, m, isDown);
 							return true;
 						}
 					return false;
@@ -133,8 +122,8 @@ namespace strata
 				  * key events. */
 				bool receiveInput(float x, float y, unsigned int buttons)
 				{
-					for(KeySetIterator it = keySets.begin(); it != keySets.end(); it++)
-						if((*it)->getListener()->receiveMouseEvent(x, y, buttons)) return true;
+					for(ListenerIterator it = listeners.begin(); it != listeners.end(); it++)
+						if((*it)->receiveMouseEvent(x, y, buttons)) return true;
 					return false;
 				}
 		};

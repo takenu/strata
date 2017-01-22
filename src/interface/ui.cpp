@@ -38,7 +38,22 @@ UIReceiver::~UIReceiver(void)
 {
 }
 
-UIInterface::UIInterface(void) : sources("", "UISourceTC"), receivers("", "UIReceiverTC")
+UIListener::UIListener(std::string _id, UIInterface * _ui) :
+	tiny::algo::TypeClusterObject<std::string, UIListener>(_id, this, _ui->getListenerTypeCluster()),
+	ui(_ui), inputSet()
+{
+	if(ui) ui->subscribe(this);
+	else std::cout << " UIListener::UIListener() : No UI for "<<_id<<", Listening won't work! "<<std::endl;
+}
+
+UIListener::~UIListener(void)
+{
+	if(ui) ui->unsubscribe(this);
+	else std::cout << " UIListener::~UIListener() : No UI! "<<std::endl;
+}
+
+UIInterface::UIInterface(void) : sources("", "UISourceTC"), receivers("", "UIReceiverTC"),
+	listeners("", "UIListenerTC")
 {
 }
 
