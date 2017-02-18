@@ -79,7 +79,15 @@ namespace strata
 						// If derived class implements a trigger key or the close key, it 'steals' its input
 						if(isDown && keyFunctions.count(k) > 0)
 						{
-							receiveUIFunctionCall(keyFunctions[k]);
+							// If key function is a Button identifier, press that button.
+							if(buttons.count(keyFunctions[k]) > 0)
+							{
+								uiInterface->callExternalFunction(
+										buttons[keyFunctions[k]].getReceiver(),
+										buttons[keyFunctions[k]].getArgs() );
+							}
+							// Else, the function should be implemented by a derived class of the Window.
+							else receiveUIFunctionCall(keyFunctions[k]);
 						}
 						else if(isDown && (k == closeKey || triggerKeys.count(k) > 0))
 						{
@@ -254,7 +262,10 @@ namespace strata
 				  */
 				// TODO: Extend with SDL_Keymod, to allow e.g. Shift+click,
 				// or generally SDL_Keymod's on user input
-				virtual void receiveUIFunctionCall(std::string /*args*/) {}
+				virtual void receiveUIFunctionCall(std::string /*args*/)
+				{
+					std::cout << " Window::receiveUIFunctionCall() : Function not overloaded!"<<std::endl;
+				}
 
 				void setBackground(std::string type, ScreenSquare * ss)
 				{

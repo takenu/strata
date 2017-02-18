@@ -13,8 +13,8 @@ function ui_tergen(path, v)
 	}
 	ui.loadBaseWindow(x.id)
 	ui.loadWindowAttribute(x.id, "triggerKey", x.triggerKey)
-	ui.loadWindowFunction(x.id, "c", "compress")
-	ui.loadWindowFunction(x.id, "e", "erode")
+	ui.loadWindowFunction(x.id, "c", "Compress")
+	ui.loadWindowFunction(x.id, "e", "Erode")
 	local xt = UIFlatTexture:new{
 		red = 100,
 		green = 50,
@@ -38,7 +38,7 @@ function ui_tergen(path, v)
 		parentWindow = x.id,
 		functionTarget = x.id,
 		functionArgs = "",
-		id = "Strata Terrain Generator button",
+		id = "Strata Terrain Generator title",
 		left = x.left,
 		top = x.top,
 		right = x.right,
@@ -57,7 +57,7 @@ function ui_tergen(path, v)
 	local xCompress = UIButton:new{
 		buttonText = "Compress",
 		parentWindow = x.id,
-		functionTarget = x.id,
+		functionTarget = "Terrain",
 		functionArgs = "compress",
 		id = "Compress",
 		left = x.left,
