@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <map>
+
 #include <tiny/algo/typecluster.h>
 #include <tiny/draw/staticmesh.h>
 
@@ -26,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../tools/convertstring.hpp"
 
 #include "layer.hpp"
+
+#include "terrainpars.hpp"
+#include "vertexmodifier.hpp"
 
 namespace strata
 {
@@ -49,6 +54,10 @@ namespace strata
 				std::vector<Layer *> layers;
 				intf::RenderInterface * renderer;
 				intf::UIInterface * uiInterface;
+
+				TerrainParameters parameters;
+
+				std::map<VertexId, VertexModifier> vmap;
 
 //				tiny::draw::RGBTexture2D * texture;
 
@@ -182,6 +191,7 @@ namespace strata
 					maxMeshSize(400.0f),
 					renderer(_renderer),
 					uiInterface(_uiInterface),
+					parameters(),
 					bundleCounter(0),
 					stripCounter(0),
 					bundles((long unsigned int)(-1), "BundleTC"),
@@ -275,6 +285,12 @@ namespace strata
 				{
 				}
 
+				/** Build the vertex map for terrain modifications. */
+				void buildVertexMap(void);
+
+				/** Compress the terrain along existing compressional axes. */
+				void compress(void);
+
 				virtual intf::UIInformation getUIInfo(void)
 				{
 					intf::UIInformation info;
@@ -284,7 +300,7 @@ namespace strata
 
 				virtual void receiveUIFunctionCall(std::string args)
 				{
-					if(args == "compress") std::cout << " Terrain::receiveUIFunctionCall() : Compressing! "<<std::endl;
+					if(args == "compress") { std::cout << " Terrain::receiveUIFunctionCall() : Compressing! "<<std::endl; compress(); }
 					else std::cout << " Terrain::receiveUIFunctionCall() : Unknown argument '"<<args<<"'!"<<std::endl;
 				}
 		};

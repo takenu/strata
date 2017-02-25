@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "terrain.hpp"
 
+// This file contains standard terrain definitions from the Terrain class. For terrain generator
+// functionality of the Terrain class, see terraingen.cpp.
+
 using namespace strata::mesh;
 using namespace std::placeholders; // for using std::bind
 

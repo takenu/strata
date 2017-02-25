@@ -189,6 +189,9 @@ namespace strata
 				  * we adjust the array index by 1. The index should be smaller than numVertices(). */
 				tiny::vec3 getVertexPosition(unsigned int i) const { assert(i+1<vertices.size()); return vertices[i+1].pos; }
 
+				/** Get the Mesh index (xVert) of a given vertex. */
+				xVert getVertexIndex(unsigned int i) const { assert(i+1<vertices.size()); return vertices[i+1].index; }
+
 				/** Get the position of the vertex referenced by vertex index 'v'. */
 				tiny::vec3 getVertexPositionFromIndex(xVert v) const { return vertices[ve[v]].pos; }
 
