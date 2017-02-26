@@ -79,51 +79,47 @@ void Terrain::buildVertexMap(void)
 								nearbyBundles[j]->getVertexPosition(k) ) > maxNeighborDistance) continue;
 					// Do not add self as neighbor.
 					if( it->second == nearbyBundles[j] && i == k ) continue;
-					bool addAsNewNeighbor = false;
-					// Add as neighbor if nearby vertex is not farther than existing neighbors.
-					for(unsigned int l = 0; l < neighbors.size(); l++)
-					{
-						if( isStrictlyCloserNeighbor(
-								nearbyBundles[j]->getVertexPosition(k),
-								neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
-								it->second->getVertexPosition(i) ) )
-						{
-							// Neighbor found as k-th vertex of nearby Bundle j. Then we need to clean
-							// up the neighbors vector of neighbor candidates by adding the new vertex
-							// and removing the vertex that was strictly farther than the new vertex.
-							// NOTE: This may remove neighbors that caused other vertices to be non-
-							// neighbors. Since strictly-neighborness isn't transitive, we may thus
-							// be skipping vertices as neighbors even though they are not strictly
-							// covered by neighbor vertices. I hope this will not cause issues.
-							addAsNewNeighbor = true;
-							neighbors[l] = neighbors.back();
-							neighbors.pop_back();
-							--l;
-							++nNeighborsReplaced;
-						}
-					}
+					bool addAsNewNeighbor = true;
 					// If the vertex has already caused deletion of existing neighbors, it must be
 					// added. If it hasn't caused such deletion, we check if it is already covered by
 					// another neighbor, and we only add it if it is not covered.
-					if(!addAsNewNeighbor)
+					for(unsigned int l = 0; l < neighbors.size(); l++)
 					{
-						addAsNewNeighbor = true;
-						for(unsigned int l = 0; l < neighbors.size(); l++)
+						if( isStrictlyCloserNeighbor(
+								neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
+								nearbyBundles[j]->getVertexPosition(k),
+								it->second->getVertexPosition(i) ) )
 						{
-							if( isStrictlyCloserNeighbor(
-									neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
-									nearbyBundles[j]->getVertexPosition(k),
-									it->second->getVertexPosition(i) ) )
-							{
-								// If existing neighbor is already covering new candidate, we do not add it.
-								addAsNewNeighbor = false;
-								++nNeighborsSkipped;
-								break;
-							}
+							// If existing neighbor is already covering new candidate, we do not add it.
+							addAsNewNeighbor = false;
+							++nNeighborsSkipped;
+							break;
 						}
 					}
 					if(addAsNewNeighbor)
 					{
+						// Clean up neighbors that are no longer needed because they are covered by
+						// the neighbor that is going to be added.
+						for(unsigned int l = 0; l < neighbors.size(); l++)
+						{
+							if( isStrictlyCloserNeighbor(
+									nearbyBundles[j]->getVertexPosition(k),
+									neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
+									it->second->getVertexPosition(i) ) )
+							{
+								// Neighbor found as k-th vertex of nearby Bundle j. Then we need to clean
+								// up the neighbors vector of neighbor candidates by adding the new vertex
+								// and removing the vertex that was strictly farther than the new vertex.
+								// NOTE: This may remove neighbors that caused other vertices to be non-
+								// neighbors. Since strictly-neighborness isn't transitive, we may thus
+								// be skipping vertices as neighbors even though they are not strictly
+								// covered by neighbor vertices. I hope this will not cause issues.
+								neighbors[l] = neighbors.back();
+								neighbors.pop_back();
+								--l;
+								++nNeighborsReplaced;
+							}
+						}
 						neighbors.push_back( VertexNeighbor( nearbyBundles[j],
 															 nearbyBundles[j]->getVertexIndex(k)));
 					}
