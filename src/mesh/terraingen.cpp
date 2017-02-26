@@ -57,7 +57,7 @@ void Terrain::buildVertexMap(void)
 	}
 	// On listed vertices, list neighbors. Neighbors are always listed in pairs.
 	float maxVertSeparation = 10.0f; // Maximal distance for which neighbors are never 'missed'.
-	float maxNeighborDistance = 30.0f; // Maximal allowed distance for neighbors.
+	float maxNeighborDistance = 10.0f; // Maximal allowed distance for neighbors.
 	long unsigned int nVerticesDone = 0;
 	long unsigned int nNeighborsAdded = 0;
 	long unsigned int nNeighborsSkipped = 0;
