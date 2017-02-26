@@ -57,6 +57,11 @@ void Terrain::buildVertexMap(void)
 	}
 	// On listed vertices, list neighbors. Neighbors are always listed in pairs.
 	float maxVertSeparation = 10.0f; // Maximal distance for which neighbors are never 'missed'.
+	float maxNeighborDistance = 30.0f; // Maximal allowed distance for neighbors.
+	long unsigned int nVerticesDone = 0;
+	long unsigned int nNeighborsAdded = 0;
+	long unsigned int nNeighborsSkipped = 0;
+	long unsigned int nNeighborsReplaced = 0;
 	for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
 	{
 		std::vector<Bundle*> nearbyBundles;
@@ -64,15 +69,20 @@ void Terrain::buildVertexMap(void)
 				it->second->getCentralPoint(), it->second->getMaxVertexDistance() + maxVertSeparation);
 		for(unsigned int i = 0; i < it->second->numVertices(); i++)
 		{
-			VertexModifier & v = vmap.at(VertexId(it->second, it->second->getVertexIndex(i)));
 			std::vector<VertexNeighbor> neighbors;
 			for(unsigned int j = 0; j < nearbyBundles.size(); j++)
 			{
 				for(unsigned int k = 0; k < nearbyBundles[j]->numVertices(); k++)
 				{
+					// Skip faraway vertices.
+					if( dist(	it->second->getVertexPosition(i),
+								nearbyBundles[j]->getVertexPosition(k) ) > maxNeighborDistance) continue;
+					// Do not add self as neighbor.
+					if( it->second == nearbyBundles[j] && i == k ) continue;
 					bool addAsNewNeighbor = false;
 					// Add as neighbor if nearby vertex is not farther than existing neighbors.
 					for(unsigned int l = 0; l < neighbors.size(); l++)
+					{
 						if( isStrictlyCloserNeighbor(
 								nearbyBundles[j]->getVertexPosition(k),
 								neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
@@ -89,18 +99,56 @@ void Terrain::buildVertexMap(void)
 							neighbors[l] = neighbors.back();
 							neighbors.pop_back();
 							--l;
+							++nNeighborsReplaced;
 						}
+					}
+					// If the vertex has already caused deletion of existing neighbors, it must be
+					// added. If it hasn't caused such deletion, we check if it is already covered by
+					// another neighbor, and we only add it if it is not covered.
+					if(!addAsNewNeighbor)
+					{
+						addAsNewNeighbor = true;
+						for(unsigned int l = 0; l < neighbors.size(); l++)
+						{
+							if( isStrictlyCloserNeighbor(
+									neighbors[l].owningBundle->getVertexPositionFromIndex(neighbors[l].index),
+									nearbyBundles[j]->getVertexPosition(k),
+									it->second->getVertexPosition(i) ) )
+							{
+								// If existing neighbor is already covering new candidate, we do not add it.
+								addAsNewNeighbor = false;
+								++nNeighborsSkipped;
+								break;
+							}
+						}
+					}
 					if(addAsNewNeighbor)
+					{
 						neighbors.push_back( VertexNeighbor( nearbyBundles[j],
 															 nearbyBundles[j]->getVertexIndex(k)));
+					}
 				}
 			}
+			// Add list of neighbors to vertex, and add vertex to its neighbors. The addNeighbor
+			// function is responsible for avoiding duplicates.
+			VertexNeighbor vn(it->second, it->second->getVertexIndex(i));
+			for(unsigned int l = 0; l < neighbors.size(); l++)
+			{
+				vmap.at( vn           ).addNeighbor( neighbors[l] );
+				vmap.at( neighbors[l] ).addNeighbor( vn           );
+				++nNeighborsAdded;
+			}
+			++nVerticesDone;
 		}
 	}
+	std::cout << " Terrain::buildVertexMap() : Vertices: "<<nVerticesDone<<" Neighbors: "<<nNeighborsAdded
+		<<" Skipped: "<<nNeighborsSkipped<<" Replaced: "<<nNeighborsReplaced<<". Average "
+		<<nNeighborsAdded/(1.0*nVerticesDone)<<" neighbors per vertex."<<std::endl;
 	std::cout << " Terrain::buildVertexMap() : Done."<<std::endl;
 }
 
 void Terrain::compress(void)
 {
+	if(vmap.size() == 0) buildVertexMap();
 }
 

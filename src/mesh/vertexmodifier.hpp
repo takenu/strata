@@ -94,6 +94,13 @@ namespace strata
 
 				/** A list of neighbor vertices that this Vertex interacts with. */
 				std::vector<VertexNeighbor> neighbors;
+
+				void addNeighbor(VertexNeighbor &v)
+				{
+					for(unsigned int i = 0; i < neighbors.size(); i++)
+						if(neighbors[i] == v) return;
+					neighbors.push_back(v);
+				}
 		};
 	} // end namespace mesh
 } // end namespace strata
