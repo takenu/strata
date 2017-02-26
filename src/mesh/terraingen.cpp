@@ -62,11 +62,13 @@ void Terrain::buildVertexMap(void)
 	long unsigned int nNeighborsAdded = 0;
 	long unsigned int nNeighborsSkipped = 0;
 	long unsigned int nNeighborsReplaced = 0;
+	long unsigned int nListedMeshes = 0;
 	for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
 	{
 		std::vector<Bundle*> nearbyBundles;
 		listNearbyMeshes(bundles, nearbyBundles,
 				it->second->getCentralPoint(), it->second->getMaxVertexDistance() + maxVertSeparation);
+		nListedMeshes += nearbyBundles.size();
 		for(unsigned int i = 0; i < it->second->numVertices(); i++)
 		{
 			std::vector<VertexNeighbor> neighbors;
@@ -139,7 +141,8 @@ void Terrain::buildVertexMap(void)
 	}
 	std::cout << " Terrain::buildVertexMap() : Vertices: "<<nVerticesDone<<" Neighbors: "<<nNeighborsAdded
 		<<" Skipped: "<<nNeighborsSkipped<<" Replaced: "<<nNeighborsReplaced<<". Average "
-		<<nNeighborsAdded/(1.0*nVerticesDone)<<" neighbors per vertex."<<std::endl;
+		<<nNeighborsAdded/(1.0*nVerticesDone)<<" neighbors per vertex, for "<<bundles.size()<<" meshes used "
+		<<nListedMeshes/(1.0*bundles.size())<<" nearby meshes on average."<<std::endl;
 	std::cout << " Terrain::buildVertexMap() : Done."<<std::endl;
 }
 

@@ -5,7 +5,7 @@ end
 
 TerrainBaseLayerSpecs = {
 	size = 300.0,
-	maxmeshsize = 70.0,
+	maxmeshsize = 40.0,
 	divisions = 200,
 	height = 0.0,
 }
