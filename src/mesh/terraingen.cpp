@@ -143,6 +143,21 @@ void Terrain::buildVertexMap(void)
 		<<" Skipped: "<<nNeighborsSkipped<<" Replaced: "<<nNeighborsReplaced<<". Average "
 		<<nNeighborsAdded/(1.0*nVerticesDone)<<" neighbors per vertex, for "<<bundles.size()<<" meshes used "
 		<<nListedMeshes/(1.0*bundles.size())<<" nearby meshes on average."<<std::endl;
+	// Now we mark all vertices of the base layer as such.
+	unsigned int nBaseVertices = 0;
+	for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
+	{
+		if(it->second->getParentLayer() == masterLayer)
+		{
+			for(unsigned int i = 0; i < it->second->numVertices(); i++)
+			{
+				vmap.at( VertexId(it->second, it->second->getVertexIndex(i)) ).isBaseVertex = true;
+				++nBaseVertices;
+			}
+		}
+	}
+	std::cout << " Terrain::buildVertexMap() : Marked "<<nBaseVertices<<" base vertices ("
+		<<nBaseVertices/(0.01*vmap.size())<<"% of total)."<<std::endl;
 	std::cout << " Terrain::buildVertexMap() : Done."<<std::endl;
 }
 

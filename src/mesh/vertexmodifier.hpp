@@ -55,13 +55,17 @@ namespace strata
 			public:
 				VertexNeighbor(Bundle * _b, xVert _i) :
 					VertexId(_b, _i),
-					isAlongFracture(false),
+					isAcrossFracture(false),
 					distanceToVertex(0.0f)
 				{
 				}
 
-				/** Whether the line between this vertex and the origin vertex tracks a fracture. */
-				bool isAlongFracture;
+				/** Whether the line connecting these neighbor vertices crosses a fracture plane.
+				  * Such neighbors can only exert compressive force on vertices on the other
+				  * side of the fracture plane in a direction perpendicular to that plane.
+				  * They cannot exert any extensional force at all across the fracture plane.
+				  */
+				bool isAcrossFracture;
 
 				/** The distance to the neighbor vertex. */
 				float distanceToVertex;
@@ -71,6 +75,8 @@ namespace strata
 		{
 			public:
 				VertexModifier(void) :
+					isBaseVertex(false),
+//					isAlongFracture(false),
 					netForce(0.0f,0.0f,0.0f),
 					dForce(0.0f,0.0f,0.0f),
 					compression(0.0f,0.0f,0.0f),
@@ -78,6 +84,20 @@ namespace strata
 					neighbors()
 				{
 				}
+
+				/** A flag to denote vertex modifiers that are at the base of the terrain (i.e.
+				  * part of the lowest layer). Such vertices have different dynamics, since the
+				  * force equilibrium is not merely due to neighbors but also due to buoyancy as
+				  * a result of the underlying mass, which is not explicitly part of the Terrain. */
+				bool isBaseVertex;
+
+				/** Whether the vertex is along a fracture.
+				  * This is the case if and only if at least one of its neighbors has 'isAcrossFracture'.
+				  * Fractures are across a layer and connect vertices of different layers. Vertices
+				  * that are along a fracture can move along the fracture lines (creep) in response
+				  * to applied force. Their movement rules thus differ from those of ordinary vertices.
+				  */
+//				bool isAlongFracture;
 
 				/** A vector to contain the net force on this vertex. */
 				tiny::vec3 netForce;
