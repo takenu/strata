@@ -205,6 +205,13 @@ namespace strata
 					v.pos = v.pos + vec;
 				}
 
+				/** Add to a Vertex's weight (to account for thickening of the layer). */
+				void addVertexWeight(unsigned int i, float w)
+				{
+					assert(i+1<vertices.size());
+					vertices[i+1].weight += w;
+				}
+
 				/** Set the scale multiplier for the terrain's texture coordinates. */
 				void setScaleFactor(float _scale) { scaleTexture = _scale; }
 
@@ -971,6 +978,13 @@ namespace strata
 						}
 					}
 					return false;
+				}
+
+				/** Calculate the surface area of a polygon. */
+				inline float computeSurface(const Polygon & p) const
+				{
+					return length(cross(vertices[ve[p.c]].pos - vertices[ve[p.a]].pos,
+										   vertices[ve[p.b]].pos - vertices[ve[p.a]].pos));
 				}
 
 				/** Calculate the normal of a polygon. */

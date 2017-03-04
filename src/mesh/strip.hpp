@@ -158,19 +158,21 @@ namespace strata
 
 				virtual tiny::mesh::StaticMesh convertToMesh(void) const;
 
-				/** Re-calculate the Strip's vertex positions, bringing them back in line with the positions of the Bundle vertices
-				  * that they were based upon. */
+				/** Re-calculate the Strip's vertex positions, bringing them back in line with the positions
+				  * of the Bundle vertices that they were based upon. */
 				void recalculateVertexPositions(void);
 
-				/** Duplicate the strip, turning 's' into a copy of this Strip. This duplication is only possible
-				  * if 's' is uninitialized and does not already have vertices and polygons.
-				  * References of 's' into other Mesh objects (in particular, the Bundles from which this Strip
-				  * borrows its vertices) are copied verbatim. The result should be that 's' is as close to a clone
-				  * of this Strip as possible.
-				  * The exception is that 's' is not given a parentLayer by this function in order to avoid 'accidental' or careless
-				  * duplication. The caller of this function should ensure that 's' is sensibly assigned to a layer, either the same
-				  * layer as 'this' (in this case the 'this' object probably would need to be removed eventually), or another layer
-				  * (but in that case all the references to adjacent Bundles need to be adjusted to copies of these Bundles).
+				/** Duplicate the strip, turning 's' into a copy of this Strip. This duplication is only
+				  * possible if 's' is uninitialized and does not already have vertices and polygons.
+				  * References of 's' into other Mesh objects (in particular, the Bundles from which this
+				  * Strip borrows its vertices) are copied verbatim. The result should be that 's' is as
+				  * close to a clone of this Strip as possible.
+				  * The exception is that 's' is not given a parentLayer by this function in order to
+				  * avoid 'accidental' or careless duplication. The caller of this function should ensure
+				  * that 's' is sensibly assigned to a layer, either the same layer as 'this' (in this
+				  * case the 'this' object probably would need to be removed eventually), or another layer
+				  * (but in that case all the references to adjacent Bundles need to be adjusted to
+				  * copies of these Bundles).
 				  */
 				void duplicateStrip(Strip * s) const;
 
@@ -211,10 +213,11 @@ namespace strata
 					return false;
 				}
 
-				/** A function called by an adjacent Bundle that ceases to exist. All references to the Bundle should be considered invalid.
-				  * In practice, except when the program is shutting down, the function that destroys the Bundle is responsible for repairing
-				  * all the vertex references of the Strip, since the Strip cannot own vertices and needs to borrow its vertices from a valid
-				  * Bundle.
+				/** A function called by an adjacent Bundle that ceases to exist. All references to the
+				  * Bundle should be considered invalid. In practice, except when the program is shutting
+				  * down, the function that destroys the Bundle is responsible for repairing all the
+				  * vertex references of the Strip, since the Strip cannot own vertices and needs to
+				  * borrow its vertices from a valid Bundle.
 				  */
 				bool releaseAdjacentBundle(Bundle * bundle)
 				{
@@ -316,6 +319,8 @@ namespace strata
 				  *   v
 				  */
 				RemoteVertex findRemoteVertexPolyNeighbor(RemoteVertex &v, RemoteVertex &w, bool clockwise);
+
+				float calculateVertexSurface(RemoteVertex &v);
 
 				/** For stitch meshes, use direct analysis to calculate shape (i.e. skip first finding the edge vertices) since all
 				  * stitch vertices are already edge vertices. */

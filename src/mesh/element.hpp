@@ -37,9 +37,10 @@ namespace strata
 			xVert index; /**< The index of this vertex in the 've' array of the Mesh. Uses '0' as an error value (valid vertices should not have index==0). */
 			xVert nextEdgeVertex; /**< The next edge vertex, if this vertex itself is on the edge of a mesh. Otherwise 0. */
 			float thickness; /**< The thickness of the layer, between 0 and 1, as a fraction of the original thickness of the layer. */
+			float weight; /**< Weight of the Layer assigned to this Vertex. Total Layer weight is the sum of the weights of its vertices. */
 			xPoly poly[STRATA_VERTEX_MAX_LINKS]; /**< Enforce max number of links (to avoid having to (de)allocate memory when creating a Vertex). */
 
-			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0), thickness(1.0f)
+			Vertex(const tiny::vec3 &p) : pos(p), index(0), nextEdgeVertex(0), thickness(1.0f), weight(1.0f)
 			{
 				clearPolys();
 			}

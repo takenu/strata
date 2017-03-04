@@ -670,3 +670,30 @@ bool Bundle::isBelowMeshAtIndex(xVert v, tiny::vec3 p, float marginAlongNormal)
 {
 	return isNearMeshAtIndex(v, p, marginAlongNormal, false);
 }
+
+/** Calculate the surface associated with a given vertex.
+  * This surface consists of one third of the area of each of the adjacent polyongs. This
+  * may include area covered by Strips, but it cannot cover area on transverse Stitches.
+  * Non-transverse stitches are special cases and are only included on the upper Layer that
+  * they are stitching.
+  *
+  * The method for calculating this is to use the fact that the surface of a triangle is equal
+  * to half the length of the cross product of two of its sides (since the length equals the
+  * area of the parallellogram spanned by it). Then, every triangle has three vertices that
+  * define it, and each is given one third of the associated area.
+  */
+float Bundle::calculateVertexSurface(xVert v)
+{
+	float surface = 0.0f;
+	for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+	{
+		if(vertices[ve[v]].poly[i] == 0) break;
+		else surface += 0.3333333f*computeSurface(polygons[po[vertices[ve[v]].poly[i]]]);
+	}
+	RemoteVertex rv(this, v);
+	for(unsigned int i = 0; i < adjacentStrips.size(); i++)
+	{
+		surface += adjacentStrips[i]->calculateVertexSurface( rv );
+	}
+	return surface;
+}

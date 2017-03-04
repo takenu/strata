@@ -234,6 +234,22 @@ RemoteVertex Strip::findRemoteVertexPolyNeighbor(RemoteVertex &v, RemoteVertex &
 	return RemoteVertex(0,0);
 }
 
+float Strip::calculateVertexSurface(RemoteVertex &v)
+{
+	float surface = 0.0f;
+	xVert vLocal = findLocalVertexIndex(v);
+	if(vLocal != 0)
+	{
+		// Little bit of code duplication from Bundle::calculateVertexSurface().
+		for(unsigned int i = 0; i < STRATA_VERTEX_MAX_LINKS; i++)
+		{
+			if(vertices[ve[vLocal]].poly[i] == 0) break;
+			else surface += 0.3333333f*computeSurface(polygons[po[vertices[ve[vLocal]].poly[i]]]);
+		}
+	}
+	return surface;
+}
+
 Strip::~Strip(void)
 {
 	for(unsigned int i = 0; i < adjacentBundles.size(); i++)

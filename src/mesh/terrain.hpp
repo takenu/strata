@@ -42,6 +42,11 @@ namespace strata
 		typedef std::map<long unsigned int, Bundle*>::iterator BundleIterator;
 		typedef std::map<long unsigned int, Strip*>::iterator StripIterator;
 
+		typedef std::map<VertexId, VertexModifier>::iterator VmapIterator;
+
+		/** A helper function to get the position of a VertexId. */
+		inline tiny::vec3 getPosition(VertexId v) { return v.owningBundle->getVertexPositionFromIndex(v.index); }
+
 		/** The Terrain is the master class for an entire terrain object. It manages a set of Bundles, which are small
 		  * mesh fragments, and Layers, which are stratigraphical components of the terrain. The Bundles are joined into
 		  * Layers using Strip objects, which define the polygons required to join distinct meshes but which do not contain
@@ -287,6 +292,12 @@ namespace strata
 
 				/** Build the vertex map for terrain modifications. */
 				void buildVertexMap(void);
+
+				/** Calculate forces on the base layer of the Terrain. */
+				void calculateBaseForces(void);
+
+				/** Calculate forces due to neighbors. */
+				void calculateNeighborForces(void);
 
 				/** Compress the terrain along existing compressional axes. */
 				void compress(void);

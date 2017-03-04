@@ -174,6 +174,9 @@ namespace strata
 				  */
 				RemoteVertex findNearestNeighborInBundle(xVert v, const tiny::vec3 &pos, bool skipStitches);
 
+				/** Calculate the surface area associated with vertex 'v'. */
+				float calculateVertexSurface(xVert v);
+
 				/** Find a neighbor vertex that may be in another Bundle. */
 				void findRemoteNeighborVertex(bool skipStitches,
 						RemoteVertex &pivot, RemoteVertex &sv, bool rotateClockwise);

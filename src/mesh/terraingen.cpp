@@ -161,8 +161,43 @@ void Terrain::buildVertexMap(void)
 	std::cout << " Terrain::buildVertexMap() : Done."<<std::endl;
 }
 
+/** Calculate forces acting on the Terrain base (the base layer).
+  * These forces are mainly buoyancy (counteracting gravity on the Terrain) and drift (the driving
+  * force of compression, mimicking tectonic drift). */
+void Terrain::calculateBaseForces(void)
+{
+	std::cout << " Terrain::calculateBaseForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
+	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
+	{
+		if(it->second.isBaseVertex)
+		{
+			tiny::vec3 pos = getPosition(it->first);
+			tiny::vec3 force = tiny::vec3(0.0f,0.0f,0.0f);
+			float area = it->first.owningBundle->calculateVertexSurface(it->first.index);
+			// Buoyancy.
+			force.y += area * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
+			// Drift.
+			force += area * parameters.compressionAxis * (
+					dot(parameters.compressionCenter - pos,
+						parameters.compressionCenter - parameters.compressionAxis) > 0.0f ? -1.0f : 1.0f);
+		}
+	}
+	std::cout << " Terrain::calculateBaseForces() : Done. "<<std::endl;
+}
+
+void Terrain::calculateNeighborForces(void)
+{
+	std::cout << " Terrain::calculateNeighborForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
+	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
+	{
+		// Neighbor forces.
+	}
+	std::cout << " Terrain::calculateNeighborForces() : Done. "<<std::endl;
+}
 void Terrain::compress(void)
 {
 	if(vmap.size() == 0) buildVertexMap();
+	calculateBaseForces();
+	calculateNeighborForces();
 }
 

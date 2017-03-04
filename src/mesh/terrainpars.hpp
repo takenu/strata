@@ -30,10 +30,28 @@ namespace strata
 		{
 			public:
 				TerrainParameters(void) :
+					buoyancyGradient(1.0f),
+					buoyancyCutoff(0.0f),
+					compressionForce(1.0f),
 					compressionAxis(0.8f,0.0f,0.6f),
 					compressionCenter(0.0f,0.0f,0.0f)
 				{
 				}
+
+				/** The buoyancy force (per meter) as a function of depth that is felt by the base layer.
+				  * Buoyancy results from upward forces due to liquid displaced by a submerged object. If
+				  * density is constant and the object is not under any of the liquid (i.e. any straight
+				  * line starting at the liquid/solid interface going vertically up never reenters the
+				  * liquid) we can simplify matters by assuming a force that increases linearly with depth.
+				  */
+				float buoyancyGradient;
+
+				/** The height at which the buoyancy force is zero. Equals the surface of a hypothetical
+				  * liquid layer. */
+				float buoyancyCutoff;
+
+				/** The compressional force. */
+				float compressionForce;
 
 				/** A vector along which compression takes place on a global scale. */
 				tiny::vec3 compressionAxis;

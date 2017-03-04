@@ -56,7 +56,8 @@ namespace strata
 				VertexNeighbor(Bundle * _b, xVert _i) :
 					VertexId(_b, _i),
 					isAcrossFracture(false),
-					distanceToVertex(0.0f)
+					distanceToVertex(0.0f),
+					dForce(0.0f,0.0f,0.0f)
 				{
 				}
 
@@ -69,6 +70,9 @@ namespace strata
 
 				/** The distance to the neighbor vertex. */
 				float distanceToVertex;
+
+				/** The net force difference between the two verices. */
+				tiny::vec3 dForce;
 		};
 
 		class VertexModifier
@@ -78,7 +82,6 @@ namespace strata
 					isBaseVertex(false),
 //					isAlongFracture(false),
 					netForce(0.0f,0.0f,0.0f),
-					dForce(0.0f,0.0f,0.0f),
 					compression(0.0f,0.0f,0.0f),
 					extension(0.0f,0.0f,0.0f),
 					neighbors()
@@ -101,10 +104,6 @@ namespace strata
 
 				/** A vector to contain the net force on this vertex. */
 				tiny::vec3 netForce;
-
-				/** A vector to contain the derivatives on the force vector, using
-				  * net forces on the neighbors. */
-				tiny::vec3 dForce;
 
 				/** A vector to denote the direction and magnitude of maximal compression. */
 				tiny::vec3 compression;
