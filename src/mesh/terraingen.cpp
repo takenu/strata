@@ -174,8 +174,11 @@ void Terrain::calculateBaseForces(void)
 			tiny::vec3 pos = getPosition(it->first);
 			tiny::vec3 force = tiny::vec3(0.0f,0.0f,0.0f);
 			float area = it->first.owningBundle->calculateVertexSurface(it->first.index);
+			// Project normal to vertical, since area for buoyancy needs to be projected on horizontal plane.
+			float proj = dot( tiny::vec3(0.0f,1.0f,0.0f),
+							  it->first.owningBundle->calculateVertexNormal(it->first.index) );
 			// Buoyancy.
-			force.y += area * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
+			force.y += area * proj * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
 			// Drift.
 			force += area * parameters.compressionAxis * (
 					dot(parameters.compressionCenter - pos,
@@ -194,6 +197,7 @@ void Terrain::calculateNeighborForces(void)
 	}
 	std::cout << " Terrain::calculateNeighborForces() : Done. "<<std::endl;
 }
+
 void Terrain::compress(void)
 {
 	if(vmap.size() == 0) buildVertexMap();
