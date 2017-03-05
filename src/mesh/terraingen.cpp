@@ -71,7 +71,7 @@ void Terrain::buildVertexMap(void)
 		nListedMeshes += nearbyBundles.size();
 		for(unsigned int i = 0; i < it->second->numVertices(); i++)
 		{
-			std::vector<VertexNeighbor> neighbors;
+			std::vector<VertexId> neighbors;
 			for(unsigned int j = 0; j < nearbyBundles.size(); j++)
 			{
 				for(unsigned int k = 0; k < nearbyBundles[j]->numVertices(); k++)
@@ -122,18 +122,18 @@ void Terrain::buildVertexMap(void)
 								++nNeighborsReplaced;
 							}
 						}
-						neighbors.push_back( VertexNeighbor( nearbyBundles[j],
-															 nearbyBundles[j]->getVertexIndex(k)));
+						neighbors.push_back( VertexId( nearbyBundles[j],
+													   nearbyBundles[j]->getVertexIndex(k)));
 					}
 				}
 			}
 			// Add list of neighbors to vertex, and add vertex to its neighbors. The addNeighbor
 			// function is responsible for avoiding duplicates.
-			VertexNeighbor vn(it->second, it->second->getVertexIndex(i));
+			VertexId vn(it->second, it->second->getVertexIndex(i));
 			for(unsigned int l = 0; l < neighbors.size(); l++)
 			{
-				vmap.at( vn           ).addNeighbor( neighbors[l] );
-				vmap.at( neighbors[l] ).addNeighbor( vn           );
+				vmap.at( vn           ).addNeighbor( neighbors[l] , &(vmap.at(neighbors[l])) );
+				vmap.at( neighbors[l] ).addNeighbor( vn           , &(vmap.at(vn          )) );
 				++nNeighborsAdded;
 			}
 			++nVerticesDone;
@@ -183,6 +183,7 @@ void Terrain::calculateBaseForces(void)
 			force += area * parameters.compressionAxis * (
 					dot(parameters.compressionCenter - pos,
 						parameters.compressionCenter - parameters.compressionAxis) > 0.0f ? -1.0f : 1.0f);
+			it->second.netForce += force;
 		}
 	}
 	std::cout << " Terrain::calculateBaseForces() : Done. "<<std::endl;
@@ -194,6 +195,7 @@ void Terrain::calculateNeighborForces(void)
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
 	{
 		// Neighbor forces.
+		tiny::vec3 pos = getPosition(it->first);
 	}
 	std::cout << " Terrain::calculateNeighborForces() : Done. "<<std::endl;
 }

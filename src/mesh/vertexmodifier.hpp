@@ -26,6 +26,7 @@ namespace strata
 	namespace mesh
 	{
 		class Bundle;
+		class VertexModifier;
 
 		class VertexId
 		{
@@ -53,13 +54,20 @@ namespace strata
 		class VertexNeighbor : public VertexId
 		{
 			public:
-				VertexNeighbor(Bundle * _b, xVert _i) :
+				VertexNeighbor(Bundle * _b, xVert _i, VertexModifier * vm) :
 					VertexId(_b, _i),
+					neighbor(vm),
 					isAcrossFracture(false),
 					distanceToVertex(0.0f),
 					dForce(0.0f,0.0f,0.0f)
 				{
 				}
+
+				/** A pointer to a VertexModifier.
+				  * VertexModifiers are stored in an std::map, but references to them should remain
+				  * valid under insertion/erasure on the map (so long as the object itself is not
+				  * erased, obviously). Therefore, storing this pointer should in principle be safe. */
+				VertexModifier * neighbor;
 
 				/** Whether the line connecting these neighbor vertices crosses a fracture plane.
 				  * Such neighbors can only exert compressive force on vertices on the other
@@ -114,11 +122,11 @@ namespace strata
 				/** A list of neighbor vertices that this Vertex interacts with. */
 				std::vector<VertexNeighbor> neighbors;
 
-				void addNeighbor(VertexNeighbor &v)
+				void addNeighbor(VertexId &v, VertexModifier * vm)
 				{
 					for(unsigned int i = 0; i < neighbors.size(); i++)
 						if(neighbors[i] == v) return;
-					neighbors.push_back(v);
+					neighbors.push_back( VertexNeighbor(v.owningBundle, v.index, vm) );
 				}
 		};
 	} // end namespace mesh
