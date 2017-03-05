@@ -167,6 +167,7 @@ void Terrain::buildVertexMap(void)
 void Terrain::calculateBaseForces(void)
 {
 	std::cout << " Terrain::calculateBaseForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
+	float totForce = 0.0f;
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
 	{
 		if(it->second.isBaseVertex)
@@ -183,27 +184,66 @@ void Terrain::calculateBaseForces(void)
 			force += area * parameters.compressionAxis * (
 					dot(parameters.compressionCenter - pos,
 						parameters.compressionCenter - parameters.compressionAxis) > 0.0f ? -1.0f : 1.0f);
+			// Note: We may instead RESET the net force here to the basal force (instead of adding to it).
+			// This prevents us from adding the same force multiple times.
+			// However, so long as we decay the force (elsewhere), adding should be fine too.
 			it->second.netForce += force;
+			totForce += length(force);
 		}
 	}
-	std::cout << " Terrain::calculateBaseForces() : Done. "<<std::endl;
+	std::cout << " Terrain::calculateBaseForces() : Done, avg force = "
+		<<totForce/vmap.size()<<". "<<std::endl;
 }
 
 void Terrain::calculateNeighborForces(void)
 {
 	std::cout << " Terrain::calculateNeighborForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
+	// Calculate neighbor forces.
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
 	{
-		// Neighbor forces.
-		tiny::vec3 pos = getPosition(it->first);
+		it->second.updateNeighborForces();
+	}
+	// Apply neighbor forces to net force.
+	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
+	{
+		it->second.applyNeighborForces();
 	}
 	std::cout << " Terrain::calculateNeighborForces() : Done. "<<std::endl;
+}
+
+void Terrain::applyForces(void)
+{
+	std::cout << " Terrain::applyForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
+	// Calculate neighbor forces.
+	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
+	{
+		it->first.owningBundle->moveVertexByIndex(it->first.index,
+				parameters.iterationStep * it->second.netForce);
+		it->second.netForce *= (1.0f - parameters.forceDecay);
+	}
+	std::cout << " Terrain::applyForces() : Done. "<<std::endl;
+}
+
+void Terrain::resetMeshes(void)
+{
+	std::cout << " Terrain::resetMeshes() : Resetting meshes for all "<<bundles.size()<<" bundles and "
+		<<strips.size()<<" strips. "<<std::endl;
+	for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
+		it->second->resetMesh();
+	for(StripIterator it = strips.begin(); it != strips.end(); it++)
+	{
+		it->second->recalculateVertexPositions();
+		it->second->resetMesh();
+	}
 }
 
 void Terrain::compress(void)
 {
 	if(vmap.size() == 0) buildVertexMap();
 	calculateBaseForces();
-	calculateNeighborForces();
+	for(unsigned int i = 0; i < parameters.numForceIterations; i++)
+		calculateNeighborForces();
+	applyForces();
+	resetMeshes();
 }
 

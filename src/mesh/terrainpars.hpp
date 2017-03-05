@@ -30,6 +30,9 @@ namespace strata
 		{
 			public:
 				TerrainParameters(void) :
+					iterationStep(0.1f),
+					forceDecay(0.2f),
+					numForceIterations(5),
 					buoyancyGradient(1.0f),
 					buoyancyCutoff(0.0f),
 					compressionForce(1.0f),
@@ -37,6 +40,15 @@ namespace strata
 					compressionCenter(0.0f,0.0f,0.0f)
 				{
 				}
+
+				/** The iteration step size, determining how much translation results from a unit force. */
+				float iterationStep;
+
+				/** The force decay, determining how much force disappears each iteration step. */
+				float forceDecay;
+
+				/** The number of iterations used to equilibrate the force for each deforming iteration. */
+				unsigned int numForceIterations;
 
 				/** The buoyancy force (per meter) as a function of depth that is felt by the base layer.
 				  * Buoyancy results from upward forces due to liquid displaced by a submerged object. If

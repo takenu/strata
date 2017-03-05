@@ -89,6 +89,7 @@ namespace strata
 				VertexModifier(void) :
 					isBaseVertex(false),
 //					isAlongFracture(false),
+					forceMultiplier(0.0f),
 					netForce(0.0f,0.0f,0.0f),
 					compression(0.0f,0.0f,0.0f),
 					extension(0.0f,0.0f,0.0f),
@@ -110,6 +111,11 @@ namespace strata
 				  */
 //				bool isAlongFracture;
 
+				/** A multiplier for neighbor forces. This reduces the effect of neighbor forces.
+				  * Normalization ensures that no more than half of the net force is lost as a
+				  * consequence of force transfer. */
+				float forceMultiplier;
+
 				/** A vector to contain the net force on this vertex. */
 				tiny::vec3 netForce;
 
@@ -122,11 +128,41 @@ namespace strata
 				/** A list of neighbor vertices that this Vertex interacts with. */
 				std::vector<VertexNeighbor> neighbors;
 
+				/** Add a neighbor to the neighbor list. The neighbor may already exist, in that case
+				  * we simply don't add it. */
 				void addNeighbor(VertexId &v, VertexModifier * vm)
 				{
 					for(unsigned int i = 0; i < neighbors.size(); i++)
 						if(neighbors[i] == v) return;
 					neighbors.push_back( VertexNeighbor(v.owningBundle, v.index, vm) );
+				}
+
+				/** Calculate the neighbor force differences. */
+				void updateNeighborForces(void)
+				{
+					tiny::vec3 netNeighborForce(0.0f,0.0f,0.0f);
+					for(unsigned int i = 0; i < neighbors.size(); i++)
+					{
+						neighbors[i].dForce = neighbors[i].neighbor->netForce - netForce;
+						netNeighborForce += neighbors[i].dForce;
+					}
+					// Cap between 0.1 and 0.5. Above 0.5 more than half the force would be used
+					// (just in opposite directions among neighbors), which still risks unreasonable
+					// transfer. Below 0.2 we don't transfer much at all. Additionally, vertices that start
+					// with near-zero net force must still be able to receive force, which they can't if
+					// the little bit of force they presently have is preserved at all costs.
+					forceMultiplier = 0.5f*std::max(0.2f, std::min(1.0f,
+								length(netForce)/length(netNeighborForce)));
+				}
+
+				/** Apply neighbor forces on net force. */
+				void applyNeighborForces(void)
+				{
+					for(unsigned int i = 0; i < neighbors.size(); i++)
+					{
+						netForce += neighbors[i].dForce * std::min( forceMultiplier,
+									   neighbors[i].neighbor->forceMultiplier);
+					}
 				}
 		};
 	} // end namespace mesh

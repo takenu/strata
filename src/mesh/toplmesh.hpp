@@ -205,6 +205,13 @@ namespace strata
 					v.pos = v.pos + vec;
 				}
 
+				/** Move a vertex a given distance along a vector. Same as moveVertexAlongVector
+				  * except that now an xVert index is passed. */
+				void moveVertexByIndex(xVert v, tiny::vec3 vec)
+				{
+					moveVertexAlongVector(ve[v]-1,vec);
+				}
+
 				/** Add to a Vertex's weight (to account for thickening of the layer). */
 				void addVertexWeight(unsigned int i, float w)
 				{

@@ -299,6 +299,12 @@ namespace strata
 				/** Calculate forces due to neighbors. */
 				void calculateNeighborForces(void);
 
+				/** Apply forces such that Terrain is deformed. */
+				void applyForces(void);
+
+				/** Reset all meshes, such that the meshes are re-made using the current vertex positions. */
+				void resetMeshes(void);
+
 				/** Compress the terrain along existing compressional axes. */
 				void compress(void);
 
