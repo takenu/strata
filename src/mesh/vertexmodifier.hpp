@@ -161,7 +161,7 @@ namespace strata
 					// transfer. Below 0.2 we don't transfer much at all. Additionally, vertices that start
 					// with near-zero net force must still be able to receive force, which they can't if
 					// the little bit of force they presently have is preserved at all costs.
-					forceMultiplier = 0.5f*std::max(0.2f, std::min(2.0f,
+					forceMultiplier = 0.5f*std::max(0.05f, std::min(2.0f,
 								length(netForce)/length(netNeighborForce)));
 				}
 

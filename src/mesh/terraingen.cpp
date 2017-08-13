@@ -34,8 +34,8 @@ inline bool isStrictlyCloserNeighbor(tiny::vec3 newCandidate, tiny::vec3 currCan
 {
 	// If angle between ref and curr candidate, seen from new candidate, is less than 90 degrees,
 	// then dot product > 0 and the new candidate is NOT strictly closer than current.
-	return !(dot(normalize(refPos - newCandidate), normalize(currCandidate - newCandidate)) > 0.0f);
-//	return !(dot(normalize(refPos - newCandidate), normalize(currCandidate - newCandidate)) > -0.1f);
+//	return !(dot(normalize(refPos - newCandidate), normalize(currCandidate - newCandidate)) > 0.0f);
+	return !(dot(normalize(refPos - newCandidate), normalize(currCandidate - newCandidate)) > -0.001f);
 }
 
 /** Build a vertex map, which creates a VertexModifier for vertices of the Terrain.
@@ -180,6 +180,7 @@ void Terrain::calculateBaseForces(void)
 {
 	std::cout << " Terrain::calculateBaseForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
 	float totBaseForce = 0.0f;
+	float maxForce = 0.0f;
 	float totGravity = 0.0f;
 	tiny::vec3 alongAxis = normalize(tiny::vec3(parameters.compressionAxis.x, 0, -parameters.compressionAxis.z));
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
@@ -241,6 +242,7 @@ void Terrain::calculateNeighborForces(void)
 				// (We multiply by 0.1 because many neighbors feel this force, and all contribute.)
 				it->second.neighbors[i].restorativeForce /= adjustment;
 			}
+//			if(it->second.neighbors[i].restorativeForce > 0.5*difVector*
 		}
 	}
 	// Apply neighbor forces to net force.
