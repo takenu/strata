@@ -246,6 +246,7 @@ float Strip::calculateVertexSurface(RemoteVertex &v)
 			if(vertices[ve[vLocal]].poly[i] == 0) break;
 			else surface += 0.3333333f*computeSurface(polygons[po[vertices[ve[vLocal]].poly[i]]]);
 		}
+		if(surface == 0.0f) std::cout << " Strip::calculateVertexSurface() : Index found but surface="<<surface<<"!"<<std::endl;
 	}
 	return surface;
 }

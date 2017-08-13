@@ -30,11 +30,15 @@ namespace strata
 		{
 			public:
 				TerrainParameters(void) :
-					iterationStep(0.1f),
+					iterationStep(0.02f),
 					forceDecay(0.2f),
 					numForceIterations(5),
+					gravityFactor(1.0f),
 					buoyancyGradient(1.0f),
-					buoyancyCutoff(0.0f),
+					buoyancyCutoff(5.0f),
+					extensionResistance(100.0f),
+					maxExtensionResistance(5.0f),
+					compressionResistance(200.0f),
 					compressionForce(1.0f),
 					compressionAxis(0.8f,0.0f,0.6f),
 					compressionCenter(0.0f,0.0f,0.0f)
@@ -50,6 +54,10 @@ namespace strata
 				/** The number of iterations used to equilibrate the force for each deforming iteration. */
 				unsigned int numForceIterations;
 
+				/** The strength of gravity. Note that gravity must be counteracted by buoyancy. Therefore,
+				  * equilibrium is reached depending on where balance between these two is achieved. */
+				float gravityFactor;
+
 				/** The buoyancy force (per meter) as a function of depth that is felt by the base layer.
 				  * Buoyancy results from upward forces due to liquid displaced by a submerged object. If
 				  * density is constant and the object is not under any of the liquid (i.e. any straight
@@ -61,6 +69,18 @@ namespace strata
 				/** The height at which the buoyancy force is zero. Equals the surface of a hypothetical
 				  * liquid layer. */
 				float buoyancyCutoff;
+
+				/** The resistance of the terrain to extension. This generates an attractive force between
+				  * vertices that are being pulled apart. */
+				float extensionResistance;
+
+				/** The maximal attractive force possible for extension resistance. If this force is exceeded,
+				  * a fracture is generated. */
+				float maxExtensionResistance;
+
+				/** The resistance of the terrain to compression. This generates a repulsive force if two
+				  * vertices are forced closer together. */
+				float compressionResistance;
 
 				/** The compressional force. */
 				float compressionForce;

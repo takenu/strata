@@ -302,6 +302,9 @@ namespace strata
 				/** Apply forces such that Terrain is deformed. */
 				void applyForces(void);
 
+				/** Set forces on the Terrain to zero. */
+				void resetForces(void);
+
 				/** Reset all meshes, such that the meshes are re-made using the current vertex positions. */
 				void resetMeshes(void);
 

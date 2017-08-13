@@ -58,7 +58,8 @@ namespace strata
 					VertexId(_b, _i),
 					neighbor(vm),
 					isAcrossFracture(false),
-					distanceToVertex(0.0f),
+					initialDistanceToVertex(0.0f),
+					restorativeForce(0.0f,0.0f,0.0f),
 					dForce(0.0f,0.0f,0.0f)
 				{
 				}
@@ -77,7 +78,11 @@ namespace strata
 				bool isAcrossFracture;
 
 				/** The distance to the neighbor vertex. */
-				float distanceToVertex;
+				float initialDistanceToVertex;
+
+				/** The restorative force due to extension or compression along the line connecting
+				  * the vertices. */
+				tiny::vec3 restorativeForce;
 
 				/** The net force difference between the two verices. */
 				tiny::vec3 dForce;
@@ -88,6 +93,7 @@ namespace strata
 			public:
 				VertexModifier(void) :
 					isBaseVertex(false),
+					initialArea(0.0f),
 //					isAlongFracture(false),
 					forceMultiplier(0.0f),
 					netForce(0.0f,0.0f,0.0f),
@@ -102,6 +108,10 @@ namespace strata
 				  * force equilibrium is not merely due to neighbors but also due to buoyancy as
 				  * a result of the underlying mass, which is not explicitly part of the Terrain. */
 				bool isBaseVertex;
+
+				/** The initial area of a base vertex. This determines the amount of area for which
+				  * that base vertex can feel a force. */
+				float initialArea;
 
 				/** Whether the vertex is along a fracture.
 				  * This is the case if and only if at least one of its neighbors has 'isAcrossFracture'.
@@ -151,7 +161,7 @@ namespace strata
 					// transfer. Below 0.2 we don't transfer much at all. Additionally, vertices that start
 					// with near-zero net force must still be able to receive force, which they can't if
 					// the little bit of force they presently have is preserved at all costs.
-					forceMultiplier = 0.5f*std::max(0.2f, std::min(1.0f,
+					forceMultiplier = 0.5f*std::max(0.2f, std::min(2.0f,
 								length(netForce)/length(netNeighborForce)));
 				}
 
@@ -162,6 +172,7 @@ namespace strata
 					{
 						netForce += neighbors[i].dForce * std::min( forceMultiplier,
 									   neighbors[i].neighbor->forceMultiplier);
+						netForce += neighbors[i].restorativeForce;
 					}
 				}
 		};

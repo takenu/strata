@@ -219,6 +219,16 @@ namespace strata
 					vertices[i+1].weight += w;
 				}
 
+				/** Get a Vertex's weight. */
+				float getVertexWeight(unsigned int i) const
+				{
+					assert(i+1<vertices.size());
+					return vertices[i+1].weight;
+				}
+
+				/** Get a Vertex's weight by index. */
+				float getVertexWeightByIndex(xVert v) const { return getVertexWeight(ve[v]-1); }
+
 				/** Set the scale multiplier for the terrain's texture coordinates. */
 				void setScaleFactor(float _scale) { scaleTexture = _scale; }
 
