@@ -196,9 +196,10 @@ void Terrain::calculateBaseForces(void)
 							  it->first.owningBundle->calculateVertexNormal(it->first.index) );
 			// Buoyancy.
 //			force.y += area * proj * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
+			force.y += proj * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
 			// Drift. The drift decreases linearly with the distance to the zero-compression line.
 			tiny::vec3 centerToPos = pos - parameters.compressionCenter;
-			float distToAxis = length(pos - (parameters.compressionCenter + dot(centerToPos, alongAxis) * alongAxis ));
+			float distToAxis = length(tiny::vec3(pos.x,parameters.compressionCenter.y,pos.z) - (parameters.compressionCenter + dot(centerToPos, alongAxis) * alongAxis ));
 // Don't include area - 'force' isn't divided by it either when we apply it, and otherwise we underestimate force on the edge vertices.
 //			force += area * parameters.compressionAxis * (2.0f * distToAxis / maxMeshSize) * (
 			force += parameters.compressionAxis * parameters.compressionRate *
@@ -213,8 +214,8 @@ void Terrain::calculateBaseForces(void)
 		}
 		else
 		{
-			float grav = parameters.gravityFactor * it->first.owningBundle->getVertexWeightByIndex(it->first.index);
-//			it->second.netForce.y -= grav;
+			float grav = parameters.gravityFactor * it->first.owningBundle->getVertexWeightByIndex(it->first.index) / it->second.initialArea;
+			it->second.netForce.y -= grav;
 			totGravity += grav;
 		}
 	}
