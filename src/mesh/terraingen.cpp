@@ -201,7 +201,8 @@ void Terrain::calculateBaseForces(void)
 			float distToAxis = length(pos - (parameters.compressionCenter + dot(centerToPos, alongAxis) * alongAxis ));
 // Don't include area - 'force' isn't divided by it either when we apply it, and otherwise we underestimate force on the edge vertices.
 //			force += area * parameters.compressionAxis * (2.0f * distToAxis / maxMeshSize) * (
-			force += parameters.compressionAxis * (2.0f * distToAxis / maxMeshSize) * (
+			force += parameters.compressionAxis * parameters.compressionRate *
+				std::min(parameters.compressionZoneWidth, 2.0f * distToAxis / terrainSize) * (
 					dot(parameters.compressionCenter - pos,
 						parameters.compressionCenter - parameters.compressionAxis) > 0.0f ? -1.0f : 1.0f);
 			// Note: We may instead RESET the net force here to the basal force (instead of adding to it).

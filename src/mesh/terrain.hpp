@@ -55,7 +55,8 @@ namespace strata
 		{
 			private:
 				MasterLayer * masterLayer;
-				float maxMeshSize;
+				float maxMeshSize; /**< The maximal size of a single Mesh (e.g. a Bundle). */
+				float terrainSize; /**< The initial size of the terrain. */
 				std::vector<Layer *> layers;
 				intf::RenderInterface * renderer;
 				intf::UIInterface * uiInterface;
@@ -193,7 +194,8 @@ namespace strata
 					intf::UISource("Terrain",_uiInterface),
 					intf::UIReceiver("Terrain", _uiInterface),
 					masterLayer(0),
-					maxMeshSize(400.0f),
+					maxMeshSize(50.0f),
+					terrainSize(400.0f),
 					renderer(_renderer),
 					uiInterface(_uiInterface),
 					parameters(),
@@ -204,7 +206,7 @@ namespace strata
 				{
 				}
 
-				void makeFlatLayer(float terrainSize, float _maxMeshSize,
+				void makeFlatLayer(float _terrainSize, float _maxMeshSize,
 						unsigned int meshSubdivisions, float height)
 				{
 					if(masterLayer)
@@ -216,6 +218,7 @@ namespace strata
 					else
 					{
 						maxMeshSize = _maxMeshSize;
+						terrainSize = _terrainSize;
 						masterLayer = new MasterLayer();
 						masterLayer->createFlatLayer(
 								std::bind(&Terrain::makeNewBundle, this),

@@ -41,6 +41,8 @@ namespace strata
 					compressionResistance(200.0f),
 					compressionForce(1.0f),
 					compressionAxis(0.8f,0.0f,0.6f),
+					compressionRate(20.0f),
+					compressionZoneWidth(0.1f),
 					compressionCenter(0.0f,0.0f,0.0f)
 				{
 				}
@@ -87,6 +89,14 @@ namespace strata
 
 				/** A vector along which compression takes place on a global scale. */
 				tiny::vec3 compressionAxis;
+
+				/** A compression rate that controls how fast compression is happening. */
+				float compressionRate;
+
+				/** The width of the strip, as a fraction of the total mesh size, where compressional
+				  * forces switch direction. Outside of this strip the compressional force is the same
+				  * everywhere. */
+				float compressionZoneWidth;
 
 				/** A point along the line of no net force that is perpendicular to the compressionAxis.
 				  * Points along this line may move during compression due to pressure imbalances, but
