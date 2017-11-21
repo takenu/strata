@@ -38,7 +38,7 @@ namespace strata
 					buoyancyCutoff(5.0f),
 					extensionResistance(100.0f),
 					maxExtensionResistance(5.0f),
-					compressionResistance(200.0f),
+					compressionResistance(5.0f),
 					compressionForce(1.0f),
 					compressionAxis(0.8f,0.0f,0.6f),
 					compressionRate(20.0f),

@@ -214,7 +214,7 @@ void Terrain::calculateBaseForces(void)
 		}
 		else
 		{
-			float grav = parameters.gravityFactor * it->first.owningBundle->getVertexWeightByIndex(it->first.index) / it->second.initialArea;
+			float grav = parameters.gravityFactor;// * it->first.owningBundle->getVertexWeightByIndex(it->first.index);// / it->second.initialArea;
 			it->second.netForce.y -= grav;
 			totGravity += grav;
 		}
@@ -225,6 +225,8 @@ void Terrain::calculateBaseForces(void)
 
 void Terrain::calculateNeighborForces(void)
 {
+	float netDeformation = 0.0f;
+	float totalRestoration = 0.0f;
 	std::cout << " Terrain::calculateNeighborForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
 	// Calculate neighbor forces.
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
@@ -250,6 +252,8 @@ void Terrain::calculateNeighborForces(void)
 			}
 			it->second.neighbors[i].restorativeForce += restorativeForce;
 //			if(it->second.neighbors[i].restorativeForce > 0.5*difVector*
+			totalRestoration += length(restorativeForce);
+			netDeformation += deformation/it->second.neighbors.size(); // divide out # of neighbors to get avg deformation per vertex when dividing by vmap size
 		}
 	}
 	// Apply neighbor forces to net force.
@@ -257,7 +261,8 @@ void Terrain::calculateNeighborForces(void)
 	{
 		it->second.applyNeighborForces();
 	}
-	std::cout << " Terrain::calculateNeighborForces() : Done. "<<std::endl;
+	std::cout << " Terrain::calculateNeighborForces() : Done, restorative force="<<totalRestoration/vmap.size()
+		<<" average deformation = "<<netDeformation/vmap.size()<<". "<<std::endl;
 }
 
 void Terrain::applyForces(void)

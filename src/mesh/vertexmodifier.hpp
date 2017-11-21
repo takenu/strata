@@ -153,8 +153,8 @@ namespace strata
 					tiny::vec3 netNeighborForce(0.0f,0.0f,0.0f);
 					for(unsigned int i = 0; i < neighbors.size(); i++)
 					{
-//						neighbors[i].dForce = neighbors[i].neighbor->netForce - netForce;
-//						netNeighborForce += neighbors[i].dForce;
+						neighbors[i].dForce = neighbors[i].neighbor->netForce - netForce;
+						netNeighborForce += neighbors[i].dForce;
 					}
 					// Cap between 0.1 and 0.5. Above 0.5 more than half the force would be used
 					// (just in opposite directions among neighbors), which still risks unreasonable
@@ -172,7 +172,7 @@ namespace strata
 					{
 						netForce += neighbors[i].dForce * std::min( forceMultiplier,
 									   neighbors[i].neighbor->forceMultiplier);
-//						netForce += neighbors[i].restorativeForce;
+						netForce += neighbors[i].restorativeForce;
 						neighbors[i].restorativeForce = tiny::vec3(0.0f,0.0f,0.0f); // Reset for re-use
 					}
 				}
