@@ -111,7 +111,7 @@ namespace strata
 						for(unsigned int j = 0; j < b->numVertices(); j++)
 						{
 							b->moveVertexAlongVector(j, normals[j]);
-							b->addVertexWeight(j, b->calculateVertexSurface( b->getVertexIndex(j) ) );
+							b->addVertexWeight(j, thickness*b->calculateVertexSurface( b->getVertexIndex(j) ) );
 						}
 					}
 				}

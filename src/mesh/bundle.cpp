@@ -695,5 +695,6 @@ float Bundle::calculateVertexSurface(xVert v)
 	{
 		surface += adjacentStrips[i]->calculateVertexSurface( rv );
 	}
+	if(surface == 0.0f) std::cout << " Bundle::calculateVertexSurface() : Zero area!"<<std::endl;
 	return surface;
 }

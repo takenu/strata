@@ -148,15 +148,15 @@ void Terrain::buildVertexMap(void)
 	unsigned int nBaseVertices = 0;
 	for(BundleIterator it = bundles.begin(); it != bundles.end(); it++)
 	{
-		if(it->second->getParentLayer() == masterLayer)
+		for(unsigned int i = 0; i < it->second->numVertices(); i++)
 		{
-			for(unsigned int i = 0; i < it->second->numVertices(); i++)
+			if(it->second->getParentLayer() == masterLayer)
 			{
 				vmap.at( VertexId(it->second, it->second->getVertexIndex(i)) ).isBaseVertex = true;
-				vmap.at( VertexId(it->second, it->second->getVertexIndex(i)) ).initialArea =
-					it->second->calculateVertexSurface(it->second->getVertexIndex(i));
 				++nBaseVertices;
 			}
+			vmap.at( VertexId(it->second, it->second->getVertexIndex(i)) ).initialArea =
+				it->second->calculateVertexSurface(it->second->getVertexIndex(i));
 		}
 	}
 	// Set all initial distances between neighbors.
@@ -180,7 +180,6 @@ void Terrain::calculateBaseForces(void)
 {
 	std::cout << " Terrain::calculateBaseForces() : Calculating on "<<vmap.size()<<" vertices. "<<std::endl;
 	float totBaseForce = 0.0f;
-	float maxForce = 0.0f;
 	float totGravity = 0.0f;
 	tiny::vec3 alongAxis = normalize(tiny::vec3(parameters.compressionAxis.z, 0, -parameters.compressionAxis.x));
 	for(VmapIterator it = vmap.begin(); it != vmap.end(); it++)
@@ -189,32 +188,28 @@ void Terrain::calculateBaseForces(void)
 		{
 			tiny::vec3 pos = getPosition(it->first);
 			tiny::vec3 force = tiny::vec3(0.0f,0.0f,0.0f);
-//			float area = it->first.owningBundle->calculateVertexSurface(it->first.index);
-			float area = it->second.initialArea;
 			// Project normal to vertical, since area for buoyancy needs to be projected on horizontal plane.
 			float proj = dot( tiny::vec3(0.0f,1.0f,0.0f),
 							  it->first.owningBundle->calculateVertexNormal(it->first.index) );
 			// Buoyancy.
-//			force.y += area * proj * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
 			force.y += proj * (parameters.buoyancyCutoff - pos.y) * parameters.buoyancyGradient;
 			// Drift. The drift decreases linearly with the distance to the zero-compression line.
 			tiny::vec3 centerToPos = pos - parameters.compressionCenter;
-			float distToAxis = length(tiny::vec3(pos.x,parameters.compressionCenter.y,pos.z) - (parameters.compressionCenter + dot(centerToPos, alongAxis) * alongAxis ));
-// Don't include area - 'force' isn't divided by it either when we apply it, and otherwise we underestimate force on the edge vertices.
-//			force += area * parameters.compressionAxis * (2.0f * distToAxis / maxMeshSize) * (
+			float distToAxis = length( tiny::vec3(pos.x,parameters.compressionCenter.y,pos.z)
+					- (parameters.compressionCenter + dot(centerToPos, alongAxis) * alongAxis) );
 			force += parameters.compressionAxis * parameters.compressionRate *
 				std::min(parameters.compressionZoneWidth, 2.0f * distToAxis / terrainSize) * (
 					dot(parameters.compressionCenter - pos,
 						parameters.compressionCenter - parameters.compressionAxis) > 0.0f ? -1.0f : 1.0f);
 			// Note: We may instead RESET the net force here to the basal force (instead of adding to it).
 			// This prevents us from adding the same force multiple times.
-			// However, so long as we decay the force (elsewhere), adding should be fine too.
+			// However, so long as we decay the force (elsewhere), adding should be fine too, and provides smoother movement.
 			it->second.netForce += force;
 			totBaseForce += length(force);
 		}
 		else
 		{
-			float grav = parameters.gravityFactor;// * it->first.owningBundle->getVertexWeightByIndex(it->first.index);// / it->second.initialArea;
+			float grav = parameters.gravityFactor * it->first.owningBundle->getVertexWeightByIndex(it->first.index) / it->second.initialArea;
 			it->second.netForce.y -= grav;
 			totGravity += grav;
 		}
@@ -236,7 +231,6 @@ void Terrain::calculateNeighborForces(void)
 		{
 			tiny::vec3 difVector = getPosition(it->second.neighbors[i]) - getPosition(it->first);
 			float deformation = length(difVector) /	it->second.neighbors[i].initialDistanceToVertex - 1.0f;
-//			it->second.neighbors[i].restorativeForce += normalize(difVector) * (deformation > 0.0f ?
 			tiny::vec3 restorativeForce = normalize(difVector) * (deformation > 0.0f ?
 					std::min(parameters.maxExtensionResistance,
 						1.0f * parameters.extensionResistance * deformation * deformation) :
@@ -248,10 +242,8 @@ void Terrain::calculateNeighborForces(void)
 				// In this case the restorative force exceeds the deformation. In that case, cap it.
 				// (We multiply by 0.1 because many neighbors feel this force, and all contribute.)
 				restorativeForce /= adjustment;
-//				it->second.neighbors[i].restorativeForce /= adjustment;
 			}
 			it->second.neighbors[i].restorativeForce += restorativeForce;
-//			if(it->second.neighbors[i].restorativeForce > 0.5*difVector*
 			totalRestoration += length(restorativeForce);
 			netDeformation += deformation/it->second.neighbors.size(); // divide out # of neighbors to get avg deformation per vertex when dividing by vmap size
 		}
